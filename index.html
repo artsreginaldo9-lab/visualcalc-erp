@@ -6442,12 +6442,22 @@ async function admRenderSeguranca() {
   if (isSbOk()) {
     var sb = getSb();
     try {
-      // Buscar últimos 50 logs
-      var { data } = await sb.from('logs_seguranca')
+      // Buscar últimos 50 logs — tabela pode não existir ainda
+      var logsRes = await sb.from('logs_seguranca')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
-      logs = data || [];
+      if (logsRes.error) {
+        if (logsRes.error.code === '42P01' || logsRes.status === 404) {
+          // Tabela não existe ainda — mostrar aviso
+          el.innerHTML = '<div class="adm-card"><div class="adm-card-hd">🛡️ Logs de Segurança</div>'
+            + '<div class="alert alert-info" style="margin-top:12px">A tabela <code>logs_seguranca</code> ainda não foi criada no Supabase.<br><br>'
+            + 'Execute o SQL de correção em <strong>Configurações → 🗄️ Supabase → SQL de Correção</strong> para ativar.</div></div>';
+          return;
+        }
+        throw logsRes.error;
+      }
+      logs = logsRes.data || [];
       // Estatísticas
       stats.total            = logs.length;
       stats.bloqueados       = logs.filter(function(l) { return l.acao === 'abuso_detectado'; }).length;
@@ -6714,7 +6724,12 @@ function admRenderPlanos() {
     + planos.map(function(p) {
         const cor  = p.cor || '#8892a8';
         const mods = p.modulos_liberados || (p.recursos && p.recursos.modulos_liberados) || [];
-        const feats = (p.features||[]);
+        // features pode ser objeto {modulos:[...]} ou array de strings
+        var rawF = p.features || [];
+        const feats = Array.isArray(rawF) ? rawF
+          : (Array.isArray(rawF.features) ? rawF.features
+          : (Array.isArray(rawF.modulos) ? rawF.modulos.map(function(m){ return m==='all'?'Acesso completo':m; })
+          : []));
         const limU = (p.limite_usuarios === -1 || p.limite_usuarios == null) ? '∞' : p.limite_usuarios;
         // Count clientes neste plano
         const cnt  = _adm.empresas.filter(function(e){return e.plano===p.nome_interno||e.plano===p.nome;}).length;
