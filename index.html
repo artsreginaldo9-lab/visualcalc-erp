@@ -1245,7 +1245,7 @@ textarea{resize:vertical;}
     <div><div class="section-title">Novo Orçamento</div><div class="section-sub">Calcule custos e gere propostas profissionais</div></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm" onclick="limparOrcamento()">🗑 Limpar</button>
-      <button class="btn btn-primary btn-lg" onclick="calcular()">⚡ Calcular</button>
+      <button class="btn btn-primary btn-lg" onclick="executarCalculo()">⚡ Calcular</button>
     </div>
   </div>
   <div class="g2" style="gap:20px">
@@ -1433,33 +1433,99 @@ textarea{resize:vertical;}
           <div class="form-group" style="margin:0"><label>Validade (dias)</label><input type="number" id="orc_validade" value="7" min="1"></div>
         </div>
       </div>
-      <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="calcular()">⚡ Calcular Orçamento</button>
+      <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="executarCalculo()">⚡ Calcular Orçamento</button>
     </div>
   </div>
-  <div id="resultado_container" style="display:none;margin-top:20px">
-    <div class="result-box">
-      <div class="card-title" style="margin-bottom:14px"><div class="card-icon">📄</div>Resultado & Simulador de Lucro</div>
-      <div class="g4" style="margin-bottom:16px">
-        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Custo Total</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500" id="res_custo">—</div></div>
-        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Preço Final</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--gold)" id="res_preco">—</div></div>
-        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Lucro Bruto</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--green)" id="res_lucro">—</div></div>
-        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Margem Real</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500" id="res_margem">—</div></div>
+  <div id="resultado_container" style="display:none;margin-top:24px">
+
+    <!-- ══ HERO: Preço Principal ══ -->
+    <div class="res-hero" id="res-hero-card">
+      <!-- Gauge de margem (SVG, posicionado absoluto) -->
+      <div class="margem-gauge" id="margem-gauge-wrap">
+        <svg viewBox="0 0 72 72" width="72" height="72">
+          <circle class="gauge-track" cx="36" cy="36" r="28"/>
+          <circle class="gauge-fill" id="gauge-arc" cx="36" cy="36" r="28"
+            stroke-dasharray="175.93" stroke-dashoffset="175.93"
+            transform="rotate(-90 36 36)" stroke="var(--green)"/>
+          <text class="gauge-text" x="36" y="34" text-anchor="middle" dominant-baseline="middle" id="gauge-pct-text">—</text>
+          <text class="gauge-label" x="36" y="48" text-anchor="middle">margem</text>
+        </svg>
       </div>
-      <!-- Simulador de Lucro Visual -->
-      <div id="simulador_lucro_box" style="display:none;margin-bottom:16px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">📊 Composição do Preço</div>
-        <div id="sim_barra_custo" style="height:28px;border-radius:var(--r);overflow:hidden;display:flex;margin-bottom:8px"></div>
-        <div id="sim_legenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px"></div>
-        <div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px" id="sim_kpis"></div>
-      </div>
-      <div id="detalhamento_resultado"></div>
-      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-success" onclick="salvarOrcamento()">💾 Salvar</button>
-        <button class="btn btn-primary" onclick="imprimirOrcamento()">🖨 PDF</button>
-        <button class="btn btn-secondary" onclick="abrirShareModal()">📤 Enviar</button>
-        <button class="btn btn-cyan" onclick="enviarWhatsAppRapido()">💬 WhatsApp</button>
+
+      <div style="padding-right:88px">
+        <div class="res-hero-label">💰 Preço Final Sugerido</div>
+        <div class="res-hero-price" id="res_preco">—</div>
+        <div class="res-hero-badges" id="res-hero-badges">
+          <span class="res-badge res-badge-custo">
+            <span style="opacity:.7">Custo</span>
+            <span id="res_custo" style="font-family:'DM Mono',monospace">—</span>
+          </span>
+          <span class="res-badge res-badge-lucro">
+            <span style="opacity:.7">Lucro</span>
+            <span id="res_lucro" style="font-family:'DM Mono',monospace">—</span>
+          </span>
+          <span class="res-badge res-badge-markup">
+            <span style="opacity:.7">Markup</span>
+            <span id="res_markup">—</span>
+          </span>
+          <span class="res-badge res-badge-margem" id="res_margem_badge" style="display:none">
+            <span id="res_margem">—</span>
+          </span>
+        </div>
       </div>
     </div>
+
+    <!-- ══ DECISION SCORE ══ -->
+    <div class="decision-score" id="decision-score-box">
+      <div class="score-ring" id="score-ring">—</div>
+      <div>
+        <div class="score-info-title" id="score-title">Calculando...</div>
+        <div class="score-info-sub" id="score-sub">Aguardando dados do cálculo</div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTAS INTELIGENTES ══ -->
+    <div class="smart-alerts" id="smart-alerts"></div>
+
+    <!-- ══ BREAKDOWN DE CUSTOS ══ -->
+    <div id="breakdown-section" style="margin-bottom:14px">
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:7px">
+        <span>📊 Composição do Custo</span>
+        <span id="breakdown-total-label" style="margin-left:auto;color:var(--text2);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0"></span>
+      </div>
+      <!-- Barra stacked -->
+      <div class="stacked-bar" id="res-stacked-bar"></div>
+      <!-- Cards de breakdown -->
+      <div class="breakdown-grid" id="res-breakdown-grid"></div>
+    </div>
+
+    <!-- ══ DETALHAMENTO LINHA A LINHA ══ -->
+    <div id="detalhamento_resultado" style="margin-bottom:12px"></div>
+
+    <!-- ══ PAINEL DE ANÁLISE IA ══ -->
+    <div id="ia-analysis-panel" style="display:none" class="ia-analysis-panel">
+      <div id="ia-analysis-content"></div>
+    </div>
+
+    <!-- ══ AÇÕES ══ -->
+    <div class="res-actions">
+      <button class="btn btn-success" onclick="salvarOrcamento()">💾 Salvar</button>
+      <button class="btn btn-primary" onclick="imprimirOrcamento()">🖨 PDF</button>
+      <button class="btn btn-secondary" onclick="abrirShareModal()">📤 Enviar</button>
+      <button class="btn btn-cyan btn-sm" onclick="enviarWhatsAppRapido()">💬 WhatsApp</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="_mostrarRelatorioCompleto()" style="border-color:rgba(56,197,224,.3);color:var(--cyan)">📋 Relatório</button>
+      <button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" id="btn-analise-ia"
+        style="border-color:rgba(139,92,246,.35);color:var(--purple);background:rgba(139,92,246,.06)">
+        🤖 Analisar com IA
+      </button>
+    </div>
+
+    <!-- legado: mantidos para compatibilidade com outras funções -->
+    <div id="simulador_lucro_box"  style="display:none"></div>
+    <div id="sim_barra_custo"      style="display:none"></div>
+    <div id="sim_legenda"          style="display:none"></div>
+    <div id="sim_kpis"             style="display:none"></div>
   </div>
 </div>
 
@@ -1516,9 +1582,14 @@ textarea{resize:vertical;}
   </div>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
     <input type="text" id="mat-busca" placeholder="🔍 Buscar material..." style="flex:1;min-width:180px;max-width:280px" oninput="filtrarMateriais()">
-    <select id="mat-filtro-tipo" style="min-width:140px" onchange="filtrarMateriais()">
-      <option value="">Todos os tipos</option><option>Impressão</option><option>Adesivo</option><option>Rígido</option><option>Acabamento</option><option>Outros</option>
-    </select>
+    <input type="text" id="mat-filtro-tipo" list="dl-mat-filtro-tipo" placeholder="🔍 Filtrar tipo..." 
+        style="min-width:140px" autocomplete="off" oninput="filtrarMateriais()">
+      <datalist id="dl-mat-filtro-tipo">
+        <option value="">Todos</option>
+        <option>Impressão</option><option>Adesivo</option><option>Rígido</option>
+        <option>Acabamento</option><option>Lona</option><option>Vinil</option>
+        <option>ACM</option><option>PVC</option><option>Outros</option>
+      </datalist>
     <select id="mat-filtro-status" style="min-width:120px" onchange="filtrarMateriais()">
       <option value="">Todos</option><option value="ativo">● Ativos</option><option value="inativo">○ Inativos</option>
     </select>
@@ -1541,7 +1612,20 @@ textarea{resize:vertical;}
     <div id="mat-form-sb-info" style="display:none;margin-bottom:12px" class="alert alert-info">☁️ Supabase conectado — dados salvos no banco automaticamente.</div>
     <div class="form-row" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px">
       <div class="form-group" style="margin:0"><label>Nome do Material *</label><input type="text" id="mat_nome" placeholder="Ex: Lona 440g"></div>
-      <div class="form-group" style="margin:0"><label>Tipo</label><select id="mat_tipo"><option>Impressão</option><option>Adesivo</option><option>Rígido</option><option>Acabamento</option><option>Outros</option></select></div>
+      <div class="form-group" style="margin:0"><label>Tipo <span style="font-size:10px;color:var(--text3)">(livre ou sugerido)</span></label>
+      <input type="text" id="mat_tipo" list="dl-mat-tipo" placeholder="Digite ou escolha..."
+        autocomplete="off" style="width:100%">
+      <datalist id="dl-mat-tipo">
+        <option>Impressão</option><option>Adesivo</option><option>Rígido</option>
+        <option>Acabamento</option><option>Lona</option><option>Vinil</option>
+        <option>ACM</option><option>PVC</option><option>Policarbonato</option>
+        <option>Tecido</option><option>Papel</option><option>Fosco</option>
+        <option>Brilho</option><option>Blackout</option><option>Perfurado</option>
+        <option>Retro-iluminado</option><option>Espelho</option><option>Madeira</option>
+        <option>Metal</option><option>Vidro</option><option>Borracha</option>
+        <option>Consumível</option><option>Tinta</option><option>Outros</option>
+      </datalist>
+    </div>
       <div class="form-group" style="margin:0"><label>Custo/m² (R$)</label><input type="number" id="mat_custo" placeholder="0.00" step="0.01" min="0" oninput="calcularMarkup()"></div>
       <div class="form-group" style="margin:0"><label>Markup (%)</label>
         <div style="display:flex;align-items:center;gap:8px">
@@ -2941,7 +3025,17 @@ ORDER BY a.created_at DESC LIMIT 10;</pre>
       <div class="form-group" style="margin:0;grid-column:span 2"><label>Nome *</label><input type="text" id="mins-nome" placeholder="Ex: Lona 440g, Tinta Eco..."></div>
       <div class="form-group" style="margin:0"><label>Código / Referência</label><input type="text" id="mins-codigo" placeholder="REF-001"></div>
       <div class="form-group" style="margin:0"><label>Categoria</label>
-        <select id="mins-categoria"><option>Impressão</option><option>Adesivo</option><option>Rígido</option><option>Acabamento</option><option>Consumível</option><option>Outros</option></select>
+        <input type="text" id="mins-categoria" list="dl-mins-cat" placeholder="Digite ou escolha..."
+        autocomplete="off" style="width:100%">
+      <datalist id="dl-mins-cat">
+        <option>Impressão</option><option>Adesivo</option><option>Rígido</option>
+        <option>Acabamento</option><option>Consumível</option><option>Lona</option>
+        <option>Vinil</option><option>Tinta</option><option>Solvente</option>
+        <option>ACM</option><option>PVC</option><option>Parafuso</option>
+        <option>Metalon</option><option>Cola</option><option>Fita</option>
+        <option>Embalagem</option><option>LED</option><option>Cabo</option>
+        <option>Outros</option>
+      </datalist>
       </div>
       <div class="form-group" style="margin:0"><label>Unidade de Medida</label>
         <select id="mins-unidade"><option value="m²">m² (metro quadrado)</option><option value="m">m (metro linear)</option><option value="un">un (unidade)</option><option value="kg">kg (quilograma)</option><option value="l">l (litro)</option><option value="cm">cm (centímetro)</option></select>
@@ -3031,7 +3125,28 @@ ORDER BY a.created_at DESC LIMIT 10;</pre>
     <div class="form-group"><label>Nome do Produto *</label><input type="text" id="mpcat-nome" placeholder="Ex: Banner em Lona, Adesivo Vinil..."></div>
     <div class="form-row">
       <div class="form-group" style="margin:0"><label>Tipo</label>
-        <select id="mpcat-tipo"><option>Banner</option><option>Faixa</option><option>Adesivo</option><option>Placa ACM</option><option>Placa PVC</option><option>Fachada</option><option>Letreiro</option><option>Outros</option></select>
+        <input type="text" id="mpcat-tipo" list="dl-mpcat-tipo" placeholder="Digite ou escolha o tipo..."
+        autocomplete="off" style="width:100%">
+      <datalist id="dl-mpcat-tipo">
+        <option>Banner</option><option>Faixa</option><option>Adesivo</option>
+        <option>Adesivo Vinil</option><option>Adesivo Fosco</option><option>Adesivo Perfurado</option>
+        <option>Placa ACM</option><option>Placa PVC</option><option>Placa Dibond</option>
+        <option>Fachada ACM</option><option>Fachada Iluminada</option>
+        <option>Letreiro</option><option>Letra Caixa</option><option>Letra Caixa LED</option>
+        <option>Totem</option><option>Totem LED</option>
+        <option>Cartão de Visita</option><option>Flyer</option><option>Folder</option>
+        <option>Panfleto</option><option>Cardápio</option><option>Rótulo</option>
+        <option>Lona</option><option>Lona Blackout</option><option>Lona Retro</option>
+        <option>Display</option><option>Display L</option><option>Pop-up</option>
+        <option>Backdrop</option><option>Roll-up</option>
+        <option>Plotter Recorte</option><option>Jateado</option><option>Espelhado</option>
+        <option>Luminoso</option><option>Painel</option><option>Outdoor</option>
+        <option>Busdoor</option><option>Backlight</option><option>Frontlight</option>
+        <option>Acrílico</option><option>Caixinha ACM</option>
+        <option>Wrap Veicular</option><option>Envelopamento</option>
+        <option>Caneta</option><option>Camiseta</option><option>Brinde</option>
+        <option>Outros</option>
+      </datalist>
       </div>
     </div>
     <div class="form-group"><label>Descrição</label><textarea id="mpcat-desc" rows="2" placeholder="Especificações, observações..."></textarea></div>
@@ -4413,7 +4528,7 @@ function renderMateriais() {
   var busca=(_matFiltro.busca||'').toLowerCase().trim(),tipo=_matFiltro.tipo||'',status=_matFiltro.status||'';
   var lista=state.materiais.filter(function(m){
     if(busca&&!(m.nome||'').toLowerCase().includes(busca))return false;
-    if(tipo&&m.tipo!==tipo)return false;
+    if(tipo&&!(m.tipo||'').toLowerCase().includes(tipo.toLowerCase()))return false;
     if(status==='ativo'&&!m.ativo)return false;
     if(status==='inativo'&&m.ativo)return false;
     return true;
@@ -8287,7 +8402,7 @@ function renderInsumos() {
   el.innerHTML += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">'
     + '<input type="text" id="ins-busca" placeholder="🔍 Buscar insumo..." style="flex:1;min-width:180px;max-width:280px" oninput="_insFiltro.busca=this.value.toLowerCase();renderInsumos()" value="' + _insFiltro.busca + '">'
     + '<select id="ins-cat" style="min-width:140px" onchange="_insFiltro.cat=this.value;renderInsumos()">'
-    + '<option value="">Todas categorias</option><option>Impressão</option><option>Adesivo</option><option>Rígido</option><option>Acabamento</option><option>Consumível</option><option>Outros</option>'
+    + '<option value="">Todas</option><option>Impressão</option><option>Adesivo</option><option>Rígido</option><option>Acabamento</option><option>Consumível</option><option>Lona</option><option>Vinil</option><option>Tinta</option><option>ACM</option><option>PVC</option><option>Metalon</option><option>LED</option><option>Outros</option>'
     + '</select>'
     + '<select id="ins-status" style="min-width:120px" onchange="_insFiltro.status=this.value;renderInsumos()">'
     + '<option value="">Todos</option><option value="ativo">Ativos</option><option value="inativo">Inativos</option>'
@@ -10855,9 +10970,195 @@ function _mostrarRelatorioCompleto() {
   // Mostrar num alert/modal simples
   var w = window.open('', '_blank', 'width=600,height=700');
   if (w) {
-    w.document.write('<html><head><title>Relatório — VisualCalc</title>'
-      + '<style>body{font-family:monospace;background:#06080f;color:#e8eaf0;padding:20px;white-space:pre;font-size:13px;line-height:1.6}</style>'
-      + '</head><body>' + rel.texto.replace(/\n/g,'<br>') + '</body></html>');
+    w.document.write('<html><head><title>Relatório — VisualCalc</title><style>body{font-family:monospace;background:#06080f;color:#e8eaf0;padding:20px;white-space:pre-wrap;font-size:13px;line-height:1.7}
+/* ═══════════════════════════════════════════════════════
+   VISUALCALC — Premium Result Experience
+   Nível SaaS enterprise · dark industrial luxury
+═══════════════════════════════════════════════════════ */
+
+/* ── HERO PRICE CARD ─────────────────────────────────── */
+.res-hero {
+  position: relative;
+  background: var(--ink2);
+  border: 1px solid rgba(232,184,75,.25);
+  border-radius: var(--r-xl);
+  padding: 28px 28px 22px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  animation: resHeroIn .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes resHeroIn {
+  from { opacity:0; transform:translateY(12px) scale(.98); }
+  to   { opacity:1; transform:none; }
+}
+.res-hero::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,184,75,.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+.res-hero::after {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent 0%, #e8b84b 40%, #f5d07a 60%, transparent 100%);
+}
+.res-hero-label {
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.14em; color:var(--text3); margin-bottom:6px;
+}
+.res-hero-price {
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(36px,5vw,52px); font-weight:800; line-height:1;
+  color:var(--gold); letter-spacing:-.02em;
+  transition: color .3s;
+}
+.res-hero-price.updating {
+  color: var(--text3);
+}
+.res-hero-badges {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;
+}
+.res-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 12px; border-radius:99px; font-size:12px; font-weight:600;
+  transition: transform .15s;
+}
+.res-badge:hover { transform: translateY(-1px); }
+.res-badge-custo  { background:rgba(56,197,224,.1);  color:var(--cyan);   border:1px solid rgba(56,197,224,.2); }
+.res-badge-lucro  { background:rgba(46,212,122,.1);  color:var(--green);  border:1px solid rgba(46,212,122,.2); }
+.res-badge-margem { background:rgba(232,184,75,.1);  color:var(--gold);   border:1px solid rgba(232,184,75,.2); }
+.res-badge-markup { background:rgba(139,92,246,.1);  color:var(--purple); border:1px solid rgba(139,92,246,.2); }
+.res-badge-warn   { background:rgba(240,145,58,.12); color:var(--warn);   border:1px solid rgba(240,145,58,.25); }
+.res-badge-danger { background:rgba(240,78,78,.12);  color:var(--red);    border:1px solid rgba(240,78,78,.25); }
+
+/* ── MARGEM GAUGE ────────────────────────────────────── */
+.margem-gauge {
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  width: 72px; height: 72px;
+}
+.margem-gauge svg { overflow: visible; }
+.gauge-track { fill:none; stroke:var(--ink4); stroke-width:6; }
+.gauge-fill  { fill:none; stroke-width:6; stroke-linecap:round;
+  transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1), stroke .4s; }
+.gauge-text  { font-family:'DM Mono',monospace; font-weight:700; font-size:13px; fill:var(--text); }
+.gauge-label { font-family:'Inter',sans-serif; font-size:8px; fill:var(--text3); text-transform:uppercase; letter-spacing:.07em; }
+
+/* ── BREAKDOWN CARDS ─────────────────────────────────── */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.breakdown-item {
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .18s, transform .18s;
+  animation: bdIn .3s cubic-bezier(.22,1,.36,1) both;
+}
+.breakdown-item:hover { border-color: var(--line2); transform: translateY(-1px); }
+@keyframes bdIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:none; }
+}
+.breakdown-item::after {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0; height:2px;
+  background: var(--bd-color, var(--line));
+  opacity: .6;
+}
+.breakdown-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text3); margin-bottom:4px; display:flex; align-items:center; gap:5px; }
+.breakdown-val { font-family:'DM Mono',monospace; font-size:15px; font-weight:600; color:var(--text); }
+.breakdown-pct { font-size:10px; color:var(--text3); margin-top:1px; }
+.breakdown-bar {
+  position:absolute; left:0; bottom:2px; height:2px;
+  background: var(--bd-color, var(--gold)); opacity:.5;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── ALERTAS INTELIGENTES ────────────────────────────── */
+.smart-alerts { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+.smart-alert {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:10px 13px; border-radius:var(--r); font-size:12px;
+  border-left:3px solid;
+  animation: alertIn .25s ease both;
+}
+@keyframes alertIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+.sa-warn  { background:rgba(240,145,58,.07); border-color:var(--warn); color:#c4721a; }
+.sa-warn  strong { color:var(--warn); }
+.sa-danger{ background:rgba(240,78,78,.07);  border-color:var(--red);  color:#c43a3a; }
+.sa-danger strong { color:var(--red); }
+.sa-info  { background:rgba(56,197,224,.07); border-color:var(--cyan); color:#2498a8; }
+.sa-info  strong { color:var(--cyan); }
+.sa-ok    { background:rgba(46,212,122,.07); border-color:var(--green);color:#1a9a52; }
+.sa-ok    strong { color:var(--green); }
+.sa-icon  { font-size:15px; flex-shrink:0; margin-top:1px; }
+
+/* ── BREAKDOWN STACKED BAR ───────────────────────────── */
+.stacked-bar {
+  height:10px; border-radius:99px; overflow:hidden;
+  display:flex; gap:1px; margin-bottom:6px;
+  background:var(--ink4);
+}
+.stacked-seg {
+  height:100%; transition:width .7s cubic-bezier(.4,0,.2,1);
+  min-width:2px;
+}
+
+/* ── IA PANEL ────────────────────────────────────────── */
+.ia-analysis-panel {
+  background:linear-gradient(135deg,rgba(139,92,246,.06),rgba(56,197,224,.04));
+  border:1px solid rgba(139,92,246,.2);
+  border-radius:var(--r-lg); padding:14px 16px; margin-top:14px;
+  animation: pgIn .3s ease;
+}
+.ia-analysis-panel .ia-thinking {
+  display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text3);
+}
+.ia-pulse {
+  width:8px; height:8px; border-radius:50%; background:var(--purple);
+  animation:iaPulse 1.2s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes iaPulse {
+  0%,100%{transform:scale(1);opacity:.8}
+  50%{transform:scale(1.5);opacity:1}
+}
+
+/* ── AÇÕES DO RESULTADO ──────────────────────────────── */
+.res-actions {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
+
+/* ── NUMBER COUNTER ANIMATION ────────────────────────── */
+@keyframes countUp {
+  from { opacity:.4; transform:translateY(4px); }
+  to   { opacity:1; transform:none; }
+}
+.res-number-anim { animation: countUp .4s ease; }
+
+/* ── DECISION SCORE ──────────────────────────────────── */
+.decision-score {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 16px; border-radius:var(--r);
+  background:var(--ink3); border:1px solid var(--line);
+  margin-bottom:12px;
+}
+.score-ring {
+  width:44px; height:44px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:15px;
+  border:3px solid;
+}
+.score-info-title { font-weight:700; font-size:13px; }
+.score-info-sub   { font-size:11px; color:var(--text3); margin-top:2px; }
+</style></head><body>' + rel.texto.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</body></html>');
     w.document.close();
   } else {
     alert(rel.texto);
@@ -11533,6 +11834,848 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('[VisualCalc v7.0] Motor de cálculo inicializado. calculo.js:', typeof calcularCustoTotal === 'function' ? '✓' : '✗');
 });
 
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// SISTEMA DE TIPOS LIVRES — datalist dinâmico
+// Aprende os tipos cadastrados pelo usuário e os sugere nos próximos
+// ═══════════════════════════════════════════════════════════════════════
+
+var _tiposLivres = {
+  material: JSON.parse(localStorage.getItem('vc_tipos_material') || '[]'),
+  produto:  JSON.parse(localStorage.getItem('vc_tipos_produto')  || '[]'),
+  insumo:   JSON.parse(localStorage.getItem('vc_tipos_insumo')   || '[]'),
+};
+
+// Salvar um tipo customizado quando o usuário cadastra algo novo
+function _registrarTipoLivre(categoria, valor) {
+  if (!valor || !valor.trim()) return;
+  var v = valor.trim();
+  if (!_tiposLivres[categoria]) _tiposLivres[categoria] = [];
+  if (!_tiposLivres[categoria].includes(v)) {
+    _tiposLivres[categoria].push(v);
+    localStorage.setItem('vc_tipos_' + categoria, JSON.stringify(_tiposLivres[categoria]));
+    _atualizarDatalist(categoria);
+  }
+}
+
+// Atualizar o datalist com os tipos customizados do usuário
+function _atualizarDatalist(categoria) {
+  var dlId = { material: 'dl-mat-tipo', produto: 'dl-mpcat-tipo', insumo: 'dl-mins-cat' };
+  var dl = document.getElementById(dlId[categoria]);
+  if (!dl) return;
+  // Remover opções customizadas anteriores (marcadas com data-custom)
+  Array.from(dl.querySelectorAll('[data-custom]')).forEach(function(el) { el.remove(); });
+  // Adicionar as novas
+  (_tiposLivres[categoria] || []).forEach(function(v) {
+    var opt = document.createElement('option');
+    opt.value = v;
+    opt.setAttribute('data-custom', '1');
+    dl.appendChild(opt);
+  });
+  // Também atualizar o filtro de materiais se for material
+  if (categoria === 'material') {
+    var dlF = document.getElementById('dl-mat-filtro-tipo');
+    if (dlF) {
+      Array.from(dlF.querySelectorAll('[data-custom]')).forEach(function(el) { el.remove(); });
+      (_tiposLivres[categoria] || []).forEach(function(v) {
+        var opt = document.createElement('option');
+        opt.value = v;
+        opt.setAttribute('data-custom', '1');
+        dlF.appendChild(opt);
+      });
+    }
+  }
+}
+
+// Inicializar datalists com tipos já cadastrados
+function _inicializarTiposLivres() {
+  ['material', 'produto', 'insumo'].forEach(function(cat) {
+    // Aprender dos dados já salvos no state
+    var itens = cat === 'material' ? (state.materiais  || [])
+              : cat === 'produto'  ? (state.produtos_cat || [])
+              : (state.insumos || []);
+    itens.forEach(function(item) {
+      var tipo = item.tipo || item.categoria || '';
+      if (tipo) _registrarTipoLivre(cat, tipo);
+    });
+  });
+}
+
+// Hook: interceptar salvarMaterial para registrar o tipo livre
+var _salvarMaterialOriginal = typeof salvarMaterial === 'function' ? salvarMaterial : null;
+var _salvarMaterialPatched = false;
+function _patchSalvarMaterial() {
+  if (_salvarMaterialPatched) return;
+  var orig = window.salvarMaterial;
+  if (!orig) return;
+  window.salvarMaterial = async function() {
+    var tipo = (document.getElementById('mat_tipo') || {}).value || '';
+    _registrarTipoLivre('material', tipo);
+    return orig.apply(this, arguments);
+  };
+  _salvarMaterialPatched = true;
+}
+
+// Hook: interceptar salvarInsumo
+var _salvarInsumoPatched = false;
+function _patchSalvarInsumo() {
+  if (_salvarInsumoPatched) return;
+  var orig = window.salvarInsumo;
+  if (!orig) return;
+  window.salvarInsumo = async function() {
+    var cat = (document.getElementById('mins-categoria') || {}).value || '';
+    _registrarTipoLivre('insumo', cat);
+    return orig.apply(this, arguments);
+  };
+  _salvarInsumoPatched = true;
+}
+
+// Hook: interceptar salvarProdutoCat
+var _salvarProdutoCatPatched = false;
+function _patchSalvarProdutoCat() {
+  if (_salvarProdutoCatPatched) return;
+  var orig = window.salvarProdutoCat;
+  if (!orig) return;
+  window.salvarProdutoCat = async function() {
+    var tipo = (document.getElementById('mpcat-tipo') || {}).value || '';
+    _registrarTipoLivre('produto', tipo);
+    return orig.apply(this, arguments);
+  };
+  _salvarProdutoCatPatched = true;
+}
+
+// Inicializar tudo após o DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+  // Pequeno delay para o state estar carregado
+  setTimeout(function() {
+    _inicializarTiposLivres();
+    _patchSalvarMaterial();
+    _patchSalvarInsumo();
+    _patchSalvarProdutoCat();
+  }, 800);
+});
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// executarCalculo() — Integração explícita com window.VC_Calculo
+// Alias direto para o botão "Calcular" e atualização em tempo real
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * executarCalculo()
+ * Ponto de entrada único para o motor de cálculo.
+ * Lê os campos do formulário, chama window.VC_Calculo e exibe resultados.
+ * Compatível com: onclick="executarCalculo()" e addEventListener.
+ */
+function executarCalculo() {
+  // ── 1. Ler campos do formulário ──────────────────────────────────────
+  function gV(id) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+  function gVs(id){ var el = document.getElementById(id); return el ? (el.value || '') : ''; }
+  function gC(id) { var el = document.getElementById(id); return el ? !!el.checked : false; }
+
+  var largura = gV('orc_largura');
+  var altura  = gV('orc_altura');
+  var qtd     = parseInt(gVs('orc_qtd')) || 1;
+
+  if (largura <= 0 || altura <= 0) {
+    toast('Informe largura e altura para calcular!', 'warn');
+    return;
+  }
+
+  var area = largura * altura * qtd;
+
+  // ── 2. Identificar material selecionado ──────────────────────────────
+  var mid = parseInt(gVs('orc_material')) || 0;
+  var mat = (state && state.materiais ? state.materiais : []).find(function(m) { return m.id === mid; });
+
+  // ── 3. Calcular custo de material por m² ────────────────────────────
+  var custoMaterialM2 = 0;
+  if (gC('tog_material')) {
+    var vm = gV('custo_material');
+    // Se o usuário digitou um valor total, converter para /m²; senão usar do cadastro
+    custoMaterialM2 = vm > 0 ? vm / (largura * altura) : (mat ? (mat.custo_m2 || 0) : 0);
+  }
+
+  // ── 4. Estrutura metalon (se ativada) ────────────────────────────────
+  var custoEstruturaMetalon = 0;
+  if (gC('tog_metalon') && typeof window.VC_Calculo !== 'undefined') {
+    var tipoMet = gVs('met_tipo') || 'simples';
+    var resMetalon = window.VC_Calculo.calcularMetalon(largura, altura, tipoMet, {
+      espacamento:   gV('met_espacamento')   || 0.5,
+      custoPorMetro: gV('met_custo_metro')   || 8.50,
+      custoFixacao:  gV('met_custo_fixacao') || 25,
+      qtd:           qtd,
+    });
+    custoEstruturaMetalon = resMetalon.custoEstrutura;
+    // Atualizar UI do metalon
+    function sEl(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+    sEl('met_total_m',    resMetalon.totalMetalon.toFixed(2) + ' m');
+    sEl('met_travessas',  resMetalon.totalTravessas + (tipoMet === 'simples' ? ' (simples)' : ''));
+    sEl('met_custo_total','R$ ' + fmtBR(resMetalon.custoEstrutura));
+  }
+
+  // ── 5. Overhead do state ─────────────────────────────────────────────
+  var percOverhead = 0, fixoOverhead = 0;
+  ((state && state.overhead) ? state.overhead : []).filter(function(o){ return o.ativo; }).forEach(function(o){
+    if (o.tipo === 'percentual') percOverhead += (o.valor || 0);
+    else fixoOverhead += (o.valor || 0);
+  });
+
+  // ── 6. Acabamentos ───────────────────────────────────────────────────
+  var custoAcabamentos = 0, detAcab = [];
+  ((state && state.acabamentos) ? state.acabamentos : []).filter(function(a){ return a.ativo; }).forEach(function(a){
+    var tog = document.getElementById('tog_acab_' + a.id);
+    if (!tog || !tog.checked) return;
+    var val = gV('val_acab_' + a.id) || a.valor || 0;
+    var c = a.tipo === 'm2' ? val * largura * altura
+          : a.tipo === 'fixo' ? val
+          : val * (gV('qty_acab_' + a.id) || 0);
+    if (c > 0) { custoAcabamentos += c; detAcab.push({ label: '✂️ ' + a.nome, valor: c }); }
+  });
+
+  // ── 7. Serviços extras ───────────────────────────────────────────────
+  var custoServicos = 0, detSvc = [];
+  ((state && state.servicos) ? state.servicos : []).filter(function(s){ return s.ativo; }).forEach(function(s){
+    var tog = document.getElementById('tog_svc_' + s.id);
+    if (!tog || !tog.checked) return;
+    var val = gV('val_svc_' + s.id) || s.valor || 0;
+    var c = s.tipo === 'fixo' ? val
+          : s.tipo === 'm2'   ? val * largura * altura
+          : val * (gV('km_svc_' + s.id) || 0);
+    if (c > 0) { custoServicos += c; detSvc.push({ label: '🚚 ' + s.nome, valor: c }); }
+  });
+
+  // ── 8. Montar objeto "dados" para o motor ────────────────────────────
+  var dados = {
+    // Dimensões
+    area:   largura * altura,   // área de UMA peça (o motor multiplica por qtd internamente via custoMaterialM2)
+    qtd:    qtd,
+    // Material
+    custoMaterialM2:   custoMaterialM2,
+    // Impressão / tinta
+    custoImpressaoM2:  gC('tog_impressao') ? gV('custo_impressao') : 0,
+    // Mão de obra manual
+    custoMaoObraM2:    gC('tog_mao_obra')  ? gV('custo_mao_obra')  : 0,
+    // Motor de produção (tempo de máquina)
+    velMaquina:              gV('prod_vel_maquina')     || 25,
+    custoHoraMaq:            gV('prod_custo_hora_maq')  || 45,
+    custoHoraFunc:           gV('prod_custo_hora_func') || 18,
+    incluirProducao:         gC('tog_incluir_producao'),
+    incluirMaoObraProducao:  gC('tog_incluir_producao'),
+    percDesperdicio:         gC('tog_incluir_producao') ? gV('prod_desperdicio') : 0,
+    // Estrutura
+    custoEstrutura:    custoEstruturaMetalon,
+    // Instalação e transporte
+    custoInstalacao:   gV('custo_instalacao'),
+    kmTransporte:      gV('km_transporte'),
+    custoKm:           gV('custo_por_km') || 2.50,
+    // Overhead
+    percOverhead:      percOverhead,
+    fixoOverhead:      fixoOverhead,
+    // Extras
+    custoAcabamentos:  custoAcabamentos,
+    custoServicos:     custoServicos,
+    // Para precificação
+    margem:      gV('margem_input')   || 40,
+    desconto:    gV('desconto_input') || 0,
+  };
+
+  // ── 9. CHAMAR MOTOR — window.VC_Calculo ─────────────────────────────
+  var motor = window.VC_Calculo;
+  if (!motor) {
+    // Fallback: tentar funções globais (compatibilidade)
+    motor = {
+      calcularCustoTotal: typeof calcularCustoTotal === 'function' ? calcularCustoTotal : null,
+      calcularPreco:      typeof calcularPreco      === 'function' ? calcularPreco      : null,
+    };
+  }
+
+  if (!motor.calcularCustoTotal || !motor.calcularPreco) {
+    toast('Motor de cálculo não disponível. Verifique se o sistema carregou corretamente.', 'error');
+    return;
+  }
+
+  var custos = motor.calcularCustoTotal(dados);
+  var adj    = (typeof _getAjustesPrecoUI === 'function') ? _getAjustesPrecoUI() : { urgencia: 'normal', tipoCliente: 'normal', qtd: qtd };
+
+  var preco = motor.calcularPreco(custos.custoTotal, {
+    margem:      dados.margem,
+    desconto:    dados.desconto,
+    urgencia:    adj.urgencia,
+    tipoCliente: adj.tipoCliente,
+    qtd:         qtd,
+    area:        custos.area,
+  });
+
+  // ── 10. EXIBIR RESULTADOS nos KPIs ──────────────────────────────────
+  function setEl(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+  setEl('res_custo',  'R$ ' + fmtBR(custos.custoTotal));
+  setEl('res_preco',  'R$ ' + fmtBR(preco.precoFinal));
+  setEl('res_lucro',  'R$ ' + fmtBR(preco.lucro));
+  setEl('res_margem', preco.margemReal.toFixed(1) + '%');
+
+  // Colorir margem por saúde
+  var mEl = document.getElementById('res_margem');
+  if (mEl) mEl.style.color = preco.margemReal >= 30 ? 'var(--green)' : preco.margemReal >= 15 ? 'var(--gold)' : 'var(--red)';
+
+  // ── 11. Montar detalhamento linha a linha ────────────────────────────
+  var linhas = [];
+  if (custos.custoMaterial    > 0) linhas.push({ label: '📦 Material' + (mat ? ' (' + mat.nome + ')' : ''), valor: custos.custoMaterial });
+  if (custos.custoImpressao   > 0) linhas.push({ label: '🖨 Impressão (R$' + fmt(dados.custoImpressaoM2) + '/m²)', valor: custos.custoImpressao });
+  if (custos.custoMaoObra     > 0) linhas.push({ label: '👷 Mão de Obra', valor: custos.custoMaoObra });
+  if (custos.custoProducao    > 0) linhas.push({ label: '⚙️ Máquina (' + custos.tempoProducao.toFixed(2) + 'h × R$' + fmt(dados.custoHoraMaq) + '/h)', valor: custos.custoProducao });
+  if (custos.custoDesperdicio > 0) linhas.push({ label: '🗑 Desperdício (' + dados.percDesperdicio + '%)', valor: custos.custoDesperdicio });
+  if (custos.custoEstrutura   > 0) linhas.push({ label: '🏗 Estrutura Metalon', valor: custos.custoEstrutura });
+  if (custos.custoInstalacao  > 0) linhas.push({ label: '🔧 Instalação', valor: custos.custoInstalacao });
+  if (custos.custoTransporte  > 0) linhas.push({ label: '🚐 Transporte (' + dados.kmTransporte + 'km × R$' + fmt(dados.custoKm) + '/km)', valor: custos.custoTransporte });
+  if (custos.custoOverhead    > 0) linhas.push({ label: '📊 Overhead', valor: custos.custoOverhead });
+  detAcab.forEach(function(d) { linhas.push(d); });
+  detSvc.forEach(function(d)  { linhas.push(d); });
+
+  // ── 12. Gerar HTML do detalhamento ───────────────────────────────────
+  var detHtml = linhas.map(function(d) {
+    return '<div class="result-row">'
+      + '<span class="result-label">' + d.label + '</span>'
+      + '<span class="result-value">R$ ' + fmtBR(d.valor) + '</span>'
+      + '</div>';
+  }).join('');
+
+  detHtml += '<div class="result-row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px">'
+    + '<span class="result-label" style="font-weight:700">Custo Total</span>'
+    + '<span class="result-value" style="font-weight:700">R$ ' + fmtBR(custos.custoTotal) + '</span>'
+    + '</div>';
+
+  // Ajustes de preço
+  if (preco.adjUrgencia  > 0) detHtml += '<div class="result-row"><span class="result-label" style="color:var(--warn)">🔥 Urgência (+' + preco.adjUrgencia + '%)</span><span class="result-value" style="color:var(--warn)">+ R$ ' + fmtBR(custos.custoTotal * preco.adjUrgencia / 100) + '</span></div>';
+  if (preco.adjCliente   < 0) detHtml += '<div class="result-row"><span class="result-label" style="color:var(--green)">' + (adj.tipoCliente === 'vip' ? '⭐ VIP' : '🆕 Novo Cliente') + ' (' + preco.adjCliente + '%)</span><span class="result-value" style="color:var(--green)">desconto</span></div>';
+  if (preco.descontoEscala > 0) detHtml += '<div class="result-row"><span class="result-label" style="color:var(--green)">' + preco.labelEscala + ' (-' + preco.descontoEscala + '%)</span><span class="result-value" style="color:var(--green)">escala</span></div>';
+  if (preco.descontoManual > 0) detHtml += '<div class="result-row"><span class="result-label" style="color:var(--red)">🎁 Desconto (-' + preco.descontoManual + '%)</span><span class="result-value" style="color:var(--red)">- R$ ' + fmtBR(preco.precoBase * preco.descontoManual / 100) + '</span></div>';
+
+  detHtml += '<div class="result-row total"><span class="result-label main">💰 Preço Final</span><span class="result-value main">R$ ' + fmtBR(preco.precoFinal) + '</span></div>';
+  detHtml += '<div class="result-row"><span class="result-label" style="color:var(--green)">Lucro Bruto</span><span class="result-value" style="color:var(--green);font-weight:600">R$ ' + fmtBR(preco.lucro) + ' (' + preco.margemReal.toFixed(1) + '% margem)</span></div>';
+  detHtml += '<div class="result-row"><span class="result-label" style="color:var(--cyan)">Markup sobre custo</span><span class="result-value" style="color:var(--cyan)">' + preco.markupReal.toFixed(1) + '%</span></div>';
+
+  if (qtd > 1)          detHtml += '<div class="result-row"><span class="result-label">Por unidade</span><span class="result-value">R$ ' + fmtBR(preco.precoUnitario) + '</span></div>';
+  if (custos.area > 0)  detHtml += '<div class="result-row"><span class="result-label">Por m²</span><span class="result-value" style="color:var(--cyan)">R$ ' + fmtBR(preco.precoM2) + '</span></div>';
+
+  if (preco.alertaMargem) detHtml += '<div class="alert alert-warn" style="margin-top:10px;font-size:12px">⚠️ ' + preco.alertaMargem + '</div>';
+
+  detHtml += '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+    + '<button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" style="border-color:rgba(139,92,246,.4);color:var(--purple)">🤖 Analisar com IA</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="_mostrarRelatorioCompleto()" style="border-color:rgba(56,197,224,.3);color:var(--cyan)">📋 Relatório</button>'
+    + '</div>';
+
+  var dr = document.getElementById('detalhamento_resultado');
+  if (dr) dr.innerHTML = detHtml;
+
+  // ── 13. Mostrar container de resultado ──────────────────────────────
+  var rc = document.getElementById('resultado_container');
+  if (rc) {
+    rc.style.display = 'block';
+    rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── 14. Simulador visual de lucro ────────────────────────────────────
+  if (typeof _renderSimuladorLucro === 'function') {
+    _renderSimuladorLucro(custos, preco, linhas);
+  }
+
+  // ── 15. Salvar em _lastCalc (para PDF, WhatsApp, salvar orçamento) ───
+  var cli_nome = (function() {
+    var sel = document.getElementById('orc_cliente_id');
+    if (sel && sel.value) {
+      var cl = (state && state.clientes ? state.clientes : []).find(function(x){ return (x._db_id||x.id)===sel.value; });
+      return cl ? cl.nome : '';
+    }
+    var inp = document.getElementById('orc_cliente');
+    return inp ? inp.value : '';
+  })();
+
+  window._lastCalc = {
+    area:        custos.area,
+    qtd:         qtd,
+    custoTotal:  custos.custoTotal,
+    precoFinal:  preco.precoFinal,
+    lucro:       preco.lucro,
+    margemReal:  preco.margemReal,
+    markupReal:  preco.markupReal,
+    margem:      dados.margem,
+    desconto:    dados.desconto,
+    detalhes:    linhas,
+    custoDetalhe:custos,
+    precoDetalhe:preco,
+    cliente:     cli_nome,
+    ref:         gVs('orc_ref'),
+    telefone:    gVs('orc_telefone'),
+    produto:     gVs('orc_produto'),
+    material:    mat ? mat.nome : '',
+    largura:     gVs('orc_largura'),
+    altura:      gVs('orc_altura'),
+    prazo:       gVs('orc_prazo')     || '5 dias úteis',
+    pagamento:   gVs('orc_pagamento') || '',
+    validade:    gVs('orc_validade')  || '7',
+    data:        new Date().toLocaleString('pt-BR'),
+  };
+
+  toast('✅ R$ ' + fmtBR(preco.precoFinal) + ' | Margem ' + preco.margemReal.toFixed(1) + '%', 'success', 'Cálculo completo');
+}
+
+// ── Atualização em tempo real: preview leve nos KPIs (sem scroll) ────
+var _calcTimer = null;
+function _previewCalculo() {
+  clearTimeout(_calcTimer);
+  _calcTimer = setTimeout(function() {
+    function gV(id) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+    function gC(id) { var el = document.getElementById(id); return el ? !!el.checked : false; }
+
+    var l = gV('orc_largura'), a = gV('orc_altura'), q = parseInt((document.getElementById('orc_qtd')||{}).value)||1;
+    if (l <= 0 || a <= 0) return;
+
+    var area1 = l * a; // área de 1 peça
+    var mid = parseInt(((document.getElementById('orc_material')||{}).value)||0);
+    var mat = (state && state.materiais ? state.materiais : []).find(function(m){ return m.id === mid; });
+    var cMatM2 = gC('tog_material') ? (gV('custo_material') > 0 ? gV('custo_material') / area1 : (mat ? mat.custo_m2||0 : 0)) : 0;
+
+    var motor = window.VC_Calculo;
+    if (!motor) return;
+
+    var previewDados = {
+      area: area1, qtd: q,
+      custoMaterialM2:  cMatM2,
+      custoImpressaoM2: gC('tog_impressao') ? gV('custo_impressao') : 0,
+      custoMaoObraM2:   gC('tog_mao_obra')  ? gV('custo_mao_obra')  : 0,
+    };
+
+    var c = motor.calcularCustoTotal(previewDados);
+    var p = motor.calcularPreco(c.custoTotal, { margem: gV('margem_input')||40, desconto: gV('desconto_input')||0, area: area1, qtd: q });
+
+    // Atualizar preview box (só se o resultado estiver visível OU criar preview inline)
+    var previewBox = document.getElementById('calc-preview-inline');
+    if (!previewBox) {
+      // Criar preview box embaixo do botão calcular (acima do resultado_container)
+      previewBox = document.createElement('div');
+      previewBox.id = 'calc-preview-inline';
+      previewBox.style.cssText = 'background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);padding:10px 14px;margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;transition:all .2s';
+      var calcBtn = document.querySelector('button[onclick="calcular()"], button[onclick="executarCalculo()"]');
+      if (calcBtn && calcBtn.parentNode) calcBtn.parentNode.insertBefore(previewBox, calcBtn.nextSibling);
+    }
+
+    previewBox.innerHTML = '<span style="color:var(--text3)">Preview:</span>'
+      + ' <span style="font-family:DM Mono,monospace;color:var(--cyan)">Custo: <strong>R$ ' + fmtBR(c.custoTotal) + '</strong></span>'
+      + ' <span style="color:var(--text3)">→</span>'
+      + ' <span style="font-family:DM Mono,monospace;color:var(--gold)">Preço: <strong>R$ ' + fmtBR(p.precoFinal) + '</strong></span>'
+      + ' <span style="font-family:DM Mono,monospace;color:' + (p.margemReal>=30?'var(--green)':p.margemReal>=15?'var(--gold)':'var(--red)') + '">Margem: ' + p.margemReal.toFixed(1) + '%</span>'
+      + ' <span style="color:var(--text3);font-size:11px;margin-left:auto">⚡ Calcule para ver o detalhamento completo</span>';
+  }, 300); // debounce 300ms
+}
+
+// ── Conectar atualização em tempo real a todos os campos relevantes ───
+document.addEventListener('DOMContentLoaded', function() {
+  var ids = [
+    'orc_largura','orc_altura','orc_qtd',
+    'custo_material','custo_impressao','custo_mao_obra',
+    'margem_input','desconto_input',
+    'custo_instalacao','km_transporte','custo_por_km',
+    'prod_vel_maquina','prod_custo_hora_maq','prod_custo_hora_func','prod_desperdicio',
+    'met_custo_metro','met_custo_fixacao','met_espacamento',
+  ];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', _previewCalculo);
+  });
+  var checkIds = ['tog_material','tog_impressao','tog_mao_obra','tog_metalon','tog_incluir_producao'];
+  checkIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', _previewCalculo);
+  });
+  var selIds = ['orc_material','tipo_cliente_preco','urgencia_preco'];
+  selIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', _previewCalculo);
+  });
+  console.log('[VisualCalc] executarCalculo() pronto | VC_Calculo:', typeof window.VC_Calculo !== 'undefined' ? '✓' : '✗');
+});
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc — Premium Result Renderer v1.0
+// Renderiza o resultado com experiência nível SaaS enterprise
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Animação de contagem numérica ────────────────────────────────────
+function _animateNumber(el, targetText, duration) {
+  if (!el) return;
+  el.classList.remove('res-number-anim');
+  void el.offsetWidth; // reflow para reiniciar animação
+  el.textContent = targetText;
+  el.classList.add('res-number-anim');
+  setTimeout(function() { el.classList.remove('res-number-anim'); }, duration || 500);
+}
+
+// ── Gauge SVG de margem ───────────────────────────────────────────────
+function _atualizarGauge(margemReal) {
+  var arc   = document.getElementById('gauge-arc');
+  var pctEl = document.getElementById('gauge-pct-text');
+  if (!arc || !pctEl) return;
+
+  var circumference = 175.93; // 2 * pi * 28
+  var perc    = Math.min(Math.max(margemReal, 0), 100);
+  var offset  = circumference * (1 - perc / 100);
+  var color   = perc >= 40 ? 'var(--green)' : perc >= 25 ? '#6bcf8a' : perc >= 15 ? 'var(--gold)' : perc >= 5 ? 'var(--warn)' : 'var(--red)';
+
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke           = color;
+  pctEl.textContent          = margemReal.toFixed(0) + '%';
+  pctEl.style.fill           = color;
+}
+
+// ── Decision Score ────────────────────────────────────────────────────
+function _renderDecisionScore(margemReal, custoTotal, precoFinal, area) {
+  var box      = document.getElementById('decision-score-box');
+  var ring     = document.getElementById('score-ring');
+  var titleEl  = document.getElementById('score-title');
+  var subEl    = document.getElementById('score-sub');
+  if (!box || !ring) return;
+
+  var score, label, cor, sub;
+  var precoM2 = area > 0 ? precoFinal / area : 0;
+
+  if (margemReal >= 45) {
+    score = 'A+'; cor = 'var(--green)'; label = '✅ Excelente margem — aprovado para fechar';
+    sub = 'Margem acima de 45% — muito saudável para o segmento.';
+  } else if (margemReal >= 35) {
+    score = 'A';  cor = '#6bcf8a'; label = '✅ Boa margem — negócio saudável';
+    sub = 'Margem entre 35–45% — dentro do padrão do mercado.';
+  } else if (margemReal >= 25) {
+    score = 'B';  cor = 'var(--gold)'; label = '⚠️ Margem regular — pode melhorar';
+    sub = 'Considere reduzir custos ou aumentar o preço em 10–15%.';
+  } else if (margemReal >= 15) {
+    score = 'C';  cor = 'var(--warn)'; label = '⚠️ Margem baixa — atenção necessária';
+    sub = 'Margem abaixo de 25% compromete a saúde financeira.';
+  } else if (margemReal > 0) {
+    score = 'D';  cor = 'var(--red)'; label = '🚨 Margem crítica — risco de prejuízo';
+    sub = 'Revise os custos ou aumente o preço antes de fechar.';
+  } else {
+    score = '!';  cor = 'var(--red)'; label = '🚫 Prejuízo — preço abaixo do custo';
+    sub = 'Preço atual não cobre os custos. Reajuste obrigatório.';
+  }
+
+  ring.textContent        = score;
+  ring.style.color        = cor;
+  ring.style.borderColor  = cor;
+  ring.style.background   = cor.replace('var(--', 'rgba(').replace(')', ', .08)');
+  if (titleEl) titleEl.textContent = label;
+  if (subEl)   subEl.textContent   = sub;
+}
+
+// ── Alertas inteligentes ─────────────────────────────────────────────
+function _renderAlertas(custos, preco) {
+  var container = document.getElementById('smart-alerts');
+  if (!container) return;
+
+  var alertas = [];
+  var mR    = preco.margemReal;
+  var area  = custos.area || 0;
+  var precoM2 = area > 0 ? preco.precoFinal / area : 0;
+  var custoM2 = area > 0 ? custos.custoTotal / area : 0;
+
+  // ── Alertas de margem
+  if (mR < 0) {
+    alertas.push({ tipo:'danger', icon:'🚫', titulo:'Prejuízo detectado', msg:'O preço atual (R$ ' + fmtBR(preco.precoFinal) + ') está <strong>abaixo do custo</strong>. Aumente o preço ou reduza custos.' });
+  } else if (mR < 15) {
+    alertas.push({ tipo:'danger', icon:'🚨', titulo:'Margem crítica (' + mR.toFixed(1) + '%)', msg:'Margem abaixo de 15% coloca o negócio em risco. Recomendado: mínimo 25% para comunicação visual.' });
+  } else if (mR < 25) {
+    alertas.push({ tipo:'warn', icon:'⚠️', titulo:'Margem baixa (' + mR.toFixed(1) + '%)', msg:'Para cobrir despesas fixas e gerar lucro real, a margem ideal é <strong>35–55%</strong> no segmento de comunicação visual.' });
+  } else if (mR >= 40) {
+    alertas.push({ tipo:'ok', icon:'✅', titulo:'Margem saudável (' + mR.toFixed(1) + '%)', msg:'Ótima margem! Você pode oferecer até <strong>' + Math.floor((mR - 25) / mR * 100 * 0.6).toFixed(0) + '% de desconto</strong> sem comprometer a operação.' });
+  }
+
+  // ── Alertas de custo por m²
+  if (area > 0) {
+    if (custoM2 > 200) {
+      alertas.push({ tipo:'warn', icon:'💡', titulo:'Custo por m² elevado (R$ ' + fmtBR(custoM2) + '/m²)', msg:'Custo acima de R$200/m² pode indicar desperdício, metalon superdimensionado ou mão de obra excessiva.' });
+    }
+    if (precoM2 > 0 && precoM2 < 30) {
+      alertas.push({ tipo:'warn', icon:'📉', titulo:'Preço por m² muito baixo (R$ ' + fmtBR(precoM2) + '/m²)', msg:'Preço abaixo de R$30/m² é comum apenas para grandes volumes. Verifique se a quantidade está correta.' });
+    }
+  }
+
+  // ── Alertas de instalação sem transporte
+  if (custos.custoInstalacao > 0 && custos.custoTransporte === 0) {
+    alertas.push({ tipo:'info', icon:'🚐', titulo:'Instalação sem transporte', msg:'Você incluiu instalação mas não informou km de transporte. Adicione o custo de deslocamento para evitar surpresas.' });
+  }
+
+  // ── Desconto excessivo
+  if (preco.descontoManual > 20) {
+    alertas.push({ tipo:'warn', icon:'🎁', titulo:'Desconto manual alto (' + preco.descontoManual + '%)', msg:'Desconto de mais de 20% reduz significativamente a margem. Margem real atual: <strong>' + mR.toFixed(1) + '%</strong>.' });
+  }
+
+  // ── Escala aplicada
+  if (preco.descontoEscala > 0) {
+    alertas.push({ tipo:'info', icon:'📦', titulo:preco.labelEscala + ' — desconto de ' + preco.descontoEscala + '% aplicado', msg:'Produção em escala justifica o desconto. Verifique se a capacidade produtiva suporta o volume.' });
+  }
+
+  // Limpar e renderizar
+  container.innerHTML = '';
+  if (!alertas.length) {
+    container.innerHTML = '<div class="smart-alert sa-ok"><span class="sa-icon">✅</span><div><strong>Tudo certo!</strong> Nenhum alerta para este cálculo.</div></div>';
+    return;
+  }
+  alertas.forEach(function(a, i) {
+    var div = document.createElement('div');
+    div.className = 'smart-alert sa-' + a.tipo;
+    div.style.animationDelay = (i * 60) + 'ms';
+    div.innerHTML = '<span class="sa-icon">' + a.icon + '</span><div><strong>' + a.titulo + '</strong> — <span>' + a.msg + '</span></div>';
+    container.appendChild(div);
+  });
+}
+
+// ── Breakdown de custos (stacked bar + cards) ─────────────────────────
+function _renderBreakdown(custos, preco) {
+  var barEl   = document.getElementById('res-stacked-bar');
+  var gridEl  = document.getElementById('res-breakdown-grid');
+  var lblEl   = document.getElementById('breakdown-total-label');
+  if (!barEl || !gridEl) return;
+
+  var ITENS = [
+    { key:'custoMaterial',    label:'Material',    icon:'📦', cor:'#38c5e0' },
+    { key:'custoImpressao',   label:'Impressão',   icon:'🖨',  cor:'#e8b84b' },
+    { key:'custoMaoObra',     label:'Mão de Obra', icon:'👷',  cor:'#8b5cf6' },
+    { key:'custoProducao',    label:'Máquina',     icon:'⚙️', cor:'#a78bfa' },
+    { key:'custoDesperdicio', label:'Desperdício', icon:'🗑',  cor:'#f0913a' },
+    { key:'custoEstrutura',   label:'Metalon',     icon:'🏗',  cor:'#6366f1' },
+    { key:'custoInstalacao',  label:'Instalação',  icon:'🔧',  cor:'#34d399' },
+    { key:'custoTransporte',  label:'Transporte',  icon:'🚐',  cor:'#fb923c' },
+    { key:'custoOverhead',    label:'Overhead',    icon:'📊',  cor:'#60a5fa' },
+    { key:'custoAcabamentos', label:'Acabamentos', icon:'✂️', cor:'#f472b6' },
+    { key:'custoServicos',    label:'Serviços',    icon:'🔩',  cor:'#94a3b8' },
+  ].filter(function(item) { return (custos[item.key] || 0) > 0; });
+
+  var total = custos.custoTotal || 1;
+  var area  = custos.area || 0;
+  var qtd   = custos.qtd  || 1;
+
+  // Label total
+  if (lblEl) {
+    var parts = [];
+    if (area > 0) parts.push('R$ ' + fmtBR(custos.custoTotalM2 || total/area) + '/m²');
+    if (qtd  > 1) parts.push('R$ ' + fmtBR(custos.custoTotalUnitario || total/qtd) + '/un.');
+    lblEl.textContent = parts.join(' · ');
+  }
+
+  // Stacked bar
+  barEl.innerHTML = ITENS.map(function(item) {
+    var pct = Math.max((custos[item.key] / total * 100), 0.3).toFixed(1);
+    return '<div class="stacked-seg" style="width:' + pct + '%;background:' + item.cor + '" title="' + item.label + ': R$ ' + fmtBR(custos[item.key]) + ' (' + pct + '%)"></div>';
+  }).join('');
+
+  // Cards de breakdown
+  gridEl.innerHTML = '';
+  ITENS.forEach(function(item, idx) {
+    var v   = custos[item.key] || 0;
+    var pct = (v / total * 100).toFixed(1);
+    var div = document.createElement('div');
+    div.className = 'breakdown-item';
+    div.style.setProperty('--bd-color', item.cor);
+    div.style.animationDelay = (idx * 40) + 'ms';
+    div.innerHTML =
+      '<div class="breakdown-lbl"><span>' + item.icon + '</span>' + item.label + '</div>'
+      + '<div class="breakdown-val res-number-anim">R$ ' + fmtBR(v) + '</div>'
+      + '<div class="breakdown-pct">' + pct + '% do custo</div>'
+      + '<div class="breakdown-bar" style="width:' + pct + '%"></div>';
+    gridEl.appendChild(div);
+  });
+
+  // Linha de lucro como card especial
+  if (preco.lucro > 0) {
+    var pctLucro = (preco.lucro / preco.precoFinal * 100).toFixed(1);
+    var lucroCard = document.createElement('div');
+    lucroCard.className = 'breakdown-item';
+    lucroCard.style.setProperty('--bd-color', 'var(--green)');
+    lucroCard.style.border = '1px solid rgba(46,212,122,.25)';
+    lucroCard.style.background = 'rgba(46,212,122,.04)';
+    lucroCard.style.animationDelay = (ITENS.length * 40) + 'ms';
+    lucroCard.innerHTML =
+      '<div class="breakdown-lbl" style="color:var(--green)"><span>💰</span>Lucro</div>'
+      + '<div class="breakdown-val" style="color:var(--green)">R$ ' + fmtBR(preco.lucro) + '</div>'
+      + '<div class="breakdown-pct" style="color:rgba(46,212,122,.6)">' + pctLucro + '% do preço</div>'
+      + '<div class="breakdown-bar" style="width:' + pctLucro + '%;background:var(--green)"></div>';
+    gridEl.appendChild(lucroCard);
+  }
+}
+
+// ── Detalhamento linha a linha (collapsible) ─────────────────────────
+function _renderDetalhamento(linhas, custos, preco) {
+  var el = document.getElementById('detalhamento_resultado');
+  if (!el) return;
+
+  if (!linhas || !linhas.length) { el.innerHTML = ''; return; }
+
+  var html = '<details style="margin-bottom:4px">'
+    + '<summary style="cursor:pointer;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:8px 0;display:flex;align-items:center;gap:7px;list-style:none;user-select:none">'
+    + '<span style="font-size:12px">▶</span> Ver detalhamento completo'
+    + '<span style="margin-left:auto;color:var(--text2);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0">' + linhas.length + ' itens</span>'
+    + '</summary>'
+    + '<div style="margin-top:8px;padding:12px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)">';
+
+  linhas.forEach(function(d) {
+    html += '<div class="result-row"><span class="result-label">' + d.label + '</span>'
+          + '<span class="result-value">R$ ' + fmtBR(d.valor) + '</span></div>';
+  });
+
+  html += '<div class="result-row" style="border-top:1px solid rgba(232,184,75,.2);margin-top:6px;padding-top:10px">'
+        + '<span class="result-label" style="font-weight:700;color:var(--text)">Custo Total</span>'
+        + '<span class="result-value" style="font-weight:700">R$ ' + fmtBR(custos.custoTotal) + '</span></div>';
+
+  if (preco.adjUrgencia  > 0) html += '<div class="result-row"><span class="result-label" style="color:var(--warn)">🔥 Urgência (+' + preco.adjUrgencia + '%)</span><span class="result-value" style="color:var(--warn)">acréscimo</span></div>';
+  if (preco.adjCliente   < 0) html += '<div class="result-row"><span class="result-label" style="color:var(--green)">Cliente especial (' + preco.adjCliente + '%)</span><span class="result-value" style="color:var(--green)">desconto</span></div>';
+  if (preco.descontoEscala>0) html += '<div class="result-row"><span class="result-label" style="color:var(--green)">' + preco.labelEscala + ' (-' + preco.descontoEscala + '%)</span><span class="result-value" style="color:var(--green)">escala</span></div>';
+  if (preco.descontoManual>0) html += '<div class="result-row"><span class="result-label" style="color:var(--red)">Desconto manual (' + preco.descontoManual + '%)</span><span class="result-value" style="color:var(--red)">- R$ ' + fmtBR(preco.precoBase * preco.descontoManual / 100) + '</span></div>';
+
+  html += '<div class="result-row total"><span class="result-label main">💰 Preço Final</span>'
+        + '<span class="result-value main">R$ ' + fmtBR(preco.precoFinal) + '</span></div>';
+
+  if (preco.lucro > 0) html += '<div class="result-row"><span class="result-label" style="color:var(--green)">Lucro Bruto</span>'
+    + '<span class="result-value" style="color:var(--green);font-weight:600">R$ ' + fmtBR(preco.lucro) + ' (' + preco.margemReal.toFixed(1) + '% margem · ' + preco.markupReal.toFixed(1) + '% markup)</span></div>';
+
+  if (custos.area > 0) {
+    html += '<div class="result-row"><span class="result-label">Por m²</span>'
+          + '<span class="result-value" style="color:var(--cyan)">R$ ' + fmtBR(preco.precoM2 || preco.precoFinal/custos.area) + '/m²</span></div>';
+  }
+  if (custos.qtd > 1) {
+    html += '<div class="result-row"><span class="result-label">Por unidade</span>'
+          + '<span class="result-value">R$ ' + fmtBR(preco.precoUnitario || preco.precoFinal/custos.qtd) + '</span></div>';
+  }
+
+  html += '</div></details>';
+  el.innerHTML = html;
+
+  // Abrir o details com animação após render
+  var det = el.querySelector('details');
+  if (det) {
+    // Rotate arrow on toggle
+    det.addEventListener('toggle', function() {
+      var arrow = det.querySelector('summary span');
+      if (arrow) arrow.textContent = det.open ? '▼' : '▶';
+    });
+  }
+}
+
+// ── FUNÇÃO PRINCIPAL: renderResultadoPremium ─────────────────────────
+function renderResultadoPremium(custos, preco, linhas) {
+  // ── 1. Hero: Preço e KPIs
+  var precoEl  = document.getElementById('res_preco');
+  var custoEl  = document.getElementById('res_custo');
+  var lucroEl  = document.getElementById('res_lucro');
+  var margemEl = document.getElementById('res_margem');
+  var markupEl = document.getElementById('res_markup');
+  var margemBd = document.getElementById('res_margem_badge');
+
+  _animateNumber(precoEl,  'R$ ' + fmtBR(preco.precoFinal));
+  _animateNumber(custoEl,  'R$ ' + fmtBR(custos.custoTotal));
+  _animateNumber(lucroEl,  'R$ ' + fmtBR(preco.lucro));
+  if (margemEl) margemEl.textContent = preco.margemReal.toFixed(1) + '% margem';
+  if (markupEl) markupEl.textContent = preco.markupReal.toFixed(1) + '% markup';
+  if (margemBd) margemBd.style.display = 'inline-flex';
+
+  // Colorir lucro
+  var lucroColor = preco.lucro > 0 ? 'var(--green)' : 'var(--red)';
+  if (lucroEl && lucroEl.closest) {
+    var lb = lucroEl.closest('.res-badge-lucro');
+    if (lb) lb.style.color = lucroColor;
+  }
+
+  // ── 2. Gauge de margem
+  _atualizarGauge(preco.margemReal);
+
+  // ── 3. Decision score
+  _renderDecisionScore(preco.margemReal, custos.custoTotal, preco.precoFinal, custos.area || 0);
+
+  // ── 4. Alertas inteligentes
+  _renderAlertas(custos, preco);
+
+  // ── 5. Breakdown de custos
+  _renderBreakdown(custos, preco);
+
+  // ── 6. Detalhamento collapsible
+  _renderDetalhamento(linhas || [], custos, preco);
+
+  // ── 7. Mostrar container com animação
+  var rc = document.getElementById('resultado_container');
+  if (rc) {
+    rc.style.display = 'block';
+    rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── 8. Reset painel IA
+  var iap = document.getElementById('ia-analysis-panel');
+  if (iap) iap.style.display = 'none';
+}
+
+// ── Análise IA Premium ────────────────────────────────────────────────
+async function analisarOrcamentoComIA() {
+  if (!window._lastCalc) { toast('Calcule um orçamento primeiro!', 'warn'); return; }
+
+  var panel   = document.getElementById('ia-analysis-panel');
+  var content = document.getElementById('ia-analysis-content');
+  var btn     = document.getElementById('btn-analise-ia');
+
+  if (!panel || !content) {
+    // Fallback: abrir chat
+    if (typeof abrirChatIA === 'function') abrirChatIA();
+    return;
+  }
+
+  if (!getApiKeyIA || !getApiKeyIA()) {
+    panel.style.display = 'block';
+    content.innerHTML = '<div style="padding:10px;font-size:13px;color:var(--text3)">'
+      + '🔑 Configure sua <strong style="color:var(--purple)">OpenAI API Key</strong> em '
+      + '<button class="btn btn-ghost btn-xs" onclick="navTo(\'config\')" style="color:var(--cyan)">Configurações → 🤖 IA & Motor</button>'
+      + ' para receber análises automáticas.'
+      + '</div>';
+    return;
+  }
+
+  // Loading state
+  panel.style.display = 'block';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Analisando...'; }
+  content.innerHTML = '<div class="ia-thinking">'
+    + '<div class="ia-pulse"></div>'
+    + '<span>IA analisando seus custos e margem...</span>'
+    + '</div>';
+
+  var c = window._lastCalc;
+  var prompt = 'Analise este orçamento de comunicação visual e dê uma análise CURTA (máximo 4 linhas) e DIRETA:\n\n'
+    + '• Produto: ' + (c.produto || 'N/A') + ' | Material: ' + (c.material || 'N/A') + '\n'
+    + '• ' + c.largura + 'm × ' + c.altura + 'm × ' + c.qtd + ' peça(s) = ' + (c.area||0).toFixed(2) + ' m²\n'
+    + '• Custo: R$' + fmtBR(c.custoTotal) + ' | Preço: R$' + fmtBR(c.precoFinal) + '\n'
+    + '• Margem: ' + (c.margemReal||0).toFixed(1) + '% | Markup: ' + (c.markupReal||0).toFixed(1) + '%\n\n'
+    + 'Responda com: 1) Avaliação geral (1 linha). 2) Principal risco ou ponto de atenção (1 linha). 3) Uma sugestão prática (1 linha). Seja direto, sem rodeios.';
+
+  try {
+    var resposta = await perguntarIA([{ role: 'user', content: prompt }],
+      'Você é especialista em precificação de comunicação visual. Seja extremamente objetivo e prático. Máximo 4 linhas no total.');
+    content.innerHTML = '<div style="font-size:13px;line-height:1.7;color:var(--text2)">'
+      + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);font-weight:700;margin-bottom:8px">🤖 Análise da IA</div>'
+      + _fmtIAText(resposta)
+      + '<div style="margin-top:10px;display:flex;gap:8px">'
+      + '<button class="btn btn-ghost btn-xs" onclick="abrirChatIA()" style="color:var(--purple);border-color:rgba(139,92,246,.3)">💬 Conversar com IA</button>'
+      + '<button class="btn btn-ghost btn-xs" onclick="document.getElementById(\'ia-analysis-panel\').style.display=\'none\'" style="color:var(--text3)">✕ Fechar</button>'
+      + '</div></div>';
+  } catch(e) {
+    content.innerHTML = '<div style="font-size:12px;color:var(--red)">❌ ' + e.message + '</div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '🤖 Analisar com IA'; }
+  }
+}
+
+// ── Substituir _renderSimuladorLucro pelo novo renderResultadoPremium ─
+function _renderSimuladorLucro(custos, preco, linhas) {
+  renderResultadoPremium(custos, preco, linhas);
+}
 
 
 async function iniciarControleAssinatura() {
