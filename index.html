@@ -468,6 +468,8 @@ textarea{resize:vertical;}
 .pix-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);}
 .pix-step-num{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#000;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
 
+.owner-show { display: inline-flex !important; }
+
 /* ═══════════════════════════════════════════════════════════════
    CHECKLIST DE PRODUÇÃO
 ═══════════════════════════════════════════════════════════════ */
@@ -634,7 +636,7 @@ textarea{resize:vertical;}
     <button class="sb-item" id="sb-pcp-item" data-page="pcp" data-module="pcp" onclick="navTo('pcp')"><span class="sb-item-icon">🏭</span>PCP — Produção</button>
     <button class="sb-item" id="sb-admin-saas-item" data-page="admin-saas" style="display:none;color:var(--gold);font-weight:600" onclick="navTo('admin-saas')"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
     <button class="sb-item" data-page="config" onclick="navTo('config')"><span class="sb-item-icon">⚙️</span>Configurações</button>
-    <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="navTo('config');setTimeout(function(){var t=document.getElementById('cfg-tab-admin');if(t)t.style.display='';showInner('cfg-admin',t);renderAdmin();},800)"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
+    <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="_navToExecutar('config');setTimeout(function(){var t=document.getElementById('cfg-tab-admin');if(t){t.style.display='';t.style.cssText='display:inline-flex!important';}renderConfig();setTimeout(function(){showInner('cfg-admin',t);renderAdmin();},100);},200)"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
   </div>
   <div class="sb-footer">
     <div class="user-chip" onclick="abrirLogoEditor()">
@@ -1096,7 +1098,7 @@ textarea{resize:vertical;}
     <button class="inner-tab" onclick="showInner('cfg-empresa',this)">🏢 Empresa</button>
     <button class="inner-tab" onclick="showInner('cfg-planos',this)">💎 Planos</button>
     <button class="inner-tab" onclick="showInner('cfg-backup',this)">💾 Backup</button>
-    <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="showInner('cfg-admin',this);renderAdmin()">🛡️ Admin SaaS</button>
+    <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="this.style.display='';showInner('cfg-admin',this);renderAdmin()">🛡️ Admin SaaS</button>
   </div>
 
   <div class="inner-page active" id="cfg-supabase">
@@ -4886,8 +4888,16 @@ function renderConfig() {
   var adminShow = isOwner() || canAccess('admin_painel');
   var adminTab = document.getElementById('cfg-tab-admin');
   var admSb    = document.getElementById('sb-admin-item');
-  if (adminTab) adminTab.style.display = adminShow ? '' : 'none';
-  if (admSb)    admSb.style.display    = adminShow ? 'flex' : 'none';
+  if (adminTab) {
+    if (adminShow) {
+      adminTab.classList.add('owner-show');
+      adminTab.style.removeProperty('display');
+    } else {
+      adminTab.classList.remove('owner-show');
+      adminTab.style.display = 'none';
+    }
+  }
+  if (admSb) admSb.style.display = adminShow ? 'flex' : 'none';
 
   // Assinatura: somente owner
   var assSb = document.getElementById('sb-assinatura-item');
@@ -8426,7 +8436,7 @@ function aplicarPermissoesSaaS(opts) {
     if (el) el.style.display = 'none';
   });
   var tab = document.getElementById('cfg-tab-admin');
-  if (tab) tab.style.display = 'none';
+  if (tab && !isRoleOwner) tab.style.display = 'none';
 
   _atualizarRoleBadge();
   atualizarBadgePlanoNovo();
