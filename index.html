@@ -1094,12 +1094,12 @@ textarea{resize:vertical;}
 <!-- ══════ CONFIGURAÇÕES ══════ -->
 <div class="page" id="page-config">
   <div class="section-header"><div><div class="section-title">Configurações</div><div class="section-sub">Sistema, banco de dados e planos</div></div></div>
-  <div class="inner-tabs">
-    <button class="inner-tab active" onclick="showInner('cfg-supabase',this)">🗄️ Supabase</button>
-    <button class="inner-tab" onclick="showInner('cfg-empresa',this)">🏢 Empresa</button>
-    <button class="inner-tab" onclick="showInner('cfg-planos',this)">💎 Planos</button>
-    <button class="inner-tab" onclick="showInner('cfg-backup',this)">💾 Backup</button>
-    <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="_mostrarAbaAdmin()">🛡️ Admin SaaS</button>
+  <div class="inner-tabs" id="cfg-tabs">
+    <button class="inner-tab active" onclick="trocarAbaCfg('cfg-supabase',this)">🗄️ Supabase</button>
+    <button class="inner-tab" onclick="trocarAbaCfg('cfg-empresa',this)">🏢 Empresa</button>
+    <button class="inner-tab" onclick="trocarAbaCfg('cfg-planos',this)">💎 Planos</button>
+    <button class="inner-tab" onclick="trocarAbaCfg('cfg-backup',this)">💾 Backup</button>
+    <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="trocarAbaCfg('cfg-admin',this)">🛡️ Admin SaaS</button>
   </div>
 
   <div class="inner-page active" id="cfg-supabase">
@@ -4692,13 +4692,67 @@ window.addEventListener('offline', updateOnlineStatus);
 function showLogoutBtn(show) {
   const b = document.getElementById('btn-logout'); if(b) b.style.display=show?'inline-flex':'none';
 }
+// trocarAbaCfg — troca abas de configuração de forma simples e direta
+function trocarAbaCfg(id, btn) {
+  // IDs de todas as inner-pages de configuração
+  var CFG_PAGES = ['cfg-supabase','cfg-empresa','cfg-planos','cfg-backup','cfg-admin'];
+  var CFG_TABS  = document.getElementById('cfg-tabs');
+
+  // Esconder todas as páginas
+  CFG_PAGES.forEach(function(pid) {
+    var el = document.getElementById(pid);
+    if (el) el.classList.remove('active');
+  });
+
+  // Desativar todos os botões
+  if (CFG_TABS) {
+    CFG_TABS.querySelectorAll('.inner-tab').forEach(function(b) {
+      b.classList.remove('active');
+    });
+  }
+
+  // Mostrar a página alvo
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+
+  // Ativar o botão
+  if (btn) btn.classList.add('active');
+
+  // Se for admin, renderizar conteúdo
+  if (id === 'cfg-admin') renderAdmin();
+}
+
 function showInner(id, btn) {
-  const p = document.getElementById(id); if(!p) return;
-  const parent = p.closest('.page') || p.closest('.card') || document;
-  parent.querySelectorAll?.('.inner-page')?.forEach(x=>x.classList.remove('active'));
-  parent.querySelectorAll?.('.inner-tab')?.forEach(x=>x.classList.remove('active'));
+  var p = document.getElementById(id);
+  if (!p) return;
+  // Encontrar o container direto das inner-tabs/inner-pages
+  var container = p.parentElement;
+  if (!container) return;
+  // Desativar todas as inner-pages e inner-tabs NO MESMO CONTAINER
+  container.querySelectorAll('.inner-page').forEach(function(x) {
+    x.classList.remove('active');
+  });
+  // Desativar tabs — buscar a div.inner-tabs dentro do mesmo container pai
+  var tabsContainer = container.querySelector('.inner-tabs');
+  if (!tabsContainer) {
+    // Tentar pegar do elemento pai do container
+    tabsContainer = container.parentElement && container.parentElement.querySelector('.inner-tabs');
+  }
+  if (tabsContainer) {
+    tabsContainer.querySelectorAll('.inner-tab').forEach(function(x) {
+      x.classList.remove('active');
+    });
+  }
+  // Ativar a página alvo
   p.classList.add('active');
-  if(btn) btn.classList.add('active');
+  // Ativar o botão
+  if (btn) {
+    btn.classList.add('active');
+    // Garantir que o botão está visível
+    if (btn.style.display === 'none') {
+      btn.style.setProperty('display', 'inline-flex', 'important');
+    }
+  }
 }
 function atualizarBadgePlano() {
   // Use the new PLANO_NOMES system
@@ -4873,45 +4927,21 @@ function usarSemLogin(){ toast('Login obrigatório. Configure o Supabase para ac
 // Solução definitiva: sem setTimeout, sequência garantida
 // ═══════════════════════════════════════════════════════════
 function abrirAdminConfig() {
-  // 1. Navegar para config (sem ir ao banco — é owner)
   _navToExecutar('config');
-
-  // 2. Aguardar renderConfig() terminar e então abrir aba admin
-  // requestAnimationFrame garante que o DOM já foi atualizado
+  // Dois frames para garantir que renderConfig() terminou
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
-      _mostrarAbaAdmin();
+      var tab = document.getElementById('cfg-tab-admin');
+      if (tab) tab.style.setProperty('display', 'inline-flex', 'important');
+      trocarAbaCfg('cfg-admin', tab);
     });
   });
 }
 
 function _mostrarAbaAdmin() {
-  // Forçar visibilidade da aba
   var tab = document.getElementById('cfg-tab-admin');
-  if (tab) {
-    tab.style.setProperty('display', 'inline-flex', 'important');
-    tab.removeAttribute('hidden');
-  }
-
-  // Mostrar conteúdo cfg-admin
-  var inner = document.getElementById('cfg-admin');
-  if (inner) {
-    // Remover active de outros inner-pages
-    var page = document.getElementById('page-config');
-    if (page) {
-      page.querySelectorAll('.inner-page').forEach(function(x) {
-        x.classList.remove('active');
-      });
-      page.querySelectorAll('.inner-tab').forEach(function(x) {
-        x.classList.remove('active');
-      });
-    }
-    inner.classList.add('active');
-    if (tab) tab.classList.add('active');
-  }
-
-  // Renderizar conteúdo admin
-  renderAdmin();
+  if (tab) tab.style.setProperty('display', 'inline-flex', 'important');
+  trocarAbaCfg('cfg-admin', tab);
 }
 
 function renderConfig() {
