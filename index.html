@@ -5428,7 +5428,15 @@ async function dbAdminFetchPlanos() {
     if (res.error) throw res.error;
     return (res.data || []).map(function(p) {
       var rec = p.recursos || {};
-      var feats = p.features || [];
+      // features pode ser objeto {modulos:[...]} ou array de strings
+      var rawFeats = p.features || [];
+      var feats = Array.isArray(rawFeats)
+        ? rawFeats
+        : (rawFeats.features && Array.isArray(rawFeats.features)
+            ? rawFeats.features
+            : (rawFeats.modulos && Array.isArray(rawFeats.modulos)
+                ? rawFeats.modulos.map(function(m) { return m === 'all' ? 'Acesso completo' : m; })
+                : []));
       if (!feats.length && p.descricao) feats = p.descricao.split('\n').filter(Boolean);
       return Object.assign({}, p, {
         nome_interno: p.nome_interno || p.nome,
@@ -5562,7 +5570,9 @@ async function renderAdminPlanos() {
     var cor  = p.cor || '#8892a8';
     var limU = (p.limite_usuarios === -1 || p.limite_usuarios == null) ? '∞' : String(p.limite_usuarios);
     var mods = p.modulos_liberados || [];
-    var feats = (p.features || []).slice(0,4);
+    var rawF2 = p.features || [];
+    var feats = (Array.isArray(rawF2) ? rawF2
+      : (rawF2.modulos ? rawF2.modulos.map(function(m){ return m==='all'?'Acesso completo':m; }) : [])).slice(0,4);
 
     html += '<div style="background:var(--ink2);border:2px solid ' + (p.ativo ? cor+'55' : 'var(--line)') + ';border-radius:var(--r-lg);padding:18px;transition:border-color .2s;opacity:' + (p.ativo ? '1' : '.55') + '">'
 
@@ -5809,10 +5819,13 @@ function admIrPara(secao) {
     s.style.display = s.id === ('adm-sec-' + secao) ? 'block' : 'none';
   });
   var fns = {
-    dashboard:  admRenderDashboard,
-    planos:     admRenderPlanos,
-    clientes:   admRenderClientes,
-    pagamentos: admRenderPagamentos,
+    dashboard:   admRenderDashboard,
+    planos:      admRenderPlanos,
+    clientes:    admRenderClientes,
+    pagamentos:  admRenderPagamentos,
+    pix:         admRenderPix,
+    seguranca:   admRenderSeguranca,
+    metricas:    admRenderMetricas,
   };
   if (fns[secao]) fns[secao]();
 }
@@ -6383,6 +6396,39 @@ serve(async (req) => {
 // ═══════════════════════════════════════════════════════════
 // ADMIN: Painel de Segurança / Logs
 // ═══════════════════════════════════════════════════════════
+// admRenderMetricas — Dashboard de métricas SaaS
+async function admRenderMetricas() {
+  var el = document.getElementById('adm-sec-metricas');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner"></div></div>';
+
+  var mrr = 0, churn = 0, novos = 0, receitaMes = 0;
+  if (isSbOk()) {
+    var sb = getSb();
+    try {
+      var r1 = await sb.rpc('calc_mrr');
+      if (r1.data) mrr = r1.data;
+      var r2 = await sb.rpc('calc_churn');
+      if (r2.data) churn = r2.data;
+      var r3 = await sb.rpc('calc_novos_mes');
+      if (r3.data) novos = r3.data;
+      var r4 = await sb.rpc('calc_receita_mes');
+      if (r4.data) receitaMes = r4.data;
+    } catch(e) { console.warn('admRenderMetricas:', e.message); }
+  }
+
+  el.innerHTML = '<div>'
+    + '<div class="adm-kpi-grid" style="margin-bottom:16px">'
+    + _admKpi('💰', 'MRR', 'R$ ' + fmtBR(mrr), 'var(--gold)', 'ARR: R$ ' + fmtBR(mrr*12))
+    + _admKpi('📉', 'Churn Rate', churn + '%', churn > 10 ? 'var(--red)' : 'var(--green)', 'Taxa de cancelamento')
+    + _admKpi('👥', 'Novos no Mês', novos, 'var(--cyan)', 'Clientes novos este mês')
+    + _admKpi('💳', 'Receita do Mês', 'R$ ' + fmtBR(receitaMes), 'var(--cyan)', 'Pagamentos confirmados')
+    + '</div>'
+    + '<div class="adm-card"><div class="adm-card-hd">ℹ️ Sobre as métricas</div>'
+    + '<div style="font-size:13px;color:var(--text2);margin-top:8px">MRR e Churn calculados via funções SQL no Supabase. Execute o SQL de correção nas Configurações para ativar.</div>'
+    + '</div></div>';
+}
+
 async function admRenderSeguranca() {
   var el = document.getElementById('adm-sec-seguranca');
   if (!el) { el = document.createElement('div'); el.id = 'adm-sec-seguranca'; el.className = 'adm-secao'; document.getElementById('adm-conteudo') && document.getElementById('adm-conteudo').appendChild(el); }
