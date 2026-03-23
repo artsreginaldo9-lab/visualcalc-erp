@@ -1533,13 +1533,35 @@ textarea{resize:vertical;}
 <div class="page" id="page-historico">
   <div class="section-header">
     <div><div class="section-title">Orçamentos</div><div class="section-sub" id="hist-sub">0 orçamentos</div></div>
-    <div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" onclick="exportarCSV('orcamentos')">⬆️ Exportar</button></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="exportarCSV('orcamentos')">⬆️ Exportar</button>
+      <button class="btn btn-primary btn-sm" onclick="navTo('orcamento')">+ Novo Orçamento</button>
+    </div>
   </div>
+  <!-- Funil visual de status -->
+  <div id="orc-funil-rapido" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"></div>
+  <!-- Filtros -->
   <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-    <div class="form-group" style="margin:0;flex:1;min-width:150px"><label>Cliente</label><input type="text" id="f_cli" placeholder="Buscar..." oninput="aplicarFiltro()"></div>
-    <div class="form-group" style="margin:0;min-width:160px"><label>Status</label>
+    <div class="form-group" style="margin:0;flex:1;min-width:150px"><label>Buscar</label><input type="text" id="f_cli" placeholder="Cliente, produto, referência..." oninput="aplicarFiltro()"></div>
+    <div class="form-group" style="margin:0;min-width:170px"><label>Status</label>
       <select id="f_status" onchange="aplicarFiltro()">
-        <option value="todos">Todos</option><option value="orcamento">📋 Orçamento</option><option value="aprovado">✅ Aprovado</option><option value="producao">🔧 Produção</option><option value="finalizado">🎉 Finalizado</option><option value="cancelado">❌ Cancelado</option>
+        <option value="todos">Todos</option>
+        <option value="rascunho">✏️ Rascunho</option>
+        <option value="enviado">📤 Enviado</option>
+        <option value="orcamento">📋 Orçamento</option>
+        <option value="aprovado">✅ Aprovado</option>
+        <option value="recusado">🚫 Recusado</option>
+        <option value="producao">🔧 Produção</option>
+        <option value="finalizado">🎉 Finalizado</option>
+        <option value="cancelado">❌ Cancelado</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;min-width:130px"><label>Ordenar</label>
+      <select id="f_ordem" onchange="aplicarFiltro()">
+        <option value="recente">Mais recente</option>
+        <option value="valor_desc">Maior valor</option>
+        <option value="valor_asc">Menor valor</option>
+        <option value="margem">Maior margem</option>
       </select>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="limparFiltro()">✕ Limpar</button>
@@ -1659,35 +1681,74 @@ textarea{resize:vertical;}
 <!-- ══════ PEDIDOS / PRODUÇÃO ══════ -->
 <div class="page" id="page-pedidos">
   <div class="section-header">
-    <div><div class="section-title">Produção</div><div class="section-sub">Kanban de pedidos</div></div>
-    <button class="btn btn-secondary btn-sm" onclick="renderPedidos()">🔄 Atualizar</button>
+    <div><div class="section-title">Produção</div><div class="section-sub">Controle de pedidos e produção</div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);overflow:hidden">
+        <button class="btn btn-ghost btn-sm" id="ped-view-kanban" onclick="setPedView('kanban')" style="border-radius:0;border:none;border-right:1px solid var(--line)">🗂 Kanban</button>
+        <button class="btn btn-ghost btn-sm" id="ped-view-lista"  onclick="setPedView('lista')"  style="border-radius:0;border:none">📋 Lista</button>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="renderPedidos()">🔄 Atualizar</button>
+    </div>
+  </div>
+  <!-- KPIs de produção -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="ped-kpis">
+    <div class="kpi-sm"><div class="kpi-lbl">Em Produção</div><div class="kpi-val b" id="ped-kpi-prod">0</div></div>
+    <div class="kpi-sm"><div class="kpi-lbl">Prontos p/ Entregar</div><div class="kpi-val g" id="ped-kpi-pronto">0</div></div>
+    <div class="kpi-sm"><div class="kpi-lbl">Entregues (mês)</div><div class="kpi-val" id="ped-kpi-entregue">0</div></div>
+    <div class="kpi-sm"><div class="kpi-lbl">Valor em Produção</div><div class="kpi-val y" id="ped-kpi-valor">R$ 0,00</div></div>
   </div>
   <div id="ped-detail-box" style="display:none;background:var(--ink2);border:1px solid var(--gold);border-radius:var(--r-lg);padding:18px;margin-bottom:18px"></div>
-  <div class="kanban-grid">
-    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--gold)">🔧 Produção <span id="ped-cnt-producao" class="sb-badge">0</span></div><div id="ped-col-producao"></div></div>
-    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--cyan)">🖨 Impressão <span id="ped-cnt-impressao" class="sb-badge" style="background:var(--cyan);color:#000">0</span></div><div id="ped-col-impressao"></div></div>
-    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:#8b5cf6">✂️ Acabamento <span id="ped-cnt-acabamento" class="sb-badge" style="background:#8b5cf6">0</span></div><div id="ped-col-acabamento"></div></div>
-    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--green)">📦 Pronto <span id="ped-cnt-pronto" class="sb-badge" style="background:var(--green);color:#000">0</span></div><div id="ped-col-pronto"></div></div>
-    <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--text3)">🚚 Entregue <span id="ped-cnt-entregue" class="sb-badge" style="background:var(--text3)">0</span></div><div id="ped-col-entregue"></div></div>
+  <!-- KANBAN VIEW -->
+  <div id="ped-view-kanban-content">
+    <div class="kanban-grid">
+      <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--gold)">🔧 Produção <span id="ped-cnt-producao" class="sb-badge">0</span></div><div id="ped-col-producao"></div></div>
+      <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--cyan)">🖨 Impressão <span id="ped-cnt-impressao" class="sb-badge" style="background:var(--cyan);color:#000">0</span></div><div id="ped-col-impressao"></div></div>
+      <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:#8b5cf6">✂️ Acabamento <span id="ped-cnt-acabamento" class="sb-badge" style="background:#8b5cf6">0</span></div><div id="ped-col-acabamento"></div></div>
+      <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--green)">📦 Pronto <span id="ped-cnt-pronto" class="sb-badge" style="background:var(--green);color:#000">0</span></div><div id="ped-col-pronto"></div></div>
+      <div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px"><div class="kanban-header" style="color:var(--text3)">🚚 Entregue <span id="ped-cnt-entregue" class="sb-badge" style="background:var(--text3)">0</span></div><div id="ped-col-entregue"></div></div>
+    </div>
+  </div>
+  <!-- LISTA VIEW -->
+  <div id="ped-view-lista-content" style="display:none">
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead><tr><th>Nº</th><th>Cliente</th><th>Produto</th><th>Dimensões</th><th>Valor</th><th>Status</th><th>Prioridade</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-pedidos-lista"><tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text3)">Nenhum pedido</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <!-- ══════ FINANCEIRO ══════ -->
 <div class="page" id="page-financeiro">
   <div class="section-header">
-    <div><div class="section-title">Financeiro</div><div class="section-sub">Entradas e saídas</div></div>
-    <div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" onclick="exportarCSV('financeiro')">⬆️ Exportar</button><button class="btn btn-primary" onclick="abrirModalFinanceiro()">+ Lançamento</button></div>
+    <div><div class="section-title">Financeiro</div><div class="section-sub">Contas a receber e a pagar</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="exportarCSV('financeiro')">⬆️ Exportar</button>
+      <button class="btn btn-success btn-sm" onclick="abrirModalFinanceiro('entrada')">+ A Receber</button>
+      <button class="btn btn-warn btn-sm" onclick="abrirModalFinanceiro('saida')">+ A Pagar</button>
+    </div>
   </div>
+  <!-- KPIs -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
     <div class="fin-card"><div class="fin-icon-wrap entrada">💵</div><div><div class="kpi-lbl">Entradas (pago)</div><div class="fin-val entrada" id="fin-entradas">R$ 0,00</div></div></div>
     <div class="fin-card"><div class="fin-icon-wrap saida">💸</div><div><div class="kpi-lbl">Saídas (pago)</div><div class="fin-val saida" id="fin-saidas">R$ 0,00</div></div></div>
     <div class="fin-card"><div class="fin-icon-wrap" style="background:rgba(232,184,75,.1)">📊</div><div><div class="kpi-lbl">Saldo</div><div class="fin-val" id="fin-saldo" style="color:var(--gold)">R$ 0,00</div></div></div>
     <div class="fin-card"><div class="fin-icon-wrap" style="background:rgba(240,145,58,.1)">⏳</div><div><div class="kpi-lbl">A Receber</div><div class="fin-val" id="fin-pendentes" style="color:var(--warn)">R$ 0,00</div></div></div>
   </div>
-  <div class="card">
+  <!-- Abas -->
+  <div class="inner-tabs" style="margin-bottom:16px">
+    <button class="inner-tab active" onclick="setFinTab('todos',this)">Todos</button>
+    <button class="inner-tab" onclick="setFinTab('entrada',this)">💵 A Receber</button>
+    <button class="inner-tab" onclick="setFinTab('saida',this)">💸 A Pagar</button>
+    <button class="inner-tab" onclick="setFinTab('pendente',this)">⏳ Pendentes</button>
+    <button class="inner-tab" onclick="setFinTab('pago',this)">✅ Pagos</button>
+  </div>
+  <!-- Tabela -->
+  <div class="card" style="padding:0;overflow:hidden">
     <table class="data-table">
-      <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Status</th></tr></thead>
-      <tbody id="tbody-financeiro"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:28px">Nenhum lançamento</td></tr></tbody>
+      <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+      <tbody id="tbody-financeiro"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px">Nenhum lançamento</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -1695,42 +1756,376 @@ textarea{resize:vertical;}
 <!-- ══════ NOTAS FISCAIS ══════ -->
 <div class="page" id="page-nf">
   <div class="section-header">
-    <div><div class="section-title">Notas Fiscais</div><div class="section-sub">Emissão e controle de NF-e</div></div>
+    <div><div class="section-title">🧾 Fiscal</div><div class="section-sub">Produtos, Serviços e Notas Fiscais</div></div>
   </div>
-  <div class="alert alert-info" style="margin-bottom:16px">
-    ℹ️ <strong>Integração com emissor de NF-e:</strong> Esta seção está preparada para integrar com APIs como <strong>NFe.io, Focus NF-e, eNotas</strong> ou similar. Notas geradas a partir de orçamentos finalizados ficam listadas aqui.
+
+  <!-- Abas principais -->
+  <div class="inner-tabs" style="margin-bottom:20px">
+    <button class="inner-tab active" onclick="setFiscalTab('produtos',this)">📦 Produtos (NF-e)</button>
+    <button class="inner-tab" onclick="setFiscalTab('servicos',this)">🔧 Serviços (NFS-e)</button>
+    <button class="inner-tab" onclick="setFiscalTab('notas',this)">📄 Notas Emitidas</button>
+    <button class="inner-tab" onclick="setFiscalTab('config',this)">⚙️ Configuração</button>
   </div>
-  <div class="g3" style="gap:14px;margin-bottom:18px">
-    <div class="card" style="text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">🔗</div>
-      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;margin-bottom:5px">NFe.io</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">API REST para NF-e, NFS-e e MDF-e</div>
-      <div class="form-group" style="text-align:left"><label>API Key</label><input type="text" id="nfe_api_key" placeholder="Sua chave da API"></div>
-      <button class="btn btn-primary btn-sm" style="width:100%" onclick="toast('Configure sua chave da API NFe.io e implemente a integração','info')">Configurar</button>
+
+  <!-- ══ ABA: PRODUTOS FISCAIS ══ -->
+  <div id="fiscal-tab-produtos" class="fiscal-tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-size:13px;color:var(--text2)">Cadastre produtos físicos com NCM para emissão de <strong>NF-e</strong></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">NCM = Nomenclatura Comum do Mercosul — obrigatório na NF-e</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalItemFiscal('produto')">+ Novo Produto Fiscal</button>
     </div>
-    <div class="card" style="text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">📋</div>
-      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;margin-bottom:5px">SQL da tabela NF</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Já criado no schema do banco</div>
-      <pre style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:10px;font-size:9.5px;color:var(--cyan);text-align:left;max-height:120px;overflow:auto">notas_fiscais:
-  numero_nf
-  chave_acesso
-  xml_url / pdf_url
-  status (pendente/emitida)
-  valor, cliente_nome</pre>
+    <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">
+      💡 <strong>NCMs comuns para comunicação visual:</strong>
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">
+        4911.91.00</span> (Impressos) ·
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">
+        3919.90.00</span> (Adesivos) ·
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">
+        7606.11.00</span> (ACM/Alumínio) ·
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">
+        3920.49.00</span> (PVC/Plástico)
     </div>
-    <div class="card" style="text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">⚡</div>
-      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;margin-bottom:5px">Fluxo de emissão</div>
-      <div style="font-size:12px;color:var(--text3);text-align:left;line-height:2">
-        1. Orçamento finalizado<br>
-        2. Clique "Emitir NF"<br>
-        3. API gera NF automaticamente<br>
-        4. XML e PDF disponíveis aqui
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table" id="tabela-fiscal-produtos">
+        <thead><tr><th>Código</th><th>Nome / Descrição</th><th>NCM</th><th>Unidade</th><th>Valor Padrão</th><th>CFOP</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-fiscal-produtos"><tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text3)">Nenhum produto fiscal cadastrado</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ ABA: SERVIÇOS FISCAIS ══ -->
+  <div id="fiscal-tab-servicos" class="fiscal-tab-content" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-size:13px;color:var(--text2)">Cadastre serviços com código LC116 para emissão de <strong>NFS-e</strong></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">Serviços prestados como instalação, criação e montagem</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalItemFiscal('servico')">+ Novo Serviço</button>
+    </div>
+    <div class="alert alert-info" style="font-size:12px;margin-bottom:14px">
+      💡 <strong>Serviços comuns para comunicação visual:</strong>
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">7.06</span> (Propaganda e publicidade) ·
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">7.09</span> (Disponibilização de espaço) ·
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">14.05</span> (Restauração, recondicionamento) ·
+      <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">17.09</span> (Comunicação visual)
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table" id="tabela-fiscal-servicos">
+        <thead><tr><th>Código</th><th>Nome / Descrição</th><th>Cód. LC116</th><th>ISS (%)</th><th>Município</th><th>Valor Padrão</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-fiscal-servicos"><tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text3)">Nenhum serviço fiscal cadastrado</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ ABA: NOTAS EMITIDAS ══ -->
+  <div id="fiscal-tab-notas" class="fiscal-tab-content" style="display:none">
+    <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="nf-filtro-tipo" onchange="renderListaNF()" style="min-width:130px">
+        <option value="todos">Todos</option>
+        <option value="nfe">NF-e</option>
+        <option value="nfse">NFS-e</option>
+      </select>
+      <select id="nf-filtro-status" onchange="renderListaNF()" style="min-width:130px">
+        <option value="todos">Todos status</option>
+        <option value="pendente">Pendente</option>
+        <option value="emitida">Emitida</option>
+        <option value="cancelada">Cancelada</option>
+      </select>
+    </div>
+    <div id="lista-nf"><div class="alert alert-info">ℹ️ Nenhuma nota fiscal emitida ainda.</div></div>
+  </div>
+
+  <!-- ══ ABA: CONFIGURAÇÃO ══ -->
+  <div id="fiscal-tab-config" class="fiscal-tab-content" style="display:none">
+
+    <!-- STATUS GERAL DA CONFIGURAÇÃO -->
+    <div id="cfg-fiscal-status-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px"></div>
+
+    <!-- BACKEND CONFIG -->
+    <div style="background:rgba(56,197,224,.07);border:1px solid rgba(56,197,224,.2);border-radius:var(--r-lg);padding:13px 16px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:18px">🖥️</span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13px">Backend Node.js</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Necessário para emissão real de NF (evita bloqueio CORS)</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="url" id="cfg-backend-url" placeholder="https://seu-backend.railway.app" style="width:280px;font-size:12px">
+          <input type="password" id="cfg-backend-key" placeholder="API_SECRET_KEY" style="width:150px;font-size:12px">
+          <button class="btn btn-primary btn-sm" onclick="salvarBackendConfig()">Salvar</button>
+          <button class="btn btn-ghost btn-sm" onclick="testarBackend()" id="btn-testar-backend">Testar</button>
+        </div>
+      </div>
+      <div id="backend-status-line" style="font-size:11px;margin-top:8px;color:var(--text3)">
+        Sem backend configurado — configure acima para habilitar emissao de NF.
+      </div>
+    </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+      <!-- ═══ CARD 1: DADOS DO EMITENTE ═══ -->
+      <div class="card">
+        <div class="card-title"><div class="card-icon">🏢</div>Dados do Emitente</div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>CNPJ *</label>
+            <input type="text" id="nf-cnpj" placeholder="00.000.000/0001-00" maxlength="18"
+              oninput="this.value=maskCNPJ(this.value)">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Razão Social *</label>
+            <input type="text" id="nf-razao-social" placeholder="Nome oficial da empresa">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Inscrição Estadual</label>
+            <input type="text" id="nf-ie" placeholder="Isento ou número">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Inscrição Municipal</label>
+            <input type="text" id="nf-im" placeholder="Número da IM">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Regime Tributário</label>
+            <select id="nf-regime">
+              <option value="1">1 — Simples Nacional</option>
+              <option value="2">2 — Simples Nacional (Excesso)</option>
+              <option value="3">3 — Regime Normal</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>CNAE Principal</label>
+            <input type="text" id="nf-cnae" placeholder="7319-0/02" list="dl-cnae">
+            <datalist id="dl-cnae">
+              <option value="7319-0/02">7319-0/02 — Comunicação visual</option>
+              <option value="1813-0/01">1813-0/01 — Impressão gráfica</option>
+              <option value="2399-1/01">2399-1/01 — Decoração/comunicação</option>
+              <option value="7311-4/00">7311-4/00 — Agências de publicidade</option>
+            </datalist>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>CEP</label>
+            <input type="text" id="nf-cep" placeholder="00000-000" maxlength="9">
+          </div>
+          <div class="form-group" style="margin:0;flex:2">
+            <label>Logradouro</label>
+            <input type="text" id="nf-logradouro" placeholder="Rua, Av...">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Número</label>
+            <input type="text" id="nf-numero" placeholder="123">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Bairro</label>
+            <input type="text" id="nf-bairro" placeholder="Centro">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Cidade</label>
+            <input type="text" id="nf-cidade-nf" placeholder="São Paulo">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>UF</label>
+            <select id="nf-uf">
+              <option value="SP">SP</option><option value="RJ">RJ</option><option value="MG">MG</option>
+              <option value="RS">RS</option><option value="SC">SC</option><option value="PR">PR</option>
+              <option value="BA">BA</option><option value="PE">PE</option><option value="CE">CE</option>
+              <option value="GO">GO</option><option value="DF">DF</option><option value="MT">MT</option>
+              <option value="MS">MS</option><option value="PA">PA</option><option value="AM">AM</option>
+              <option value="ES">ES</option><option value="RN">RN</option><option value="PB">PB</option>
+              <option value="AL">AL">AL</option><option value="SE">SE</option><option value="PI">PI</option>
+              <option value="MA">MA</option><option value="TO">TO</option><option value="RO">RO</option>
+              <option value="AC">AC</option><option value="RR">RR</option><option value="AP">AP</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group" style="margin:0">
+            <label>Cód. IBGE do município</label>
+            <input type="text" id="nf-ibge" placeholder="3550308 (SP)" maxlength="7">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>ISS padrão (%)</label>
+            <input type="number" id="nf-iss-padrao" placeholder="2.00" step="0.01" min="0" max="5" value="2">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="salvarConfigFiscal()">💾 Salvar Dados do Emitente</button>
+      </div>
+
+      <!-- ═══ CARD 2: CERTIFICADO DIGITAL A1 ═══ -->
+      <div>
+        <div class="card" style="margin-bottom:14px;border-color:rgba(139,92,246,.3)">
+          <div class="card-title"><div class="card-icon" style="background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.25)">🔐</div>Certificado Digital A1</div>
+
+          <!-- Alerta de segurança -->
+          <div class="alert alert-info" style="font-size:12px;margin-bottom:14px;line-height:1.6">
+            <strong>🛡️ Como funciona com segurança:</strong><br>
+            O certificado <strong>nunca é armazenado no navegador</strong>. Ele é enviado diretamente ao provedor de NF (Focus NF-e, NFe.io, eNotas) via HTTPS. O frontend apenas transmite — não guarda o arquivo.
+          </div>
+
+          <!-- Status do certificado -->
+          <div id="cert-status-box" style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+            <span id="cert-status-icon" style="font-size:20px">📄</span>
+            <div style="flex:1">
+              <div id="cert-status-title" style="font-weight:600;font-size:13px">Nenhum certificado configurado</div>
+              <div id="cert-status-sub" style="font-size:11px;color:var(--text3);margin-top:2px">Configure seu certificado A1 (.pfx ou .p12) para emissão automática de NF</div>
+            </div>
+            <span id="cert-status-badge"></span>
+          </div>
+
+          <!-- Upload do certificado -->
+          <div class="form-group" style="margin-bottom:10px">
+            <label>Arquivo do Certificado (.pfx ou .p12)</label>
+            <div id="cert-drop-zone" style="border:2px dashed var(--line2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--ink3)"
+              onclick="document.getElementById('cert-file-input').click()"
+              ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+              ondragleave="this.style.borderColor='var(--line2)'"
+              ondrop="handleCertDrop(event)">
+              <div id="cert-drop-icon" style="font-size:28px;margin-bottom:6px">📁</div>
+              <div id="cert-drop-text" style="font-size:13px;color:var(--text3)">Clique ou arraste o arquivo aqui</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">Formatos aceitos: .pfx, .p12 · Máx: 500KB</div>
+            </div>
+            <input type="file" id="cert-file-input" accept=".pfx,.p12" style="display:none" onchange="handleCertSelect(this)">
+          </div>
+
+          <div class="form-row" style="margin-bottom:12px">
+            <div class="form-group" style="margin:0">
+              <label>Senha do Certificado</label>
+              <div style="position:relative">
+                <input type="password" id="cert-senha" placeholder="Senha do arquivo .pfx" autocomplete="new-password"
+                  style="padding-right:40px">
+                <button onclick="toggleSenhaCert()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px" id="cert-senha-eye">👁</button>
+              </div>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Validade do Certificado</label>
+              <input type="text" id="cert-validade" placeholder="Lida automaticamente" readonly
+                style="color:var(--text3);cursor:not-allowed">
+            </div>
+          </div>
+
+          <div id="cert-arquivo-info" style="display:none;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:var(--r);padding:10px;margin-bottom:12px;font-size:12px">
+            <span id="cert-arquivo-nome" style="color:var(--purple);font-weight:600"></span>
+            <span id="cert-arquivo-size" style="color:var(--text3);margin-left:8px"></span>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" id="btn-enviar-cert" onclick="enviarCertificado()" disabled>
+              🔐 Enviar ao Provedor
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="verificarCertificado()">🔍 Verificar status</button>
+            <button class="btn btn-danger btn-xs" id="btn-remover-cert" onclick="removerCertificado()" style="display:none">🗑 Remover</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:8px">
+            ⚠️ A senha <strong>nunca é armazenada</strong> no banco de dados. É usada apenas para transmitir o certificado ao provedor.
+          </div>
+        </div>
+
+        <!-- ═══ CARD 3: PROVEDOR DE NF ═══ -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title"><div class="card-icon">🔗</div>Provedor de Emissão</div>
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label>Provedor</label>
+              <select id="nf-provedor" onchange="onProvedorChange(this.value)">
+                <option value="">Selecione...</option>
+                <option value="focusnfe">Focus NF-e</option>
+                <option value="nuvemfiscal">Nuvem Fiscal</option>
+                <option value="nfeio">NFe.io</option>
+                <option value="enotas">eNotas</option>
+                <option value="manual">Manual (exportar dados)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Ambiente</label>
+              <select id="nf-ambiente">
+                <option value="homologacao">🧪 Homologação (testes)</option>
+                <option value="producao">🟢 Produção</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="provedor-instrucoes" style="display:none;font-size:11px;color:var(--text3);margin-bottom:10px;padding:8px 10px;background:var(--ink3);border-radius:var(--r);border-left:3px solid var(--cyan)"></div>
+
+          <div class="form-group" style="margin-bottom:10px">
+            <label>API Token / Client Secret</label>
+            <div style="position:relative">
+              <input type="password" id="nf-api-key" placeholder="Token de acesso do provedor" autocomplete="new-password"
+                style="padding-right:40px">
+              <button onclick="toggleApiKey()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3)" id="api-key-eye">👁</button>
+            </div>
+          </div>
+
+          <div id="nuvemfiscal-extra" style="display:none">
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Client ID (Nuvem Fiscal)</label>
+              <input type="text" id="nf-client-id" placeholder="Client ID OAuth2">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="salvarConfigEmissor()">💾 Salvar</button>
+            <button class="btn btn-ghost btn-sm" id="btn-testar-api" onclick="testarConexaoNF()">🧪 Testar conexão</button>
+          </div>
+        </div>
+
+        <!-- ═══ CARD 4: EXPORTAR / SQL ═══ -->
+        <div class="card">
+          <div class="card-title"><div class="card-icon">📤</div>Exportar & SQL</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="exportarDadosNF()">⬇️ Exportar JSON para NF</button>
+            <button class="btn btn-ghost btn-sm" onclick="copiarSqlFiscal()">📋 Copiar SQL</button>
+          </div>
+          <details>
+            <summary style="cursor:pointer;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.07em">🗄️ SQL Supabase (itens_fiscais + certificados)</summary>
+            <pre id="sql-fiscal-pre" style="margin-top:8px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:10px;font-size:8.5px;color:var(--cyan);max-height:200px;overflow:auto;white-space:pre-wrap">-- itens_fiscais (já criado anteriormente)
+-- Adicionar tabela certificados_fiscais:
+
+CREATE TABLE IF NOT EXISTS certificados_fiscais (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  empresa_id UUID REFERENCES empresas(id) ON DELETE CASCADE UNIQUE,
+  provedor TEXT NOT NULL,
+  ambiente TEXT DEFAULT 'homologacao',
+  cert_status TEXT DEFAULT 'nao_configurado',
+  cert_nome TEXT,
+  cert_validade DATE,
+  cnpj TEXT,
+  razao_social TEXT,
+  ie TEXT, im TEXT,
+  regime TEXT DEFAULT '1',
+  cnae TEXT,
+  ibge TEXT,
+  cep TEXT, logradouro TEXT, numero TEXT,
+  bairro TEXT, cidade TEXT, uf TEXT,
+  iss_padrao NUMERIC DEFAULT 2,
+  client_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS: cada empresa só acessa seu próprio certificado
+ALTER TABLE certificados_fiscais ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own_cert_fiscal" ON certificados_fiscais FOR ALL
+  USING (empresa_id = get_empresa_id())
+  WITH CHECK (empresa_id = get_empresa_id());
+GRANT SELECT,INSERT,UPDATE ON certificados_fiscais TO authenticated;
+
+-- NUNCA armazenar o arquivo .pfx ou senha no banco!
+-- O certificado é enviado diretamente ao provedor via HTTPS.
+-- O banco armazena apenas metadados (nome, validade, status).</pre>
+          </details>
+        </div>
       </div>
     </div>
   </div>
-  <div id="lista-nf"><div class="alert alert-info">ℹ️ Nenhuma nota fiscal emitida ainda.</div></div>
 </div>
 
 
@@ -3210,6 +3605,7 @@ let state = {
   compras:      [],
   fornecedores: [],
   produtos_cat: [],
+  itens_fiscais: [],   // produtos e serviços com dados fiscais (NCM, ISS, etc.)
 };
 
 let empresa = {
@@ -4487,11 +4883,14 @@ function renderDashboard() {
 // STATUS CONFIGS
 // ═══════════════════════════════════════════════════════════════════
 const STATUS_CFG = {
-  orcamento:  { label:'Orçamento',  icon:'📋', color:'var(--cyan)',   next:'aprovado',   badgeCls:'badge-blue'   },
-  aprovado:   { label:'Aprovado',   icon:'✅', color:'var(--green)',  next:'producao',   badgeCls:'badge-green'  },
-  producao:   { label:'Produção',   icon:'🔧', color:'var(--gold)',   next:'finalizado', badgeCls:'badge-yellow' },
-  finalizado: { label:'Finalizado', icon:'🎉', color:'#6bcf8a',      next:null,         badgeCls:'badge-green'  },
-  cancelado:  { label:'Cancelado',  icon:'❌', color:'var(--red)',    next:null,         badgeCls:'badge-red'    },
+  rascunho:   { label:'Rascunho',   icon:'✏️', color:'var(--text3)', next:'enviado',    badgeCls:'badge-gray'   },
+  enviado:    { label:'Enviado',    icon:'📤', color:'var(--cyan)',  next:'aprovado',   badgeCls:'badge-blue'   },
+  orcamento:  { label:'Orçamento',  icon:'📋', color:'var(--cyan)',  next:'aprovado',   badgeCls:'badge-blue'   },
+  aprovado:   { label:'Aprovado',   icon:'✅', color:'var(--green)', next:'producao',   badgeCls:'badge-green'  },
+  recusado:   { label:'Recusado',   icon:'🚫', color:'var(--red)',   next:null,         badgeCls:'badge-red'    },
+  producao:   { label:'Produção',   icon:'🔧', color:'var(--gold)',  next:'finalizado', badgeCls:'badge-yellow' },
+  finalizado: { label:'Finalizado', icon:'🎉', color:'#6bcf8a',     next:null,         badgeCls:'badge-green'  },
+  cancelado:  { label:'Cancelado',  icon:'❌', color:'var(--red)',   next:null,         badgeCls:'badge-red'    },
 };
 const PED_STATUS_CFG = {
   producao:   { label:'Produção',    icon:'🔧', badgeCls:'badge-yellow', next:'impressao' },
@@ -10971,7 +11370,124 @@ function _mostrarRelatorioCompleto() {
   var w = window.open('', '_blank', 'width=600,height=700');
   if (w) {
     var css = 'body{font-family:monospace;background:#06080f;color:#e8eaf0;padding:20px;white-space:pre-wrap;font-size:13px;line-height:1.7}';
-    w.document.write('<html><head><title>Relatorio VisualCalc</title><style>' + css + '</style></head><body>' + rel.texto.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</body></html>');
+    w.document.write('<html><head><title>Relatorio VisualCalc</title><style>' + css + '</style></head><body>' + rel.texto.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '
+<!-- ═══════════════════ MODAL ITEM FISCAL ═══════════════════ -->
+<div id="modal-item-fiscal" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalItemFiscal()">
+  <div class="modal-box" style="max-width:580px">
+    <button class="modal-close" onclick="fecharModalItemFiscal()">✕</button>
+    <div class="modal-title" id="mif-title">+ Novo Produto Fiscal</div>
+    <div class="modal-sub" id="mif-sub">Preencha os dados fiscais para emissão de NF</div>
+
+    <input type="hidden" id="mif-id">
+    <input type="hidden" id="mif-tipo-item">
+
+    <!-- Campos comuns -->
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-group" style="margin:0"><label>Código Interno *</label>
+        <input type="text" id="mif-codigo" placeholder="Ex: BAN-001, INST-001">
+      </div>
+      <div class="form-group" style="margin:0;flex:2"><label>Nome / Descrição *</label>
+        <input type="text" id="mif-nome" placeholder="Ex: Banner em Lona 440g, Instalação de Fachada">
+      </div>
+    </div>
+
+    <!-- Campos PRODUTO -->
+    <div id="mif-campos-produto">
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>NCM *</label>
+          <input type="text" id="mif-ncm" placeholder="0000.00.00" maxlength="10"
+            list="dl-ncm-sugestoes" autocomplete="off">
+          <datalist id="dl-ncm-sugestoes">
+            <option value="4911.91.00">4911.91.00 — Impressos publicitários</option>
+            <option value="4911.99.00">4911.99.00 — Outros impressos</option>
+            <option value="3919.90.00">3919.90.00 — Adesivos autocolantes</option>
+            <option value="3920.49.00">3920.49.00 — Placas PVC/plástico</option>
+            <option value="7606.11.00">7606.11.00 — ACM/Alumínio</option>
+            <option value="7308.90.90">7308.90.90 — Estruturas metálicas</option>
+            <option value="9405.40.00">9405.40.00 — Painéis luminosos/LED</option>
+            <option value="3926.90.90">3926.90.90 — Outras obras de plástico</option>
+          </datalist>
+        </div>
+        <div class="form-group" style="margin:0"><label>CFOP</label>
+          <select id="mif-cfop">
+            <option value="5101">5101 — Venda prod. industrializado</option>
+            <option value="5102">5102 — Venda de mercadoria</option>
+            <option value="5405">5405 — Simples Nacional</option>
+            <option value="6101">6101 — Venda interestadual</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Unidade de Medida</label>
+          <select id="mif-unidade">
+            <option value="M2">M2 — Metro quadrado</option>
+            <option value="UN">UN — Unidade</option>
+            <option value="M">M — Metro linear</option>
+            <option value="KG">KG — Quilograma</option>
+            <option value="CX">CX — Caixa</option>
+            <option value="PC">PC — Peça</option>
+            <option value="SV">SV — Serviço</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>CST / CSOSN</label>
+          <select id="mif-cst">
+            <option value="400">400 — Simples Nacional (saída)</option>
+            <option value="102">102 — Simples Nacional sem permissão de crédito</option>
+            <option value="500">500 — ICMS cobrado por ST</option>
+            <option value="900">900 — Outros (Regime Normal)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campos SERVIÇO -->
+    <div id="mif-campos-servico" style="display:none">
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Código LC 116/2003 *</label>
+          <input type="text" id="mif-lc116" placeholder="Ex: 7.06"
+            list="dl-lc116-sugestoes" autocomplete="off">
+          <datalist id="dl-lc116-sugestoes">
+            <option value="7.06">7.06 — Propaganda e publicidade</option>
+            <option value="7.09">7.09 — Disponibilização de espaço</option>
+            <option value="14.05">14.05 — Restauração e recondicionamento</option>
+            <option value="17.09">17.09 — Comunicação visual</option>
+            <option value="37.01">37.01 — Serviços em geral</option>
+          </datalist>
+        </div>
+        <div class="form-group" style="margin:0"><label>ISS (%)</label>
+          <input type="number" id="mif-iss" placeholder="2" step="0.1" min="0" max="5" value="2">
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Município de prestação</label>
+          <input type="text" id="mif-municipio" placeholder="Ex: São Paulo/SP">
+        </div>
+        <div class="form-group" style="margin:0"><label>Cód. IBGE do município</label>
+          <input type="text" id="mif-ibge-item" placeholder="Ex: 3550308">
+        </div>
+      </div>
+    </div>
+
+    <!-- Campos comuns (valor + obs) -->
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-group" style="margin:0"><label>Valor Padrão (R$)</label>
+        <input type="number" id="mif-valor" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group" style="margin:0;flex:2"><label>Descrição Fiscal Completa</label>
+        <input type="text" id="mif-desc-fiscal" placeholder="Descrição que aparece na nota fiscal">
+      </div>
+    </div>
+    <div class="form-group"><label>Observações</label>
+      <input type="text" id="mif-obs" placeholder="Informações adicionais (opcional)">
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="fecharModalItemFiscal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarItemFiscal()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+</body></html>');
     w.document.close();
   } else {
     alert(rel.texto);
@@ -12490,6 +13006,2233 @@ function _renderSimuladorLucro(custos, preco, linhas) {
   renderResultadoPremium(custos, preco, linhas);
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc ERP — Módulos Expandidos v8.0
+// Orçamentos · Pedidos · Produção · Financeiro · Fluxo Completo
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 1: ORÇAMENTOS — renderização melhorada + duplicar + editar
+// ─────────────────────────────────────────────────────────────────────
+
+function renderOrcamentos() {
+  var lista = document.getElementById('lista-orcamentos'); if (!lista) return;
+  var sub   = document.getElementById('hist-sub');
+
+  var busca  = ((document.getElementById('f_cli')    || {}).value || '').toLowerCase().trim();
+  var status = (document.getElementById('f_status')  || {}).value || 'todos';
+  var ordem  = (document.getElementById('f_ordem')   || {}).value || 'recente';
+
+  var filtrados = (state.orcamentos || []).filter(function(o) {
+    var txt = ((o.cliente||'') + ' ' + (o.produto||'') + ' ' + (o.ref||'') + ' ' + (o.material||'')).toLowerCase();
+    if (busca && !txt.includes(busca)) return false;
+    if (status !== 'todos' && o.status !== status) return false;
+    return true;
+  });
+
+  // Ordenação
+  filtrados.sort(function(a, b) {
+    if (ordem === 'valor_desc') return (b.precoFinal||0) - (a.precoFinal||0);
+    if (ordem === 'valor_asc')  return (a.precoFinal||0) - (b.precoFinal||0);
+    if (ordem === 'margem')     return (b.margemReal||0) - (a.margemReal||0);
+    // recente: por data
+    return new Date(b.created_at || b.data || 0) - new Date(a.created_at || a.data || 0);
+  });
+
+  if (sub) sub.textContent = filtrados.length + ' orçamento(s)';
+
+  // Funil rápido
+  _renderFunilRapido();
+
+  if (!filtrados.length) {
+    lista.innerHTML = '<div class="alert alert-info">ℹ️ Nenhum orçamento encontrado.</div>';
+    return;
+  }
+
+  lista.innerHTML = filtrados.map(function(h) {
+    var cfg     = STATUS_CFG[h.status || 'orcamento'] || STATUS_CFG.orcamento;
+    var cfgNext = cfg.next ? STATUS_CFG[cfg.next] : null;
+    var isEnd   = ['finalizado','cancelado','recusado'].indexOf(h.status) >= 0;
+    var orcId   = h._db_id || h.id;
+    var mR      = parseFloat(h.margemReal || 0);
+    var mCor    = mR >= 35 ? 'var(--green)' : mR >= 20 ? 'var(--gold)' : 'var(--red)';
+
+    return '<div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--line2)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
+
+      // Header
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:13px 16px 10px">'
+      +   '<div style="flex:1;min-width:0">'
+      +     '<div style="font-family:Bricolage Grotesque,sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">'
+      +       (h.cliente || '—')
+      +       (h.ref ? '<span style="color:var(--text3);font-weight:400;font-size:11px">— ' + h.ref + '</span>' : '')
+      +     '</div>'
+      +     '<div style="font-size:11px;color:var(--text3);margin-top:2px">'
+      +       (h.data || '') + (h.produto ? ' · ' + h.produto : '') + (h.material ? ' · ' + h.material : '')
+      +     '</div>'
+      +   '</div>'
+      +   '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:10px">'
+      +     statusBadge(h.status || 'orcamento')
+      +   '</div>'
+      + '</div>'
+
+      // KPIs numéricos
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">'
+      +   _finCell('Custo',      'R$ ' + fmtBR(h.custoTotal),  'var(--text)', true)
+      +   _finCell('Preço Final','R$ ' + fmtBR(h.precoFinal),  'var(--gold)', true)
+      +   _finCell('Lucro',      'R$ ' + fmtBR(h.lucro),       'var(--green)',true)
+      +   _finCell('Margem',     mR.toFixed(1) + '%',            mCor,         false)
+      + '</div>'
+
+      // Ações
+      + '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:var(--ink3);flex-wrap:wrap;gap:5px">'
+      +   '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+      +     (!isEnd && cfgNext ? '<button class="btn btn-success btn-sm" onclick="avancarOrc(\'' + orcId + '\')">' + cfgNext.icon + ' ' + cfgNext.label + '</button>' : '')
+      +     (!isEnd ? '<button class="btn btn-warn btn-xs" onclick="cancelarOrc(\'' + orcId + '\')">✕ Cancelar</button>' : '')
+      +     (h.status === 'aprovado' ? '<button class="btn btn-cyan btn-sm" onclick="criarPedidoDeOrc(\'' + orcId + '\')">📦 → Produção</button>' : '')
+      +     (h.status === 'finalizado' ? '<button class="btn btn-secondary btn-sm" onclick="registrarRecebimento(\'' + orcId + '\')">💰 Lançar</button><button class="btn btn-sm" onclick="emitirNotaFiscal(\'' + orcId + '\')" style="background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.3)">📄 Emitir NF</button>' : '')
+      +     '<button class="btn btn-ghost btn-xs" onclick="recusarOrc(\'' + orcId + '\')" style="color:var(--red)" title="Marcar como recusado">🚫</button>'
+      +   '</div>'
+      +   '<div style="display:flex;gap:5px">'
+      +     '<button class="btn btn-ghost btn-xs" onclick="duplicarOrc(\'' + orcId + '\')" title="Duplicar orçamento">📋 Duplicar</button>'
+      +     '<button class="btn btn-secondary btn-xs" onclick="enviarWA_hist(\'' + orcId + '\')">💬</button>'
+      +     '<button class="btn btn-secondary btn-xs" onclick="imprimirOrc(\'' + orcId + '\')">🖨</button>'
+      +     '<button class="btn btn-danger btn-xs btn-icon" onclick="excluirOrc(\'' + orcId + '\')">🗑</button>'
+      +   '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function _finCell(label, val, cor, border) {
+  return '<div style="padding:8px 14px' + (border ? ';border-right:1px solid var(--line)' : '') + '">'
+    + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:2px">' + label + '</div>'
+    + '<div style="font-family:DM Mono,monospace;font-weight:600;font-size:13px;color:' + cor + '">' + val + '</div>'
+    + '</div>';
+}
+
+function _renderFunilRapido() {
+  var el = document.getElementById('orc-funil-rapido'); if (!el) return;
+  var counts = {};
+  (state.orcamentos || []).forEach(function(o) {
+    var s = o.status || 'orcamento';
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  var ordem = ['rascunho','enviado','orcamento','aprovado','recusado','producao','finalizado','cancelado'];
+  el.innerHTML = ordem.filter(function(s){ return counts[s] > 0; }).map(function(s) {
+    var cfg = STATUS_CFG[s] || STATUS_CFG.orcamento;
+    var ativo = (document.getElementById('f_status') || {}).value === s;
+    return '<button onclick="filtrarPorStatus(\'' + s + '\')" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;border:1px solid ' + (ativo ? cfg.color : 'var(--line)') + ';background:' + (ativo ? cfg.color+'18' : 'var(--ink3)') + ';cursor:pointer;font-size:12px;color:' + (ativo ? cfg.color : 'var(--text2)') + ';transition:all .15s">'
+      + cfg.icon + ' ' + cfg.label + ' <span style="font-family:DM Mono,monospace;font-weight:700">' + counts[s] + '</span></button>';
+  }).join('');
+}
+
+function filtrarPorStatus(s) {
+  var el = document.getElementById('f_status');
+  if (el) {
+    el.value = el.value === s ? 'todos' : s;
+  }
+  aplicarFiltro();
+}
+
+function aplicarFiltro() {
+  _filtro.cliente = ((document.getElementById('f_cli') || {}).value || '').toLowerCase().trim();
+  _filtro.status  = (document.getElementById('f_status') || {}).value || 'todos';
+  renderOrcamentos();
+}
+
+function limparFiltro() {
+  _filtro = { cliente: '', status: 'todos' };
+  var fc = document.getElementById('f_cli');   if (fc) fc.value = '';
+  var fs = document.getElementById('f_status');if (fs) fs.value = 'todos';
+  renderOrcamentos();
+}
+
+// ── Duplicar orçamento ────────────────────────────────────────────────
+async function duplicarOrc(id) {
+  var o = (state.orcamentos || []).find(function(x){ return String(x._db_id||x.id) === String(id); });
+  if (!o) return;
+  showLoading('Duplicando...');
+  var copia = Object.assign({}, o, {
+    id:         Date.now(),
+    _db_id:     undefined,
+    status:     'orcamento',
+    ref:        (o.ref || '') + ' (cópia)',
+    data:       new Date().toLocaleString('pt-BR'),
+    created_at: new Date().toISOString(),
+  });
+  delete copia._db_id;
+  await dbSaveOrcamento(copia);
+  hideLoading();
+  renderOrcamentos(); updateHistBadge(); renderDashboard();
+  toast('Orçamento duplicado!', 'success');
+}
+
+// ── Recusar orçamento ─────────────────────────────────────────────────
+async function recusarOrc(id) {
+  if (!confirm('Marcar este orçamento como recusado pelo cliente?')) return;
+  var o = (state.orcamentos || []).find(function(x){ return String(x._db_id||x.id) === String(id); });
+  if (!o) return;
+  showLoading('Atualizando...');
+  await dbUpdateOrcStatus(o.id, 'recusado');
+  hideLoading(); renderOrcamentos(); renderDashboard();
+  toast('Orçamento marcado como recusado', 'warn');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 2: PEDIDOS — view switcher + lista + KPIs
+// ─────────────────────────────────────────────────────────────────────
+
+var _pedView = 'kanban';
+
+function setPedView(view) {
+  _pedView = view;
+  var k = document.getElementById('ped-view-kanban-content');
+  var l = document.getElementById('ped-view-lista-content');
+  var bk= document.getElementById('ped-view-kanban');
+  var bl= document.getElementById('ped-view-lista');
+  if (k) k.style.display = view === 'kanban' ? 'block' : 'none';
+  if (l) l.style.display = view === 'lista'  ? 'block' : 'none';
+  if (bk) { bk.style.background = view==='kanban'?'var(--gold-d)':''; bk.style.color = view==='kanban'?'var(--gold)':''; }
+  if (bl) { bl.style.background = view==='lista' ?'var(--gold-d)':''; bl.style.color = view==='lista' ?'var(--gold)':''; }
+  renderPedidos();
+}
+
+function renderPedidos() {
+  // Atualizar KPIs
+  var peds = state.pedidos || [];
+  var emProd   = peds.filter(function(p){ return ['producao','impressao','acabamento'].indexOf(p.status) >= 0; });
+  var prontos  = peds.filter(function(p){ return p.status === 'pronto'; });
+  var entregues= peds.filter(function(p){ return p.status === 'entregue'; });
+  var valorProd= emProd.reduce(function(s,p){ return s + (parseFloat(p.valor)||0); }, 0);
+
+  function sEl(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+  sEl('ped-kpi-prod',    emProd.length);
+  sEl('ped-kpi-pronto',  prontos.length);
+  sEl('ped-kpi-entregue',entregues.length);
+  sEl('ped-kpi-valor',   'R$ ' + fmtBR(valorProd));
+
+  if (_pedView === 'kanban') {
+    _renderPedidosKanban();
+  } else {
+    _renderPedidosLista();
+  }
+  updateHistBadge();
+}
+
+function _renderPedidosKanban() {
+  Object.keys(PED_STATUS_CFG).forEach(function(status) {
+    var col = document.getElementById('ped-col-' + status); if (!col) return;
+    var peds = (state.pedidos || []).filter(function(p){ return p.status === status; });
+    var cnt  = document.getElementById('ped-cnt-' + status); if (cnt) cnt.textContent = peds.length;
+    col.innerHTML = peds.map(function(p) {
+      var pedId   = p._db_id || p.id;
+      var chkDisp = planoLiberaChecklist();
+      var cache   = _checklistCache[pedId];
+      var chkPct  = cache && cache.length > 0
+        ? Math.round(cache.filter(function(x){ return x.concluido; }).length / cache.length * 100) : null;
+      var chkBadge = chkDisp && chkPct !== null
+        ? '<span style="font-size:10px;color:' + (chkPct===100?'var(--green)':'var(--text3)') + '">✅' + chkPct + '%</span>'
+        : (chkDisp ? '<span style="font-size:10px;color:var(--text3)">✅—</span>' : '');
+      var priCor = {baixa:'var(--text3)',normal:'var(--cyan)',alta:'var(--gold)',urgente:'var(--red)'};
+      var cor = priCor[p.prioridade] || priCor.normal;
+      return '<div class="kanban-card" onclick="abrirPedido(\'' + pedId + '\')">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+        +   '<div class="kanban-card-title" style="flex:1">' + (p.cliente_nome||'—') + '</div>'
+        +   '<div style="width:8px;height:8px;border-radius:50%;background:' + cor + ';flex-shrink:0;margin-top:3px"></div>'
+        + '</div>'
+        + '<div class="kanban-card-meta">' + (p.produto||'') + '</div>'
+        + (p.largura && p.altura ? '<div style="font-size:10px;color:var(--text3)">' + p.largura + 'm × ' + p.altura + 'm</div>' : '')
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">'
+        +   '<span style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;color:var(--gold)">R$ ' + fmtBR(p.valor) + '</span>'
+        +   '<div style="display:flex;align-items:center;gap:5px">' + chkBadge + '<span class="badge badge-gray" style="font-size:10px">' + (p.numero||'') + '</span></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">'
+        +   (PED_STATUS_CFG[status] && PED_STATUS_CFG[status].next ? '<button class="btn btn-success btn-xs" onclick="event.stopPropagation();avancarPedido(\'' + pedId + '\')" style="font-size:10px">→ ' + PED_STATUS_CFG[PED_STATUS_CFG[status].next].label + '</button>' : '')
+        +   (chkDisp ? '<button class="btn btn-cyan btn-xs" onclick="event.stopPropagation();abrirPedido(\'' + pedId + '\')" style="font-size:10px">✅ Checklist</button>' : '')
+        + '</div>'
+        + '</div>';
+    }).join('') || '<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">Nenhum</div>';
+  });
+}
+
+function _renderPedidosLista() {
+  var tbody = document.getElementById('tbody-pedidos-lista'); if (!tbody) return;
+  var peds  = state.pedidos || [];
+  if (!peds.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text3)">Nenhum pedido em produção</td></tr>';
+    return;
+  }
+  tbody.innerHTML = peds.map(function(p) {
+    var pedId = p._db_id || p.id;
+    var pcfg  = PED_STATUS_CFG[p.status] || PED_STATUS_CFG.producao;
+    var priCor= {baixa:'var(--text3)',normal:'var(--cyan)',alta:'var(--gold)',urgente:'var(--red)'};
+    return '<tr style="cursor:pointer" onclick="abrirPedido(\'' + pedId + '\')">'
+      + '<td style="font-family:DM Mono,monospace;font-size:11px">' + (p.numero||'—') + '</td>'
+      + '<td><strong>' + (p.cliente_nome||'—') + '</strong></td>'
+      + '<td>' + (p.produto||'—') + '</td>'
+      + '<td style="font-size:12px">' + (p.largura&&p.altura ? p.largura+'×'+p.altura+'m' : '—') + '</td>'
+      + '<td style="font-family:DM Mono,monospace;color:var(--gold);font-weight:600">R$ ' + fmtBR(p.valor) + '</td>'
+      + '<td><span class="badge ' + pcfg.badgeCls + '">' + pcfg.icon + ' ' + pcfg.label + '</span></td>'
+      + '<td><span style="color:' + (priCor[p.prioridade]||priCor.normal) + ';font-size:12px;font-weight:600">' + (p.prioridade||'normal') + '</span></td>'
+      + '<td><div style="display:flex;gap:4px">'
+      +   (pcfg.next ? '<button class="btn btn-success btn-xs" onclick="event.stopPropagation();avancarPedido(\'' + pedId + '\')">→ ' + PED_STATUS_CFG[pcfg.next].label + '</button>' : '')
+      +   '<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();abrirPedido(\'' + pedId + '\')">Ver</button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 3: FINANCEIRO — abas + filtro + vencimento
+// ─────────────────────────────────────────────────────────────────────
+
+var _finTab = 'todos';
+
+function setFinTab(tab, el) {
+  _finTab = tab;
+  document.querySelectorAll('#page-financeiro .inner-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderFinanceiro();
+}
+
+function abrirModalFinanceiro(tipo) {
+  var el = document.getElementById('modal-financeiro'); if (!el) return;
+  // Pre-select tipo se passado
+  if (tipo) {
+    var tipoEl = document.getElementById('fin_tipo');
+    if (tipoEl) tipoEl.value = tipo;
+  }
+  el.style.display = 'flex';
+}
+
+function fecharModalFinanceiro() {
+  var el = document.getElementById('modal-financeiro'); if (el) el.style.display = 'none';
+}
+
+function renderFinanceiro() {
+  var fins = state.financeiro || [];
+
+  // KPIs
+  var totalEntradas = fins.filter(function(f){ return f.tipo==='entrada' && f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0); }, 0);
+  var totalSaidas   = fins.filter(function(f){ return f.tipo==='saida'   && f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0); }, 0);
+  var pendentes     = fins.filter(function(f){ return f.status==='pendente'; }).reduce(function(s,f){ return s+(+f.valor||0); }, 0);
+  var saldo         = totalEntradas - totalSaidas;
+
+  function sEl(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+  sEl('fin-entradas', 'R$ ' + fmtBR(totalEntradas));
+  sEl('fin-saidas',   'R$ ' + fmtBR(totalSaidas));
+  sEl('fin-saldo',    'R$ ' + fmtBR(saldo));
+  sEl('fin-pendentes','R$ ' + fmtBR(pendentes));
+
+  // Colorir saldo
+  var saldoEl = document.getElementById('fin-saldo');
+  if (saldoEl) saldoEl.style.color = saldo >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Filtrar pela aba ativa
+  var filtrados = fins.filter(function(f) {
+    if (_finTab === 'entrada')  return f.tipo === 'entrada';
+    if (_finTab === 'saida')    return f.tipo === 'saida';
+    if (_finTab === 'pendente') return f.status === 'pendente';
+    if (_finTab === 'pago')     return f.status === 'pago';
+    return true;
+  });
+
+  var tbody = document.getElementById('tbody-financeiro'); if (!tbody) return;
+  if (!filtrados.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px">Nenhum lançamento</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtrados.slice(0, 80).map(function(f) {
+    var fId   = f._db_id || f.id;
+    var hoje  = new Date().toISOString().split('T')[0];
+    var venc  = f.vencimento || f.data || '';
+    var atrasado = f.status === 'pendente' && venc && venc < hoje;
+
+    return '<tr style="' + (atrasado ? 'background:rgba(240,78,78,.04)' : '') + '">'
+      + '<td style="font-size:12px">' + (f.data || '—') + '</td>'
+      + '<td><span class="badge ' + (f.tipo==='entrada'?'badge-green':'badge-red') + '">' + (f.tipo==='entrada'?'↑ Entrada':'↓ Saída') + '</span></td>'
+      + '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (f.descricao||'') + '">' + (f.descricao || '—') + '</td>'
+      + '<td style="font-family:DM Mono,monospace;font-weight:600;color:' + (f.tipo==='entrada'?'var(--green)':'var(--red)') + '">R$ ' + fmtBR(f.valor) + '</td>'
+      + '<td style="font-size:12px;color:var(--text3)">' + (f.categoria || '—') + '</td>'
+      + '<td style="font-size:12px;color:' + (atrasado?'var(--red)':'var(--text3)') + '">' + (venc || '—') + (atrasado?' ⚠️':'') + '</td>'
+      + '<td><span class="badge ' + (f.status==='pago'?'badge-green':f.status==='cancelado'?'badge-red':'badge-yellow') + '">' + (f.status||'pendente') + '</span></td>'
+      + '<td><div style="display:flex;gap:4px">'
+      +   (f.status==='pendente' ? '<button class="btn btn-success btn-xs" onclick="pagarLancamento(\'' + fId + '\')">✓ Pago</button>' : '')
+      +   '<button class="btn btn-danger btn-xs" onclick="excluirLancamento(\'' + fId + '\')">🗑</button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+async function excluirLancamento(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  state.financeiro = (state.financeiro || []).filter(function(f){ return String(f._db_id||f.id) !== String(id); });
+  if (typeof saveState === 'function') saveState();
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) { try { await sb.from('financeiro').delete().eq('id', id); } catch(e) {} }
+  }
+  renderFinanceiro(); renderDashboard();
+  toast('Lançamento excluído', 'info');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 4: FLUXO COMPLETO — orçamento → pedido → produção → financeiro
+// Integração automática com geração de conta a receber
+// ─────────────────────────────────────────────────────────────────────
+
+// Sobrescrever avancarFluxo para garantir integração completa
+async function avancarFluxo(orcId, statusAtual) {
+  var FLUXO_CFG = {
+    rascunho:  { prox:'enviado',    label:'📤 Marcar como Enviado',  cor:'var(--cyan)'  },
+    enviado:   { prox:'aprovado',   label:'✅ Aprovar Orçamento',    cor:'var(--green)' },
+    orcamento: { prox:'aprovado',   label:'✅ Aprovar Orçamento',    cor:'var(--green)' },
+    aprovado:  { prox:'producao',   label:'🔧 Iniciar Produção',     cor:'var(--gold)'  },
+    producao:  { prox:'finalizado', label:'🎉 Finalizar',            cor:'#6bcf8a'      },
+  };
+
+  var cfg = FLUXO_CFG[statusAtual];
+  if (!cfg) { toast('Status final — sem próximo passo', 'info'); return; }
+
+  var orc = (state.orcamentos || []).find(function(o){ return String(o._db_id||o.id) === String(orcId); });
+
+  // Confirmação rápida inline
+  var confirmMsg = cfg.label;
+  if (cfg.prox === 'aprovado')   confirmMsg += '\n\n→ Um pedido de produção será criado automaticamente.';
+  if (cfg.prox === 'finalizado') confirmMsg += '\n\n→ Uma conta a receber será criada no Financeiro.';
+  if (!confirm(confirmMsg)) return;
+
+  showLoading('Avançando: ' + cfg.label + '...');
+  try {
+    // 1. Atualizar status
+    if (orc) orc.status = cfg.prox;
+    if (typeof saveState === 'function') saveState();
+    if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+      var sb = typeof getSb === 'function' ? getSb() : null;
+      if (sb) {
+        try { await sb.from('orcamentos').update({ status: cfg.prox, updated_at: new Date().toISOString() }).eq('id', orcId); }
+        catch(e) { console.warn('update status:', e.message); }
+      }
+    }
+
+    // 2. Aprovado → criar pedido de produção automaticamente
+    if (cfg.prox === 'aprovado' && orc) {
+      await _criarPedidoCompleto(orc);
+      toast('📦 Pedido criado em Produção!', 'info');
+    }
+
+    // 3. Finalizado → criar conta a receber no financeiro
+    if (cfg.prox === 'finalizado' && orc && (orc.precoFinal || 0) > 0) {
+      await _criarContaReceber(orc);
+      toast('💰 Conta a receber criada no Financeiro!', 'info');
+    }
+
+    // 4. Recarregar tudo
+    if (typeof dbFetchOrcamentos === 'function') await dbFetchOrcamentos();
+    if (typeof renderOrcamentos  === 'function') renderOrcamentos();
+    if (typeof renderDashboard   === 'function') renderDashboard();
+    if (typeof updateHistBadge   === 'function') updateHistBadge();
+
+    hideLoading();
+    var labels = {
+      enviado:    '📤 Orçamento marcado como enviado ao cliente!',
+      aprovado:   '✅ Aprovado! Pedido criado na Produção.',
+      producao:   '🔧 Produção iniciada!',
+      finalizado: '🎉 Finalizado! Receita lançada no Financeiro.',
+    };
+    toast(labels[cfg.prox] || 'Status atualizado: ' + cfg.prox, 'success');
+  } catch(e) {
+    hideLoading();
+    toast('Erro: ' + e.message, 'error');
+    console.error('[Fluxo]', e);
+  }
+}
+
+async function _criarPedidoCompleto(orc) {
+  var numero = 'PED-' + String(Date.now()).slice(-5);
+
+  // Determinar checklist pelo tipo de produto
+  var etapas = _checklistPorProduto(orc.produto || '');
+
+  var pedido = {
+    id:           Date.now(),
+    numero:       numero,
+    cliente_nome: orc.cliente || '—',
+    produto:      orc.produto || '',
+    material:     orc.material || '',
+    largura:      parseFloat(orc.largura) || 0,
+    altura:       parseFloat(orc.altura)  || 0,
+    area:         orc.area || 0,
+    qtd:          orc.qtd || 1,
+    valor:        orc.precoFinal || 0,
+    custo:        orc.custoTotal || 0,
+    lucro:        orc.lucro || 0,
+    status:       'producao',
+    prioridade:   'normal',
+    orcamento_id: orc._db_id || orc.id,
+    data:         new Date().toLocaleDateString('pt-BR'),
+    prazo:        orc.prazo || '',
+    etapas:       etapas,
+  };
+
+  if (!state.pedidos) state.pedidos = [];
+  state.pedidos.unshift(pedido);
+  if (typeof saveState === 'function') saveState();
+
+  // Salvar no Supabase
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try {
+        var row = typeof withEmpresa === 'function' ? withEmpresa({
+          numero:       numero,
+          cliente_nome: pedido.cliente_nome,
+          produto:      pedido.produto,
+          material:     pedido.material,
+          largura:      pedido.largura,
+          altura:       pedido.altura,
+          area:         pedido.area,
+          qtd:          pedido.qtd,
+          valor:        pedido.valor,
+          status:       'producao',
+          prioridade:   'normal',
+          orcamento_id: orc._db_id || null,
+        }) : {};
+        var r = await sb.from('pedidos').insert(row).select('id').single();
+        if (r.data) pedido._db_id = r.data.id;
+      } catch(e) { console.warn('_criarPedidoCompleto:', e.message); }
+    }
+  }
+  return pedido;
+}
+
+async function _criarContaReceber(orc) {
+  var lanc = {
+    id:          Date.now(),
+    tipo:        'entrada',
+    descricao:   'A receber: ' + (orc.cliente || '—') + (orc.ref ? ' — ' + orc.ref : '') + (orc.produto ? ' (' + orc.produto + ')' : ''),
+    valor:       orc.precoFinal || 0,
+    categoria:   'vendas',
+    status:      'pendente',
+    data:        new Date().toISOString().split('T')[0],
+    vencimento:  new Date().toISOString().split('T')[0],
+    created_at:  new Date().toISOString(),
+  };
+
+  if (!state.financeiro) state.financeiro = [];
+  state.financeiro.unshift(lanc);
+  if (typeof saveState === 'function') saveState();
+
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try {
+        var row = typeof withEmpresa === 'function' ? withEmpresa({
+          tipo:       'entrada',
+          descricao:  lanc.descricao,
+          valor:      lanc.valor,
+          categoria:  'vendas',
+          status:     'pendente',
+          data:       lanc.data,
+          vencimento: lanc.vencimento,
+        }) : {};
+        await sb.from('financeiro').insert(row);
+      } catch(e) { console.warn('_criarContaReceber:', e.message); }
+    }
+  }
+  return lanc;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 5: CHECKLIST por tipo de produto (expandido)
+// ─────────────────────────────────────────────────────────────────────
+
+var _CHECKLIST_PRODUTOS = {
+  'banner':      ['📁 Receber arquivo do cliente', '🖨 Imprimir', '✂️ Cortar nas medidas', '🔩 Colocar ilhós/solda', '🔍 Controle de qualidade', '📦 Embalar', '🚚 Entregar'],
+  'faixa':       ['📁 Receber arquivo', '🖨 Imprimir', '✂️ Cortar', '🔩 Acabamento', '🔍 Qualidade', '📦 Embalar', '🚚 Entregar'],
+  'adesivo':     ['📁 Receber arquivo', '🖨 Imprimir', '🎨 Laminação', '✂️ Recorte', '🔍 Qualidade', '📦 Embalar'],
+  'acm':         ['🏗 Montar estrutura metalon', '✂️ Cortar ACM', '🖨 Imprimir/pintar', '🔩 Montar painel', '🔍 Revisar acabamento', '🚧 Instalar', '✅ Vistoria final'],
+  'fachada':     ['🏗 Montar estrutura metalon', '✂️ Cortar ACM', '🖨 Imprimir/pintar', '🔩 Montar painel', '🔍 Revisar acabamento', '🚧 Instalar', '✅ Vistoria final'],
+  'letra caixa': ['✂️ Corte CNC/router', '🔩 Solda da estrutura', '💡 Cabeamento LED', '🎨 Pintura/acabamento', '🚧 Instalar', '💡 Testar iluminação', '✅ Vistoria'],
+  'letreiro':    ['✂️ Corte', '🔩 Estrutura', '💡 LED/iluminação', '🎨 Acabamento', '🚧 Instalar', '✅ Vistoria'],
+  'totem':       ['🏗 Estrutura base', '📐 Painéis laterais', '🖨 Impressão interna', '🔩 Montagem', '💡 Iluminação', '🚧 Instalar', '✅ Vistoria'],
+  'placa':       ['🖨 Impressão/gravação', '✂️ Recorte', '🔩 Acabamento', '🕳 Furação', '🔍 Qualidade', '🚚 Entregar'],
+  'cartão':      ['📁 Diagramar', '🖨 Imprimir', '✂️ Cortar/guilhotinar', '🔍 Qualidade', '📦 Embalar', '🚚 Entregar'],
+  'flyer':       ['📁 Diagramar', '🖨 Imprimir', '✂️ Cortar', '📦 Embalar', '🚚 Entregar'],
+  'folder':      ['📁 Diagramar', '🖨 Imprimir', '📐 Dobrar', '✂️ Cortar', '📦 Embalar'],
+  'roll-up':     ['🖨 Imprimir', '✂️ Cortar', '🔩 Montar no suporte', '🔍 Qualidade', '📦 Embalar'],
+  'backdrop':    ['🖨 Imprimir', '✂️ Cortar', '🔩 Montar estrutura', '🔍 Qualidade', '📦 Embalar'],
+  'default':     ['📋 Preparar material', '⚙️ Produção', '🔍 Controle de qualidade', '📦 Embalar/entregar'],
+};
+
+function _checklistPorProduto(nomeProduto) {
+  var nome = (nomeProduto || '').toLowerCase();
+  var keys = Object.keys(_CHECKLIST_PRODUTOS);
+  for (var i = 0; i < keys.length; i++) {
+    if (keys[i] !== 'default' && nome.indexOf(keys[i]) >= 0) {
+      return _CHECKLIST_PRODUTOS[keys[i]];
+    }
+  }
+  return _CHECKLIST_PRODUTOS['default'];
+}
+
+// Sobrescrever _gerarChecklistPadrao para usar o novo mapa
+function _gerarChecklistPadrao(pedidoId) {
+  var pedido = (state.pedidos || []).find(function(p){ return String(p._db_id||p.id) === String(pedidoId); });
+  var nomeProd = (pedido && pedido.produto) ? pedido.produto : '';
+  var etapas = _checklistPorProduto(nomeProd);
+  return etapas.map(function(etapa, idx) {
+    return {
+      id:         'local-' + pedidoId + '-' + idx,
+      pedido_id:  pedidoId,
+      etapa:      etapa,
+      ordem:      idx + 1,
+      concluido:  false,
+      empresa_id: typeof currentEmpresaId !== 'undefined' ? currentEmpresaId : null,
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 6: MODAL FINANCEIRO melhorado — com campo vencimento
+// ─────────────────────────────────────────────────────────────────────
+
+async function salvarLancamento() {
+  function gV(id){ var el=document.getElementById(id); return el ? el.value : ''; }
+  var tipo     = gV('fin_tipo') || 'entrada';
+  var descricao= gV('fin_desc').trim();
+  var valor    = parseFloat(gV('fin_valor')) || 0;
+  var categoria= gV('fin_cat') || 'outros';
+  var status   = gV('fin_status') || 'pendente';
+  var vencimento= gV('fin_vencimento') || new Date().toISOString().split('T')[0];
+
+  if (!descricao) { toast('Informe a descrição','warn'); return; }
+  if (valor <= 0) { toast('Informe o valor','warn');     return; }
+
+  showLoading('Salvando...');
+  await dbSaveFinanceiro({ tipo, descricao, valor, categoria, status, vencimento,
+    data: new Date().toISOString().split('T')[0] });
+  hideLoading();
+  fecharModalFinanceiro();
+  renderFinanceiro(); renderDashboard();
+  toast(tipo === 'entrada' ? '💵 Conta a receber criada!' : '💸 Conta a pagar criada!', 'success');
+  ['fin_desc','fin_valor','fin_vencimento'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Inicialização: renderizar funil ao abrir página de orçamentos
+// ─────────────────────────────────────────────────────────────────────
+var _ercOriginalNavTo = typeof _navToExecutar === 'function' ? _navToExecutar : null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Garantir que ao abrir orçamentos o funil seja renderizado
+  setTimeout(function() {
+    if (typeof renderOrcamentos === 'function' && (state.orcamentos||[]).length > 0) {
+      renderOrcamentos();
+    }
+    if (typeof renderFinanceiro === 'function') {
+      renderFinanceiro();
+    }
+  }, 1200);
+});
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc ERP — Módulo Fiscal v1.0
+// Produtos (NF-e) · Serviços (NFS-e) · Configuração · Exportação
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────
+// NAVEGAÇÃO DE ABAS FISCAL
+// ─────────────────────────────────────────────────────────────────────
+function setFiscalTab(tab, el) {
+  // Esconder todas as abas
+  document.querySelectorAll('.fiscal-tab-content').forEach(function(div) {
+    div.style.display = 'none';
+  });
+  // Desativar todos os botões
+  document.querySelectorAll('#page-nf .inner-tab').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  // Mostrar aba selecionada
+  var target = document.getElementById('fiscal-tab-' + tab);
+  if (target) target.style.display = 'block';
+  if (el) el.classList.add('active');
+
+  // Render específico por aba
+  if (tab === 'produtos')  renderFiscalProdutos();
+  if (tab === 'servicos')  renderFiscalServicos();
+  if (tab === 'notas')     renderListaNF();
+  if (tab === 'config')    carregarConfigFiscal();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// RENDER: TABELA DE PRODUTOS FISCAIS
+// ─────────────────────────────────────────────────────────────────────
+function renderFiscalProdutos() {
+  var tbody = document.getElementById('tbody-fiscal-produtos');
+  if (!tbody) return;
+
+  var itens = (state.itens_fiscais || []).filter(function(i) {
+    return i.tipoItem === 'produto';
+  });
+
+  if (!itens.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text3)">'
+      + '📦 Nenhum produto fiscal cadastrado.<br><span style="font-size:11px">Cadastre seus produtos para emissão de NF-e.</span></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = itens.map(function(item) {
+    var id = item._db_id || item.id;
+    return '<tr>'
+      + '<td style="font-family:DM Mono,monospace;font-size:11px;color:var(--cyan)">' + (item.codigo || '—') + '</td>'
+      + '<td><strong style="font-size:13px">' + (item.nome || '—') + '</strong>'
+      + (item.descFiscal ? '<div style="font-size:10px;color:var(--text3)">' + item.descFiscal + '</div>' : '')
+      + '</td>'
+      + '<td><span style="font-family:DM Mono,monospace;font-size:12px;color:var(--gold)">' + (item.ncm || '—') + '</span></td>'
+      + '<td><span class="badge badge-gray" style="font-size:10px">' + (item.unidade || 'UN') + '</span></td>'
+      + '<td style="font-family:DM Mono,monospace;font-size:12px">' + (item.valor > 0 ? 'R$ ' + fmtBR(item.valor) : '—') + '</td>'
+      + '<td style="font-size:11px;color:var(--text3)">' + (item.cfop || '—') + '</td>'
+      + '<td><span class="badge ' + (item.ativo !== false ? 'badge-green' : 'badge-gray') + '" style="font-size:10px">'
+      + (item.ativo !== false ? '● Ativo' : '○ Inativo') + '</span></td>'
+      + '<td><div style="display:flex;gap:4px">'
+      + '<button class="btn btn-secondary btn-xs" onclick="editarItemFiscal(\'' + id + '\')">✏️</button>'
+      + '<button class="btn btn-danger btn-xs" onclick="excluirItemFiscal(\'' + id + '\')">🗑</button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// RENDER: TABELA DE SERVIÇOS FISCAIS
+// ─────────────────────────────────────────────────────────────────────
+function renderFiscalServicos() {
+  var tbody = document.getElementById('tbody-fiscal-servicos');
+  if (!tbody) return;
+
+  var itens = (state.itens_fiscais || []).filter(function(i) {
+    return i.tipoItem === 'servico';
+  });
+
+  if (!itens.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text3)">'
+      + '🔧 Nenhum serviço fiscal cadastrado.<br><span style="font-size:11px">Cadastre seus serviços para emissão de NFS-e.</span></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = itens.map(function(item) {
+    var id = item._db_id || item.id;
+    return '<tr>'
+      + '<td style="font-family:DM Mono,monospace;font-size:11px;color:var(--purple)">' + (item.codigo || '—') + '</td>'
+      + '<td><strong style="font-size:13px">' + (item.nome || '—') + '</strong>'
+      + (item.descFiscal ? '<div style="font-size:10px;color:var(--text3)">' + item.descFiscal + '</div>' : '')
+      + '</td>'
+      + '<td><span style="font-family:DM Mono,monospace;font-size:12px;color:var(--cyan)">' + (item.lc116 || '—') + '</span></td>'
+      + '<td><span style="font-family:DM Mono,monospace;color:var(--warn)">' + (item.iss || 0) + '%</span></td>'
+      + '<td style="font-size:12px;color:var(--text3)">' + (item.municipio || '—') + '</td>'
+      + '<td style="font-family:DM Mono,monospace;font-size:12px">' + (item.valor > 0 ? 'R$ ' + fmtBR(item.valor) : '—') + '</td>'
+      + '<td><span class="badge ' + (item.ativo !== false ? 'badge-green' : 'badge-gray') + '" style="font-size:10px">'
+      + (item.ativo !== false ? '● Ativo' : '○ Inativo') + '</span></td>'
+      + '<td><div style="display:flex;gap:4px">'
+      + '<button class="btn btn-secondary btn-xs" onclick="editarItemFiscal(\'' + id + '\')">✏️</button>'
+      + '<button class="btn btn-danger btn-xs" onclick="excluirItemFiscal(\'' + id + '\')">🗑</button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MODAL: Abrir/fechar item fiscal
+// ─────────────────────────────────────────────────────────────────────
+var _fiscalEditId = null;
+
+function abrirModalItemFiscal(tipo) {
+  var modal = document.getElementById('modal-item-fiscal');
+  if (!modal) return;
+  _fiscalEditId = null;
+
+  // Limpar campos
+  ['mif-id','mif-codigo','mif-nome','mif-ncm','mif-lc116','mif-municipio',
+   'mif-ibge-item','mif-desc-fiscal','mif-obs','mif-valor'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('mif-tipo-item').value = tipo;
+  document.getElementById('mif-unidade') && (document.getElementById('mif-unidade').value = 'M2');
+  document.getElementById('mif-cfop')    && (document.getElementById('mif-cfop').value    = '5102');
+  document.getElementById('mif-cst')     && (document.getElementById('mif-cst').value     = '400');
+  document.getElementById('mif-iss')     && (document.getElementById('mif-iss').value     = '2');
+
+  // Mostrar campos corretos
+  var isProd = tipo === 'produto';
+  var campP  = document.getElementById('mif-campos-produto');
+  var campS  = document.getElementById('mif-campos-servico');
+  if (campP) campP.style.display = isProd ? 'block' : 'none';
+  if (campS) campS.style.display = isProd ? 'none'  : 'block';
+
+  var title = document.getElementById('mif-title');
+  var sub   = document.getElementById('mif-sub');
+  if (title) title.textContent = isProd ? '+ Novo Produto Fiscal (NF-e)' : '+ Novo Serviço Fiscal (NFS-e)';
+  if (sub)   sub.textContent   = isProd
+    ? 'Produto físico — requer NCM para emissão de NF-e'
+    : 'Serviço prestado — requer código LC 116 para emissão de NFS-e';
+
+  modal.style.display = 'flex';
+  setTimeout(function() { var el = document.getElementById('mif-codigo'); if (el) el.focus(); }, 100);
+}
+
+function fecharModalItemFiscal() {
+  var modal = document.getElementById('modal-item-fiscal');
+  if (modal) modal.style.display = 'none';
+  _fiscalEditId = null;
+}
+
+function editarItemFiscal(id) {
+  var item = (state.itens_fiscais || []).find(function(i) {
+    return String(i._db_id || i.id) === String(id);
+  });
+  if (!item) return;
+
+  abrirModalItemFiscal(item.tipoItem || 'produto');
+  _fiscalEditId = id;
+
+  function setV(elId, val) { var el = document.getElementById(elId); if (el) el.value = val || ''; }
+  setV('mif-id',           id);
+  setV('mif-codigo',       item.codigo);
+  setV('mif-nome',         item.nome);
+  setV('mif-ncm',          item.ncm);
+  setV('mif-lc116',        item.lc116);
+  setV('mif-iss',          item.iss);
+  setV('mif-municipio',    item.municipio);
+  setV('mif-ibge-item',    item.ibge);
+  setV('mif-desc-fiscal',  item.descFiscal);
+  setV('mif-obs',          item.obs);
+  setV('mif-valor',        item.valor);
+  if (item.unidade) { var el = document.getElementById('mif-unidade'); if (el) el.value = item.unidade; }
+  if (item.cfop)    { var el = document.getElementById('mif-cfop');    if (el) el.value = item.cfop; }
+  if (item.cst)     { var el = document.getElementById('mif-cst');     if (el) el.value = item.cst; }
+
+  var title = document.getElementById('mif-title');
+  if (title) title.textContent = '✏️ Editar ' + (item.tipoItem === 'produto' ? 'Produto' : 'Serviço') + ' Fiscal';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SALVAR item fiscal
+// ─────────────────────────────────────────────────────────────────────
+async function salvarItemFiscal() {
+  function gV(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+  var tipoItem = gV('mif-tipo-item') || 'produto';
+  var codigo   = gV('mif-codigo');
+  var nome     = gV('mif-nome');
+  var isProd   = tipoItem === 'produto';
+
+  if (!codigo) { toast('Informe o código interno', 'warn'); return; }
+  if (!nome)   { toast('Informe o nome/descrição', 'warn'); return; }
+  if (isProd && !gV('mif-ncm')) { toast('NCM obrigatório para produtos (NF-e)', 'warn'); return; }
+  if (!isProd && !gV('mif-lc116')) { toast('Código LC 116 obrigatório para serviços (NFS-e)', 'warn'); return; }
+
+  var obj = {
+    tipoItem:   tipoItem,
+    codigo:     codigo,
+    nome:       nome,
+    descFiscal: gV('mif-desc-fiscal') || nome,
+    valor:      parseFloat(gV('mif-valor')) || 0,
+    obs:        gV('mif-obs'),
+    ativo:      true,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (isProd) {
+    obj.ncm     = gV('mif-ncm').replace(/[^0-9.]/g, '');
+    obj.unidade = gV('mif-unidade') || 'UN';
+    obj.cfop    = gV('mif-cfop') || '5102';
+    obj.cst     = gV('mif-cst') || '400';
+  } else {
+    obj.lc116     = gV('mif-lc116');
+    obj.iss       = parseFloat(gV('mif-iss')) || 2;
+    obj.municipio = gV('mif-municipio');
+    obj.ibge      = gV('mif-ibge-item');
+  }
+
+  showLoading(_fiscalEditId ? 'Atualizando...' : 'Salvando...');
+
+  if (!state.itens_fiscais) state.itens_fiscais = [];
+
+  if (_fiscalEditId) {
+    var idx = state.itens_fiscais.findIndex(function(i) {
+      return String(i._db_id || i.id) === String(_fiscalEditId);
+    });
+    if (idx >= 0) {
+      state.itens_fiscais[idx] = Object.assign({}, state.itens_fiscais[idx], obj);
+    }
+  } else {
+    obj.id         = Date.now();
+    obj.created_at = new Date().toISOString();
+    state.itens_fiscais.push(obj);
+  }
+
+  if (typeof saveState === 'function') saveState();
+
+  // Salvar no Supabase se disponível
+  // (tabela itens_fiscais precisa ser criada manualmente — SQL fornecido abaixo)
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try {
+        var row = typeof withEmpresa === 'function' ? withEmpresa(obj) : obj;
+        if (_fiscalEditId && state.itens_fiscais.find(function(i){ return String(i._db_id||i.id)===String(_fiscalEditId); })?._db_id) {
+          await sb.from('itens_fiscais').update(row).eq('id', _fiscalEditId);
+        } else {
+          var r = await sb.from('itens_fiscais').insert(row).select('id').single();
+          if (r.data && state.itens_fiscais[state.itens_fiscais.length-1]) {
+            state.itens_fiscais[state.itens_fiscais.length-1]._db_id = r.data.id;
+          }
+        }
+      } catch(e) { console.warn('salvarItemFiscal Supabase:', e.message); }
+    }
+  }
+
+  hideLoading();
+  fecharModalItemFiscal();
+
+  // Re-render aba correspondente
+  if (isProd) renderFiscalProdutos();
+  else        renderFiscalServicos();
+
+  toast((_fiscalEditId ? 'Atualizado' : 'Cadastrado') + '! ' + (isProd ? 'Produto (NF-e)' : 'Serviço (NFS-e)'), 'success');
+}
+
+async function excluirItemFiscal(id) {
+  if (!confirm('Excluir este item fiscal?')) return;
+  state.itens_fiscais = (state.itens_fiscais || []).filter(function(i) {
+    return String(i._db_id || i.id) !== String(id);
+  });
+  if (typeof saveState === 'function') saveState();
+  renderFiscalProdutos();
+  renderFiscalServicos();
+  toast('Item excluído', 'info');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CONFIGURAÇÃO FISCAL
+// ─────────────────────────────────────────────────────────────────────
+// salvarConfigFiscal() — substituída pela versão em cert_modules.js
+
+// carregarConfigFiscal() — substituída pela versão em cert_modules.js
+
+// salvarConfigEmissor() — substituída pela versão em cert_modules.js
+
+function testarConexaoNF() {
+  var provedor = ((document.getElementById('nf-provedor') || {}).value || '');
+  var apiKey   = ((document.getElementById('nf-api-key')  || {}).value || '');
+  if (!provedor) { toast('Selecione um provedor', 'warn'); return; }
+  if (!apiKey)   { toast('Informe a API Key', 'warn'); return; }
+  toast('Teste de conexão: implemente o endpoint do ' + provedor + ' para validar a chave.', 'info');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EXPORTAR DADOS PARA NF (JSON estruturado)
+// ─────────────────────────────────────────────────────────────────────
+function exportarDadosNF() {
+  var orcsFinalizados = (state.orcamentos || []).filter(function(o) {
+    return o.status === 'finalizado';
+  });
+
+  if (!orcsFinalizados.length) {
+    toast('Nenhum orçamento finalizado para exportar', 'warn');
+    return;
+  }
+
+  var cfgFiscal = {};
+  try { cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}'); } catch(e) {}
+
+  var dados = {
+    exportacao:  new Date().toISOString(),
+    emitente: {
+      cnpj:    cfgFiscal.cnpj    || '',
+      ie:      cfgFiscal.ie      || '',
+      regime:  cfgFiscal.regime  || '1',
+      nome:    empresa.nome      || '',
+      cidade:  empresa.cidade    || '',
+      cnae:    cfgFiscal.cnae    || '',
+    },
+    notas: orcsFinalizados.map(function(o, idx) {
+      // Tentar encontrar itens fiscais correspondentes
+      var itensFiscais = (state.itens_fiscais || []).filter(function(i) {
+        return (o.produto || '').toLowerCase().indexOf((i.nome || '').toLowerCase()) >= 0
+          || (o.produto || '').toLowerCase().indexOf((i.codigo || '').toLowerCase()) >= 0;
+      });
+
+      return {
+        numero_ref:    o.ref || ('ORC-' + String(o.id || idx).slice(-5)),
+        data_emissao:  new Date().toISOString().split('T')[0],
+        destinatario: {
+          nome:     o.cliente   || '',
+          telefone: o.telefone  || '',
+        },
+        itens: [{
+          codigo:      itensFiscais[0] ? itensFiscais[0].codigo : 'SEM-COD',
+          descricao:   o.produto || 'Produto/Serviço de Comunicação Visual',
+          ncm:         itensFiscais[0] ? itensFiscais[0].ncm    : '',
+          lc116:       itensFiscais[0] ? itensFiscais[0].lc116  : '',
+          cfop:        itensFiscais[0] ? itensFiscais[0].cfop   : '5102',
+          unidade:     itensFiscais[0] ? itensFiscais[0].unidade: 'UN',
+          quantidade:  o.qtd   || 1,
+          valor_unit:  o.precoFinal ? (o.precoFinal / (o.qtd || 1)) : 0,
+          valor_total: o.precoFinal || 0,
+          iss:         itensFiscais[0] ? itensFiscais[0].iss    : 0,
+        }],
+        valor_total:   o.precoFinal || 0,
+        observacoes:   'Orçamento: ' + (o.ref || '') + ' | ' + (o.produto || '') + ' | ' + (o.material || ''),
+      };
+    }),
+  };
+
+  // Download como JSON
+  var blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'dados-nf-' + new Date().toISOString().split('T')[0] + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast('Exportado! ' + orcsFinalizados.length + ' nota(s) para emissão.', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// RENDER: Lista de notas emitidas (existentes no state)
+// ─────────────────────────────────────────────────────────────────────
+function renderListaNF() {
+  var el = document.getElementById('lista-nf');
+  if (!el) return;
+
+  var notas = state.notas_fiscais || [];
+  var filtroTipo   = ((document.getElementById('nf-filtro-tipo')   || {}).value || 'todos');
+  var filtroStatus = ((document.getElementById('nf-filtro-status') || {}).value || 'todos');
+
+  var filtradas = notas.filter(function(n) {
+    if (filtroTipo   !== 'todos' && n.tipo   !== filtroTipo)   return false;
+    if (filtroStatus !== 'todos' && n.status !== filtroStatus) return false;
+    return true;
+  });
+
+  if (!filtradas.length) {
+    el.innerHTML = '<div class="alert alert-info">'
+      + 'ℹ️ Nenhuma nota fiscal emitida ainda. '
+      + 'Configure o emissor na aba <strong>⚙️ Configuração</strong> e emita a partir de orçamentos finalizados.'
+      + '</div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="card" style="padding:0;overflow:hidden"><table class="data-table">'
+    + '<thead><tr><th>Número</th><th>Tipo</th><th>Cliente</th><th>Valor</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>'
+    + '<tbody>'
+    + filtradas.map(function(n) {
+        return '<tr>'
+          + '<td style="font-family:DM Mono,monospace;font-weight:600">' + (n.numero_nf || '—') + '</td>'
+          + '<td><span class="badge ' + (n.tipo==='nfe'?'badge-blue':'badge-purple') + '">' + (n.tipo||'NF-e').toUpperCase() + '</span></td>'
+          + '<td>' + (n.cliente_nome || '—') + '</td>'
+          + '<td style="font-family:DM Mono,monospace;color:var(--gold)">R$ ' + fmtBR(n.valor||0) + '</td>'
+          + '<td style="font-size:12px">' + (n.data_emissao || '—') + '</td>'
+          + '<td><span class="badge ' + (n.status==='emitida'?'badge-green':n.status==='cancelada'?'badge-red':'badge-yellow') + '">' + (n.status||'pendente') + '</span></td>'
+          + '<td><div style="display:flex;gap:4px">'
+          + (n.xml_url ? '<a href="' + n.xml_url + '" target="_blank" class="btn btn-ghost btn-xs">📄 XML</a>' : '')
+          + (n.pdf_url ? '<a href="' + n.pdf_url + '" target="_blank" class="btn btn-ghost btn-xs">🖨 PDF</a>' : '')
+          + '</div></td>'
+          + '</tr>';
+    }).join('')
+    + '</tbody></table></div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SQL para criar tabela itens_fiscais no Supabase
+// Exibido na aba de configuração como referência
+// ─────────────────────────────────────────────────────────────────────
+var SQL_ITENS_FISCAIS = `-- Execute no Supabase SQL Editor para habilitar sincronização de itens fiscais
+CREATE TABLE IF NOT EXISTS itens_fiscais (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  empresa_id  UUID REFERENCES empresas(id) ON DELETE CASCADE,
+  tipo_item   TEXT NOT NULL CHECK (tipo_item IN ('produto','servico')),
+  codigo      TEXT NOT NULL,
+  nome        TEXT NOT NULL,
+  desc_fiscal TEXT,
+  valor       NUMERIC DEFAULT 0,
+  unidade     TEXT DEFAULT 'UN',
+  ncm         TEXT,
+  cfop        TEXT,
+  cst         TEXT,
+  lc116       TEXT,
+  iss         NUMERIC DEFAULT 0,
+  municipio   TEXT,
+  ibge        TEXT,
+  obs         TEXT,
+  ativo       BOOLEAN DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE itens_fiscais ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own_itens_fiscais" ON itens_fiscais FOR ALL
+  USING (empresa_id = get_empresa_id())
+  WITH CHECK (empresa_id = get_empresa_id());
+CREATE INDEX IF NOT EXISTS idx_ifi_empresa ON itens_fiscais(empresa_id, tipo_item);
+GRANT SELECT, INSERT, UPDATE, DELETE ON itens_fiscais TO authenticated;`;
+
+// ─────────────────────────────────────────────────────────────────────
+// Carregar itens fiscais do Supabase ao inicializar
+// ─────────────────────────────────────────────────────────────────────
+async function dbFetchItensFiscais() {
+  if (typeof dbMode !== 'function' || dbMode() !== 'supabase') return;
+  var sb = typeof getSb === 'function' ? getSb() : null;
+  if (!sb) return;
+  try {
+    var r = await sb.from('itens_fiscais').select('*').order('tipo_item').order('codigo');
+    if (!r.error && r.data) {
+      state.itens_fiscais = r.data.map(function(row) {
+        return Object.assign({}, row, { _db_id: row.id, tipoItem: row.tipo_item, descFiscal: row.desc_fiscal });
+      });
+      if (typeof saveState === 'function') saveState();
+    }
+  } catch(e) { console.warn('dbFetchItensFiscais:', e.message); }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CSS das abas fiscal (injetar dinamicamente)
+// ─────────────────────────────────────────────────────────────────────
+(function injetarCSSFiscal() {
+  var style = document.createElement('style');
+  style.textContent = [
+    '.fiscal-tab-content { animation: pgIn .2s ease; }',
+  ].join('\n');
+  document.head.appendChild(style);
+})();
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc ERP — Módulo Certificado Digital A1 v1.0
+// Arquitetura segura: frontend apenas transmite, nunca armazena
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────
+// ESTADO LOCAL (apenas metadados, NUNCA o arquivo ou senha)
+// ─────────────────────────────────────────────────────────────────────
+var _certState = {
+  arquivo:    null,        // File object — só existe em memória durante a sessão
+  nomeArquivo:'',
+  tamanhoKB:  0,
+  configurado: false,
+  validade:   '',
+  status:     'nao_configurado', // 'nao_configurado' | 'configurado' | 'expirado' | 'erro'
+};
+
+// ─────────────────────────────────────────────────────────────────────
+// MÁSCARAS E FORMATAÇÃO
+// ─────────────────────────────────────────────────────────────────────
+function maskCNPJ(v) {
+  v = v.replace(/\D/g, '').slice(0, 14);
+  if (v.length <= 2)  return v;
+  if (v.length <= 5)  return v.slice(0,2) + '.' + v.slice(2);
+  if (v.length <= 8)  return v.slice(0,2) + '.' + v.slice(2,5) + '.' + v.slice(5);
+  if (v.length <= 12) return v.slice(0,2) + '.' + v.slice(2,5) + '.' + v.slice(5,8) + '/' + v.slice(8);
+  return v.slice(0,2)+'.'+v.slice(2,5)+'.'+v.slice(5,8)+'/'+v.slice(8,12)+'-'+v.slice(12,14);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────────────────────────────
+function toggleSenhaCert() {
+  var inp = document.getElementById('cert-senha');
+  var eye = document.getElementById('cert-senha-eye');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (eye) eye.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function toggleApiKey() {
+  var inp = document.getElementById('nf-api-key');
+  var eye = document.getElementById('api-key-eye');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (eye) eye.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function onProvedorChange(provedor) {
+  var instrEl = document.getElementById('provedor-instrucoes');
+  var extEl   = document.getElementById('nuvemfiscal-extra');
+  var instrucoes = {
+    focusnfe:    '🔗 <strong>Focus NF-e:</strong> Crie conta em <a href="https://focusnfe.com.br" target="_blank" style="color:var(--cyan)">focusnfe.com.br</a>. Obtenha o token em Configurações → API. Envie o certificado A1 pelo painel deles antes de usar a API.',
+    nuvemfiscal: '🔗 <strong>Nuvem Fiscal:</strong> Acesse <a href="https://nuvemfiscal.com.br" target="_blank" style="color:var(--cyan)">nuvemfiscal.com.br</a>. Use Client ID + Client Secret para autenticação OAuth2. Suporte a NF-e, NFS-e e CT-e.',
+    nfeio:       '🔗 <strong>NFe.io:</strong> Acesse <a href="https://nfe.io" target="_blank" style="color:var(--cyan)">nfe.io</a>. Obtenha a API Key em sua empresa. Suporte a NF-e e NFS-e com upload de certificado via painel.',
+    enotas:      '🔗 <strong>eNotas:</strong> Acesse <a href="https://enotas.com.br" target="_blank" style="color:var(--cyan)">enotas.com.br</a>. Foco em NFS-e (Nota de Serviço). Configure a empresa e obtenha a chave de API.',
+    manual:      '📤 <strong>Emissão manual:</strong> Use o botão "Exportar JSON" para baixar os dados estruturados e importar no emissor de sua preferência (Domínio, Alterdata, etc).',
+  };
+  if (instrEl) {
+    instrEl.style.display = provedor ? 'block' : 'none';
+    instrEl.innerHTML = instrucoes[provedor] || '';
+  }
+  if (extEl) extEl.style.display = provedor === 'nuvemfiscal' ? 'block' : 'none';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CERTIFICADO: seleção via click
+// ─────────────────────────────────────────────────────────────────────
+function handleCertSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  _processarArquivoCert(input.files[0]);
+}
+
+function handleCertDrop(event) {
+  event.preventDefault();
+  var dropZone = document.getElementById('cert-drop-zone');
+  if (dropZone) dropZone.style.borderColor = 'var(--line2)';
+  var files = event.dataTransfer.files;
+  if (!files || !files[0]) return;
+  var file = files[0];
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'pfx' && ext !== 'p12') {
+    toast('Formato inválido. Use .pfx ou .p12', 'error');
+    return;
+  }
+  _processarArquivoCert(file);
+}
+
+function _processarArquivoCert(file) {
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'pfx' && ext !== 'p12') {
+    toast('Use arquivos .pfx ou .p12 (certificado A1)', 'error');
+    return;
+  }
+  var maxKB = 500;
+  var sizeKB = file.size / 1024;
+  if (sizeKB > maxKB) {
+    toast('Arquivo muito grande. Máximo ' + maxKB + 'KB para certificado A1.', 'error');
+    return;
+  }
+
+  // Guardar APENAS em memória — NUNCA localStorage
+  _certState.arquivo    = file;
+  _certState.nomeArquivo= file.name;
+  _certState.tamanhoKB  = sizeKB.toFixed(1);
+
+  // Atualizar UI
+  var dropZone  = document.getElementById('cert-drop-zone');
+  var dropIcon  = document.getElementById('cert-drop-icon');
+  var dropText  = document.getElementById('cert-drop-text');
+  var infoBox   = document.getElementById('cert-arquivo-info');
+  var nomeEl    = document.getElementById('cert-arquivo-nome');
+  var sizeEl    = document.getElementById('cert-arquivo-size');
+  var btnEnviar = document.getElementById('btn-enviar-cert');
+
+  if (dropIcon) dropIcon.textContent = '✅';
+  if (dropText) dropText.textContent = 'Arquivo selecionado — pronto para enviar';
+  if (dropZone) dropZone.style.borderColor = 'var(--green)';
+  if (infoBox)  infoBox.style.display = 'block';
+  if (nomeEl)   nomeEl.textContent    = file.name;
+  if (sizeEl)   sizeEl.textContent    = '(' + sizeKB.toFixed(1) + ' KB)';
+  if (btnEnviar){ btnEnviar.disabled  = false; }
+
+  toast('Certificado selecionado: ' + file.name, 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ENVIAR CERTIFICADO AO PROVEDOR
+// Segurança: lê o arquivo como base64, envia via HTTPS ao provedor
+// O arquivo NUNCA é salvo no Supabase ou localStorage
+// ─────────────────────────────────────────────────────────────────────
+async function enviarCertificado() {
+  if (!_certState.arquivo) { toast('Selecione o arquivo .pfx primeiro', 'warn'); return; }
+
+  var senha    = (document.getElementById('cert-senha')   || {}).value || '';
+  var provedor = (document.getElementById('nf-provedor')  || {}).value || '';
+  var apiKey   = (document.getElementById('nf-api-key')   || {}).value || '';
+  var ambiente = (document.getElementById('nf-ambiente')  || {}).value || 'homologacao';
+  var cnpj     = ((document.getElementById('nf-cnpj')     || {}).value || '').replace(/\D/g,'');
+
+  if (!senha)    { toast('Informe a senha do certificado', 'warn'); return; }
+  if (!provedor) { toast('Selecione o provedor de NF', 'warn'); return; }
+  if (!apiKey)   { toast('Informe a API Key do provedor', 'warn'); return; }
+  if (!cnpj || cnpj.length !== 14) { toast('CNPJ inválido. Verifique os dados do emitente.', 'warn'); return; }
+
+  var btnEnviar = document.getElementById('btn-enviar-cert');
+  if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = '⏳ Enviando...'; }
+
+  try {
+    // Ler arquivo como base64 (apenas em memória)
+    var base64 = await _fileToBase64(_certState.arquivo);
+
+    // Chamar função de envio específica do provedor
+    var resultado;
+    if (provedor === 'focusnfe')    resultado = await _enviarCertFocusNFe(base64, senha, cnpj, apiKey, ambiente);
+    else if (provedor === 'nuvemfiscal') resultado = await _enviarCertNuvemFiscal(base64, senha, cnpj, apiKey, ambiente);
+    else if (provedor === 'nfeio')  resultado = await _enviarCertNFeio(base64, senha, cnpj, apiKey, ambiente);
+    else {
+      // Provedores sem API de upload de cert — salvar apenas config
+      resultado = { ok: true, manual: true };
+    }
+
+    if (resultado.ok) {
+      // Limpar arquivo da memória imediatamente após envio
+      _certState.arquivo = null;
+      _certState.configurado = true;
+      _certState.status = 'configurado';
+
+      // Salvar APENAS metadados no Supabase (sem arquivo, sem senha)
+      await _salvarMetadadosCert({
+        provedor:   provedor,
+        ambiente:   ambiente,
+        cert_nome:  _certState.nomeArquivo,
+        cert_status:'configurado',
+        cnpj:       cnpj,
+      });
+
+      // Limpar campos sensíveis da tela
+      var senhaEl = document.getElementById('cert-senha');
+      if (senhaEl) senhaEl.value = '';
+      var fileInput = document.getElementById('cert-file-input');
+      if (fileInput) fileInput.value = '';
+
+      _atualizarStatusCert('configurado', _certState.nomeArquivo);
+      toast('✅ Certificado enviado ao ' + provedor + ' com sucesso!', 'success');
+
+      if (resultado.manual) {
+        toast('Configure o certificado diretamente no painel do provedor ' + provedor, 'info');
+      }
+    } else {
+      throw new Error(resultado.erro || 'Erro desconhecido ao enviar certificado');
+    }
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error');
+    console.error('[Cert]', e);
+  } finally {
+    if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '🔐 Enviar ao Provedor'; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// HELPERS DE ENVIO POR PROVEDOR
+// Cada provedor tem seu endpoint e formato específico
+// ─────────────────────────────────────────────────────────────────────
+
+function _fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload  = function(e) { resolve(e.target.result.split(',')[1]); }; // apenas base64, sem prefixo
+    reader.onerror = function()  { reject(new Error('Erro ao ler arquivo')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Focus NF-e — https://focusnfe.com.br/doc/#introducao-certificado
+async function _enviarCertFocusNFe(base64, senha, cnpj, apiKey, ambiente) {
+  var baseUrl = ambiente === 'producao'
+    ? 'https://api.focusnfe.com.br'
+    : 'https://homologacao.focusnfe.com.br';
+
+  try {
+    var resp = await fetch(baseUrl + '/v2/empresa/' + cnpj + '/certificado', {
+      method:  'PUT',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Basic ' + btoa(apiKey + ':'),
+      },
+      body: JSON.stringify({
+        certificado: base64,
+        senha:       senha,
+      }),
+    });
+    if (resp.ok || resp.status === 204) return { ok: true };
+    var err = await resp.json().catch(function(){ return {}; });
+    return { ok: false, erro: (err.mensagem || err.message || 'Erro HTTP ' + resp.status) };
+  } catch(e) {
+    // Se CORS ou rede — orientar a fazer pelo painel
+    return { ok: false, erro: 'Não foi possível conectar ao Focus NF-e. Configure o certificado pelo painel em focusnfe.com.br → Empresas → Certificado.' };
+  }
+}
+
+// Nuvem Fiscal — https://nuvemfiscal.com.br/docs
+async function _enviarCertNuvemFiscal(base64, senha, cnpj, apiKey, ambiente) {
+  var baseUrl = ambiente === 'producao'
+    ? 'https://api.nuvemfiscal.com.br'
+    : 'https://api.sandbox.nuvemfiscal.com.br';
+
+  try {
+    var resp = await fetch(baseUrl + '/v1/empresas/' + cnpj + '/certificado', {
+      method:  'PUT',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+      },
+      body: JSON.stringify({
+        certificado: base64,
+        password:    senha,
+      }),
+    });
+    if (resp.ok) return { ok: true };
+    var err = await resp.json().catch(function(){ return {}; });
+    return { ok: false, erro: (err.message || 'Erro HTTP ' + resp.status) };
+  } catch(e) {
+    return { ok: false, erro: 'CORS: Configure o certificado no painel da Nuvem Fiscal → Empresas → Certificado Digital.' };
+  }
+}
+
+// NFe.io — https://nfe.io/docs
+async function _enviarCertNFeio(base64, senha, cnpj, apiKey, ambiente) {
+  // NFe.io não expõe endpoint de upload de certificado na API pública
+  // O upload é feito pelo painel web deles
+  return {
+    ok: true,
+    manual: true,
+    mensagem: 'NFe.io: faça o upload do certificado pelo painel em nfe.io → Empresas → Certificado Digital'
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SALVAR METADADOS NO SUPABASE (APENAS metadados, NUNCA o arquivo)
+// ─────────────────────────────────────────────────────────────────────
+async function _salvarMetadadosCert(meta) {
+  if (typeof dbMode !== 'function' || dbMode() !== 'supabase') {
+    // Salvar metadados apenas no localStorage se não tiver Supabase
+    try { localStorage.setItem('vc_cert_meta', JSON.stringify(meta)); } catch(e) {}
+    return;
+  }
+  var sb = typeof getSb === 'function' ? getSb() : null;
+  if (!sb || !currentEmpresaId) return;
+
+  try {
+    var row = {
+      empresa_id:  currentEmpresaId,
+      provedor:    meta.provedor    || '',
+      ambiente:    meta.ambiente    || 'homologacao',
+      cert_status: meta.cert_status || 'configurado',
+      cert_nome:   meta.cert_nome   || '',
+      cnpj:        meta.cnpj        || '',
+      updated_at:  new Date().toISOString(),
+    };
+    // Upsert — criar ou atualizar registro desta empresa
+    var { error } = await sb.from('certificados_fiscais')
+      .upsert(row, { onConflict: 'empresa_id' });
+    if (error) throw error;
+  } catch(e) {
+    console.warn('[Cert] _salvarMetadadosCert:', e.message);
+    // Fallback local
+    try { localStorage.setItem('vc_cert_meta', JSON.stringify(meta)); } catch(err) {}
+  }
+}
+
+async function _carregarMetadadosCert() {
+  // Tentar Supabase primeiro
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb && currentEmpresaId) {
+      try {
+        var { data } = await sb.from('certificados_fiscais')
+          .select('*')
+          .eq('empresa_id', currentEmpresaId)
+          .maybeSingle();
+        if (data) return data;
+      } catch(e) { console.warn('[Cert] _carregarMetadadosCert:', e.message); }
+    }
+  }
+  // Fallback local
+  try { return JSON.parse(localStorage.getItem('vc_cert_meta') || 'null'); } catch(e) { return null; }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// VERIFICAR STATUS DO CERTIFICADO (consulta ao provedor)
+// ─────────────────────────────────────────────────────────────────────
+async function verificarCertificado() {
+  var meta = await _carregarMetadadosCert();
+  if (!meta || meta.cert_status === 'nao_configurado') {
+    toast('Nenhum certificado configurado ainda', 'info');
+    return;
+  }
+
+  var apiKey   = (document.getElementById('nf-api-key')  || {}).value || '';
+  var ambiente = (document.getElementById('nf-ambiente')  || {}).value || 'homologacao';
+  var cnpj     = (meta.cnpj || '').replace(/\D/g,'');
+  var provedor = meta.provedor || '';
+
+  showLoading('Verificando certificado...');
+  try {
+    var resultado = null;
+
+    if (provedor === 'focusnfe' && apiKey && cnpj) {
+      var baseUrl = ambiente === 'producao'
+        ? 'https://api.focusnfe.com.br'
+        : 'https://homologacao.focusnfe.com.br';
+      var resp = await fetch(baseUrl + '/v2/empresa/' + cnpj + '/certificado', {
+        headers: { 'Authorization': 'Basic ' + btoa(apiKey + ':') }
+      });
+      if (resp.ok) {
+        var d = await resp.json();
+        resultado = { valido: true, validade: d.data_vencimento || d.expiration || '' };
+      }
+    } else if (provedor === 'nuvemfiscal' && apiKey && cnpj) {
+      var baseUrl2 = ambiente === 'producao'
+        ? 'https://api.nuvemfiscal.com.br'
+        : 'https://api.sandbox.nuvemfiscal.com.br';
+      var resp2 = await fetch(baseUrl2 + '/v1/empresas/' + cnpj + '/certificado', {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      if (resp2.ok) {
+        var d2 = await resp2.json();
+        resultado = { valido: true, validade: d2.expiration || d2.valid_to || '' };
+      }
+    }
+
+    hideLoading();
+    if (resultado && resultado.valido) {
+      var validadeStr = resultado.validade
+        ? new Date(resultado.validade).toLocaleDateString('pt-BR')
+        : '';
+      if (validadeStr) {
+        var el = document.getElementById('cert-validade');
+        if (el) el.value = 'Válido até ' + validadeStr;
+        await _salvarMetadadosCert(Object.assign({}, meta, { cert_validade: resultado.validade, cert_status: 'configurado' }));
+      }
+      _atualizarStatusCert('configurado', meta.cert_nome || '');
+      toast('✅ Certificado ativo e válido' + (validadeStr ? ' até ' + validadeStr : ''), 'success');
+    } else {
+      toast('Não foi possível verificar online. Status local: ' + (meta.cert_status || 'desconhecido'), 'info');
+      _atualizarStatusCert(meta.cert_status || 'configurado', meta.cert_nome || '');
+    }
+  } catch(e) {
+    hideLoading();
+    toast('Verificação offline. Use o painel do provedor para confirmar.', 'info');
+    _atualizarStatusCert(meta.cert_status || 'configurado', meta.cert_nome || '');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ATUALIZAR UI DO STATUS DO CERTIFICADO
+// ─────────────────────────────────────────────────────────────────────
+function _atualizarStatusCert(status, nome) {
+  var iconEl  = document.getElementById('cert-status-icon');
+  var titleEl = document.getElementById('cert-status-title');
+  var subEl   = document.getElementById('cert-status-sub');
+  var badgeEl = document.getElementById('cert-status-badge');
+  var btnRem  = document.getElementById('btn-remover-cert');
+  var dropZone= document.getElementById('cert-drop-zone');
+  var dropIcon= document.getElementById('cert-drop-icon');
+  var dropText= document.getElementById('cert-drop-text');
+
+  var configs = {
+    nao_configurado: { icon:'📄', title:'Nenhum certificado configurado', sub:'Configure seu .pfx para emissão automática de NF', badge:'', cor:'var(--text3)' },
+    configurado:     { icon:'🔐', title:'Certificado configurado' + (nome ? ': ' + nome : ''), sub:'Certificado ativo no provedor', badge:'<span class="badge badge-green">✅ Ativo</span>', cor:'var(--green)' },
+    expirado:        { icon:'⚠️', title:'Certificado EXPIRADO', sub:'Renove seu certificado digital para continuar emitindo NFs', badge:'<span class="badge badge-red">❌ Expirado</span>', cor:'var(--red)' },
+    erro:            { icon:'❌', title:'Erro no certificado', sub:'Verifique a senha e o arquivo .pfx', badge:'<span class="badge badge-red">Erro</span>', cor:'var(--red)' },
+  };
+  var cfg = configs[status] || configs.nao_configurado;
+
+  if (iconEl)  iconEl.textContent  = cfg.icon;
+  if (titleEl) { titleEl.textContent = cfg.title; titleEl.style.color = cfg.cor; }
+  if (subEl)   subEl.textContent   = cfg.sub;
+  if (badgeEl) badgeEl.innerHTML   = cfg.badge;
+  if (btnRem)  btnRem.style.display= (status === 'configurado') ? 'inline-flex' : 'none';
+
+  if (status === 'configurado') {
+    if (dropIcon) dropIcon.textContent = '🔐';
+    if (dropText) dropText.textContent = 'Certificado ativo. Clique para substituir.';
+    if (dropZone) dropZone.style.borderColor = 'rgba(46,212,122,.4)';
+  }
+
+  // Atualizar barra de status geral
+  _atualizarBarraStatusFiscal(status);
+}
+
+function _atualizarBarraStatusFiscal(certStatus) {
+  var barra = document.getElementById('cfg-fiscal-status-bar');
+  if (!barra) return;
+
+  var cfgFiscal = {};
+  try { cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}'); } catch(e) {}
+  var cfgEmissor = {};
+  try { cfgEmissor = JSON.parse(localStorage.getItem('vc_config_emissor') || '{}'); } catch(e) {}
+
+  var itens = [
+    { ok: !!(cfgFiscal.cnpj),      label: 'CNPJ',        ok_lbl: '✅ CNPJ configurado',       err_lbl: '⚠️ CNPJ pendente' },
+    { ok: !!(cfgEmissor.provedor),  label: 'Provedor',    ok_lbl: '✅ ' + (cfgEmissor.provedor||'Provedor') + ' configurado', err_lbl: '⚠️ Provedor não selecionado' },
+    { ok: !!(cfgEmissor.apiKey),    label: 'API Key',     ok_lbl: '✅ API Key configurada',     err_lbl: '⚠️ API Key pendente' },
+    { ok: certStatus === 'configurado', label: 'Certificado', ok_lbl: '✅ Certificado ativo',   err_lbl: '⚠️ Certificado pendente' },
+  ];
+
+  barra.innerHTML = itens.map(function(item) {
+    return '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:11px;font-weight:600;'
+      + 'background:' + (item.ok ? 'rgba(46,212,122,.08)' : 'rgba(240,145,58,.08)') + ';'
+      + 'border:1px solid ' + (item.ok ? 'rgba(46,212,122,.2)' : 'rgba(240,145,58,.2)') + ';'
+      + 'color:' + (item.ok ? 'var(--green)' : 'var(--warn)') + '">'
+      + (item.ok ? item.ok_lbl : item.err_lbl)
+      + '</div>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// REMOVER CERTIFICADO
+// ─────────────────────────────────────────────────────────────────────
+async function removerCertificado() {
+  if (!confirm('Remover a configuração do certificado?\n\nO arquivo .pfx no provedor não é afetado — apenas os metadados locais serão removidos.')) return;
+  _certState.arquivo = null;
+  _certState.configurado = false;
+  _certState.status = 'nao_configurado';
+
+  localStorage.removeItem('vc_cert_meta');
+  if (typeof dbMode === 'function' && dbMode() === 'supabase' && currentEmpresaId) {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try { await sb.from('certificados_fiscais').update({ cert_status: 'nao_configurado' }).eq('empresa_id', currentEmpresaId); }
+      catch(e) {}
+    }
+  }
+  _atualizarStatusCert('nao_configurado', '');
+  toast('Configuração do certificado removida', 'info');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SALVAR CONFIG FISCAL (emitente) — melhorada
+// ─────────────────────────────────────────────────────────────────────
+function salvarConfigFiscal() {
+  function gV(id) { return (document.getElementById(id) || {}).value || ''; }
+  var cnpj = gV('nf-cnpj').replace(/\D/g,'');
+  if (cnpj && cnpj.length !== 14) { toast('CNPJ inválido', 'warn'); return; }
+
+  var cfg = {
+    cnpj:         gV('nf-cnpj'),
+    razaoSocial:  gV('nf-razao-social'),
+    ie:           gV('nf-ie'),
+    im:           gV('nf-im'),
+    regime:       gV('nf-regime'),
+    cnae:         gV('nf-cnae'),
+    cep:          gV('nf-cep'),
+    logradouro:   gV('nf-logradouro'),
+    numero:       gV('nf-numero'),
+    bairro:       gV('nf-bairro'),
+    cidade:       gV('nf-cidade-nf'),
+    uf:           gV('nf-uf'),
+    ibge:         gV('nf-ibge'),
+    issPadrao:    gV('nf-iss-padrao') || '2',
+    savedAt:      new Date().toISOString(),
+  };
+  localStorage.setItem('vc_config_fiscal', JSON.stringify(cfg));
+
+  // Salvar no Supabase (tabela certificados_fiscais)
+  if (typeof dbMode === 'function' && dbMode() === 'supabase' && currentEmpresaId) {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      var row = {
+        empresa_id:  currentEmpresaId,
+        cnpj:        cnpj,
+        razao_social:cfg.razaoSocial,
+        ie:          cfg.ie,
+        im:          cfg.im,
+        regime:      cfg.regime,
+        cnae:        cfg.cnae,
+        ibge:        cfg.ibge,
+        cep:         cfg.cep,
+        logradouro:  cfg.logradouro,
+        numero:      cfg.numero,
+        bairro:      cfg.bairro,
+        cidade:      cfg.cidade,
+        uf:          cfg.uf,
+        iss_padrao:  parseFloat(cfg.issPadrao) || 2,
+        updated_at:  new Date().toISOString(),
+      };
+      sb.from('certificados_fiscais')
+        .upsert(row, { onConflict: 'empresa_id' })
+        .then(function(r) { if (r.error) console.warn('[Fiscal] save:', r.error.message); })
+        .catch(function(e) { console.warn('[Fiscal] save:', e.message); });
+    }
+  }
+  toast('Dados do emitente salvos!', 'success');
+  _atualizarBarraStatusFiscal(_certState.status);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SALVAR CONFIG EMISSOR — melhorada
+// ─────────────────────────────────────────────────────────────────────
+function salvarConfigEmissor() {
+  function gV(id) { return (document.getElementById(id) || {}).value || ''; }
+  var provedor = gV('nf-provedor');
+  var apiKey   = gV('nf-api-key');
+  if (!provedor) { toast('Selecione um provedor', 'warn'); return; }
+  var cfg = {
+    provedor:  provedor,
+    apiKey:    apiKey,
+    ambiente:  gV('nf-ambiente') || 'homologacao',
+    clientId:  gV('nf-client-id'),
+    savedAt:   new Date().toISOString(),
+  };
+  localStorage.setItem('vc_config_emissor', JSON.stringify(cfg));
+  toast('Configuração do emissor salva!', 'success');
+  _atualizarBarraStatusFiscal(_certState.status);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CARREGAR CONFIG FISCAL + CERT STATUS ao abrir aba
+// ─────────────────────────────────────────────────────────────────────
+async function carregarConfigFiscal() {
+  // Configs locais
+  function setV(id, v) { var el = document.getElementById(id); if (el && v !== undefined && v !== null) el.value = v; }
+
+  try {
+    var cfg = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}');
+    setV('nf-cnpj',         cfg.cnpj);
+    setV('nf-razao-social', cfg.razaoSocial);
+    setV('nf-ie',           cfg.ie);
+    setV('nf-im',           cfg.im);
+    setV('nf-regime',       cfg.regime);
+    setV('nf-cnae',         cfg.cnae);
+    setV('nf-cep',          cfg.cep);
+    setV('nf-logradouro',   cfg.logradouro);
+    setV('nf-numero',       cfg.numero);
+    setV('nf-bairro',       cfg.bairro);
+    setV('nf-cidade-nf',    cfg.cidade);
+    setV('nf-uf',           cfg.uf);
+    setV('nf-ibge',         cfg.ibge);
+    setV('nf-iss-padrao',   cfg.issPadrao);
+  } catch(e) {}
+
+  try {
+    var em = JSON.parse(localStorage.getItem('vc_config_emissor') || '{}');
+    setV('nf-provedor',  em.provedor);
+    setV('nf-ambiente',  em.ambiente);
+    setV('nf-client-id', em.clientId);
+    // API Key: não preencher automaticamente (segurança — exige redigitar)
+    if (em.provedor) onProvedorChange(em.provedor);
+  } catch(e) {}
+
+  // Carregar status do certificado
+  var meta = await _carregarMetadadosCert();
+  if (meta && meta.cert_status) {
+    _atualizarStatusCert(meta.cert_status, meta.cert_nome || '');
+    if (meta.cert_validade) {
+      var el = document.getElementById('cert-validade');
+      if (el) el.value = 'Válido até ' + new Date(meta.cert_validade).toLocaleDateString('pt-BR');
+    }
+  } else {
+    _atualizarStatusCert('nao_configurado', '');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// TESTAR CONEXÃO COM A API
+// ─────────────────────────────────────────────────────────────────────
+async function testarConexaoNF() {
+  var provedor = (document.getElementById('nf-provedor') || {}).value || '';
+  var apiKey   = (document.getElementById('nf-api-key')  || {}).value || '';
+  var ambiente = (document.getElementById('nf-ambiente')  || {}).value || 'homologacao';
+  var cnpj     = ((document.getElementById('nf-cnpj')    || {}).value || '').replace(/\D/g,'');
+  var btn      = document.getElementById('btn-testar-api');
+
+  if (!provedor) { toast('Selecione o provedor', 'warn'); return; }
+  if (!apiKey)   { toast('Informe a API Key para testar', 'warn'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Testando...'; }
+
+  try {
+    var ok = false, msg = '';
+
+    if (provedor === 'focusnfe') {
+      var base = ambiente === 'producao' ? 'https://api.focusnfe.com.br' : 'https://homologacao.focusnfe.com.br';
+      // Endpoint de listagem de empresas (GET simples)
+      var r = await fetch(base + '/v2/empresa?cnpj=' + cnpj, {
+        headers: { 'Authorization': 'Basic ' + btoa(apiKey + ':') }
+      });
+      ok  = r.status < 400;
+      msg = ok ? 'Conexão OK com Focus NF-e (' + ambiente + ')' : 'HTTP ' + r.status;
+    } else if (provedor === 'nuvemfiscal') {
+      var base2 = ambiente === 'producao' ? 'https://api.nuvemfiscal.com.br' : 'https://api.sandbox.nuvemfiscal.com.br';
+      var r2 = await fetch(base2 + '/v1/empresas?top=1', {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      ok  = r2.status < 400;
+      msg = ok ? 'Conexão OK com Nuvem Fiscal (' + ambiente + ')' : 'HTTP ' + r2.status;
+    } else {
+      ok  = true;
+      msg = 'Configure o token no painel do provedor ' + provedor + ' e salve as configurações.';
+    }
+
+    toast(ok ? ('✅ ' + msg) : ('❌ ' + msg), ok ? 'success' : 'error');
+  } catch(e) {
+    // CORS esperado em chamada direta do browser
+    toast('⚠️ Bloqueio CORS esperado em testes diretos. Isso é normal — o envio real funciona pelo servidor. Teste pelo painel do provedor.', 'info');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🧪 Testar conexão'; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// COPIAR SQL FISCAL
+// ─────────────────────────────────────────────────────────────────────
+function copiarSqlFiscal() {
+  var pre = document.getElementById('sql-fiscal-pre');
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.textContent)
+    .then(function() { toast('SQL copiado!', 'success'); })
+    .catch(function() { toast('Selecione o texto manualmente e copie', 'info'); });
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc ERP — Módulo Backend Client v2.0
+// Conecta o frontend ao backend Node.js (Railway/Render)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * URL do backend — detectada automaticamente:
+ *   - Produção: lê de localStorage 'vc_backend_url'
+ *   - Dev local: localhost:3001
+ */
+function getBackendUrl() {
+  return localStorage.getItem('vc_backend_url') || '';
+}
+
+function setBackendUrl(url) {
+  localStorage.setItem('vc_backend_url', url.replace(/\/$/, ''));
+  toast('URL do backend salva!', 'success');
+}
+
+function getBackendApiKey() {
+  return localStorage.getItem('vc_backend_api_key') || '';
+}
+
+/**
+ * Fetch autenticado para o backend
+ * Injeta X-API-Key automaticamente
+ */
+async function backendFetch(path, options) {
+  var url    = getBackendUrl();
+  var apiKey = getBackendApiKey();
+
+  if (!url) {
+    throw new Error('Backend não configurado. Acesse Fiscal → ⚙️ Configuração → Backend.');
+  }
+
+  options = options || {};
+  options.headers = Object.assign({
+    'Content-Type':  'application/json',
+    'X-API-Key':     apiKey,
+  }, options.headers || {});
+
+  var fullUrl = url + path;
+  console.log(`[Backend] ${(options.method || 'GET')} ${fullUrl}`);
+
+  var resp = await fetch(fullUrl, options);
+
+  if (!resp.ok) {
+    var errBody = {};
+    try { errBody = await resp.json(); } catch(e) {}
+    var msg = errBody.error || errBody.message || `HTTP ${resp.status}`;
+    throw new Error(msg);
+  }
+
+  return resp.json();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// VERIFICAR STATUS DO BACKEND
+// ─────────────────────────────────────────────────────────────────────
+async function verificarBackend() {
+  var url = getBackendUrl();
+  if (!url) return { ok: false, erro: 'URL não configurada' };
+  try {
+    var r = await fetch(url + '/health', { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) return { ok: false, erro: 'HTTP ' + r.status };
+    var d = await r.json();
+    return { ok: true, data: d };
+  } catch(e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ENVIAR CERTIFICADO VIA BACKEND
+// Substitui _enviarCertNuvemFiscal — agora vai pelo backend (sem CORS)
+// ─────────────────────────────────────────────────────────────────────
+async function enviarCertViaBackend(base64, senha, cnpj) {
+  return backendFetch('/api/certificado/upload', {
+    method: 'POST',
+    body:   JSON.stringify({ base64, senha, cnpj }),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EMITIR NF-e VIA BACKEND
+// ─────────────────────────────────────────────────────────────────────
+async function emitirNFeViaBackend(orcamento) {
+  if (!orcamento) throw new Error('Dados do orçamento obrigatórios');
+
+  // Carregar configurações do emitente
+  var cfgFiscal = {};
+  try { cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}'); } catch(e) {}
+
+  if (!cfgFiscal.cnpj) throw new Error('Configure o CNPJ da empresa em Fiscal → ⚙️ Configuração');
+
+  // Buscar itens fiscais cadastrados para o produto
+  var itens = _montarItensFiscais(orcamento);
+
+  return backendFetch('/api/nf/emitir-nfe', {
+    method: 'POST',
+    body:   JSON.stringify({
+      orcamento: {
+        id:         orcamento._db_id || orcamento.id,
+        ref:        orcamento.ref         || '',
+        cliente:    orcamento.cliente     || 'Consumidor Final',
+        produto:    orcamento.produto     || '',
+        material:   orcamento.material    || '',
+        largura:    orcamento.largura     || 0,
+        altura:     orcamento.altura      || 0,
+        qtd:        orcamento.qtd         || 1,
+        precoFinal: orcamento.precoFinal  || 0,
+        // Dados do cliente (se disponíveis)
+        clienteCnpj:    orcamento.clienteCnpj    || '',
+        clienteCpf:     orcamento.clienteCpf     || '',
+        clienteEmail:   orcamento.clienteEmail   || '',
+        clienteCidade:  orcamento.clienteCidade  || '',
+        clienteUf:      orcamento.clienteUf      || '',
+      },
+      empresa: {
+        cnpj:        cfgFiscal.cnpj,
+        razaoSocial: cfgFiscal.razaoSocial || empresa.nome,
+        nome:        empresa.nome,
+        nomeFantasia:empresa.nome,
+        ie:          cfgFiscal.ie          || '',
+        im:          cfgFiscal.im          || '',
+        regime:      cfgFiscal.regime      || '1',
+        cnae:        cfgFiscal.cnae        || '',
+        cep:         cfgFiscal.cep         || '',
+        logradouro:  cfgFiscal.logradouro  || '',
+        numero:      cfgFiscal.numero      || 'S/N',
+        bairro:      cfgFiscal.bairro      || '',
+        cidade:      cfgFiscal.cidade      || '',
+        uf:          cfgFiscal.uf          || 'SP',
+        ibge:        cfgFiscal.ibge        || '3550308',
+        issPadrao:   cfgFiscal.issPadrao   || '2',
+      },
+      itens: itens,
+    }),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EMITIR NFS-e VIA BACKEND
+// ─────────────────────────────────────────────────────────────────────
+async function emitirNFSeViaBackend(orcamento, servico) {
+  var cfgFiscal = {};
+  try { cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}'); } catch(e) {}
+  if (!cfgFiscal.cnpj) throw new Error('Configure o CNPJ da empresa em Fiscal → ⚙️ Configuração');
+
+  return backendFetch('/api/nf/emitir-nfse', {
+    method: 'POST',
+    body:   JSON.stringify({
+      orcamento: {
+        id:         orcamento._db_id || orcamento.id,
+        ref:        orcamento.ref        || '',
+        cliente:    orcamento.cliente    || 'Consumidor Final',
+        produto:    orcamento.produto    || '',
+        largura:    orcamento.largura    || 0,
+        altura:     orcamento.altura     || 0,
+        qtd:        orcamento.qtd        || 1,
+        precoFinal: orcamento.precoFinal || 0,
+      },
+      empresa: {
+        cnpj:        cfgFiscal.cnpj,
+        razaoSocial: cfgFiscal.razaoSocial || empresa.nome,
+        im:          cfgFiscal.im     || '',
+        ibge:        cfgFiscal.ibge   || '3550308',
+        cnae:        cfgFiscal.cnae   || '',
+        issPadrao:   cfgFiscal.issPadrao || '2',
+        uf:          cfgFiscal.uf     || 'SP',
+        cidade:      cfgFiscal.cidade || '',
+      },
+      servico: servico || { lc116: '7.06', iss: cfgFiscal.issPadrao || 2, nome: orcamento.produto },
+    }),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CONSULTAR STATUS DE UMA NF
+// ─────────────────────────────────────────────────────────────────────
+async function consultarStatusNF(id, tipo) {
+  return backendFetch('/api/nf/status/' + id + '?tipo=' + (tipo || 'nfe'));
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// HELPER: montar itens fiscais a partir do orçamento
+// ─────────────────────────────────────────────────────────────────────
+function _montarItensFiscais(orc) {
+  // Tentar encontrar item fiscal cadastrado para este produto
+  var itensCad = (state.itens_fiscais || []).filter(function(i) {
+    var nomeProd = (orc.produto || '').toLowerCase();
+    var nomeItem = (i.nome || '').toLowerCase();
+    return i.tipoItem === 'produto' && (nomeProd.includes(nomeItem) || nomeItem.includes(nomeProd) || (i.codigo && nomeProd.includes(i.codigo.toLowerCase())));
+  });
+
+  if (itensCad.length > 0) {
+    return itensCad.map(function(i) {
+      return {
+        codigo:       i.codigo,
+        descricao:    i.descFiscal || i.nome,
+        ncm:          i.ncm || '49119100',
+        cfop:         i.cfop || '5102',
+        cst:          i.cst || '400',
+        unidade:      i.unidade || 'UN',
+        quantidade:   orc.qtd || 1,
+        valorUnitario:(orc.precoFinal / (orc.qtd || 1)),
+        valorTotal:   orc.precoFinal,
+      };
+    });
+  }
+
+  // Fallback: item genérico com dados do orçamento
+  return [{
+    codigo:       'PROD-001',
+    descricao:    orc.produto || 'Produto de Comunicação Visual',
+    ncm:          '49119100', // Impressos publicitários (default)
+    cfop:         '5102',
+    cst:          '400',
+    unidade:      orc.area > 1 ? 'M2' : 'UN',
+    quantidade:   orc.qtd || 1,
+    valorUnitario:(orc.precoFinal / (orc.qtd || 1)),
+    valorTotal:   orc.precoFinal,
+  }];
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SALVAR NOTA NO STATE APÓS EMISSÃO
+// ─────────────────────────────────────────────────────────────────────
+async function _salvarNotaEmitida(resultado, orcamento, tipo) {
+  var nota = {
+    id:           resultado.id,
+    tipo:         tipo,
+    numero_nf:    resultado.numero_nf || resultado.numero_nfse,
+    chave_acesso: resultado.chave_acesso || '',
+    status:       resultado.status || 'emitida',
+    valor:        orcamento.precoFinal,
+    cliente_nome: orcamento.cliente,
+    data_emissao: new Date().toISOString().split('T')[0],
+    xml_url:      resultado.xml_url || '',
+    pdf_url:      resultado.pdf_url || '',
+    orcamento_id: orcamento._db_id || orcamento.id,
+    ambiente:     resultado.ambiente || 'sandbox',
+  };
+
+  if (!state.notas_fiscais) state.notas_fiscais = [];
+  state.notas_fiscais.unshift(nota);
+  if (typeof saveState === 'function') saveState();
+
+  // Salvar no Supabase se disponível
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try {
+        var row = typeof withEmpresa === 'function' ? withEmpresa({
+          tipo: tipo, numero_nf: nota.numero_nf, chave_acesso: nota.chave_acesso,
+          status: nota.status, valor: nota.valor, cliente_nome: nota.cliente_nome,
+          data_emissao: nota.data_emissao, xml_url: nota.xml_url, pdf_url: nota.pdf_url,
+        }) : nota;
+        await sb.from('notas_fiscais').insert(row);
+      } catch(e) { console.warn('[NF] save Supabase:', e.message); }
+    }
+  }
+  return nota;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FUNÇÃO PRINCIPAL: Emitir NF a partir de um orçamento
+// Detecta automaticamente NF-e vs NFS-e baseado nos itens fiscais
+// ─────────────────────────────────────────────────────────────────────
+async function emitirNotaFiscal(orcId) {
+  var orc = (state.orcamentos || []).find(function(o) {
+    return String(o._db_id || o.id) === String(orcId);
+  });
+
+  if (!orc) { toast('Orçamento não encontrado', 'error'); return; }
+  if (orc.status !== 'finalizado') {
+    toast('Apenas orçamentos finalizados podem ter nota emitida', 'warn');
+    return;
+  }
+
+  // Verificar se o backend está configurado
+  var backendUrl = getBackendUrl();
+  if (!backendUrl) {
+    toast('Configure o Backend URL em Fiscal → ⚙️ Configuração', 'warn');
+    if (typeof navTo === 'function') navTo('nf');
+    setTimeout(function() { if (typeof setFiscalTab === 'function') setFiscalTab('config', null); }, 500);
+    return;
+  }
+
+  // Determinar tipo: produto (NF-e) ou serviço (NFS-e)
+  var itensFiscais  = (state.itens_fiscais || []);
+  var temProduto    = itensFiscais.some(function(i){ return i.tipoItem === 'produto'; });
+  var temServico    = itensFiscais.some(function(i){ return i.tipoItem === 'servico'; });
+
+  // Confirmar tipo
+  var tipo = 'nfe';
+  if (temServico && !temProduto) tipo = 'nfse';
+  else if (temServico && temProduto) {
+    tipo = confirm('Este orçamento tem produtos e serviços.\n\nOK = NF-e (produto)\nCancelar = NFS-e (serviço)') ? 'nfe' : 'nfse';
+  }
+
+  if (!confirm('Emitir ' + tipo.toUpperCase() + ' para ' + orc.cliente + '?\nValor: R$ ' + fmtBR(orc.precoFinal) + '\nAmbiente: ' + (localStorage.getItem('vc_config_emissor') ? JSON.parse(localStorage.getItem('vc_config_emissor')||'{}').ambiente : 'sandbox'))) {
+    return;
+  }
+
+  var btnEl = document.querySelector('[onclick*="emitirNotaFiscal"]');
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Emitindo...'; }
+
+  try {
+    showLoading('Emitindo nota fiscal...');
+    var resultado;
+
+    if (tipo === 'nfe') {
+      resultado = await emitirNFeViaBackend(orc);
+    } else {
+      var cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}');
+      var servico = (itensFiscais.filter(function(i){ return i.tipoItem==='servico'; })[0]) || { lc116:'7.06', iss: cfgFiscal.issPadrao||2 };
+      resultado = await emitirNFSeViaBackend(orc, servico);
+    }
+
+    // Salvar nota no state e Supabase
+    var nota = await _salvarNotaEmitida(resultado, orc, tipo);
+
+    hideLoading();
+    toast('✅ ' + tipo.toUpperCase() + ' emitida! Nº ' + (nota.numero_nf || '—'), 'success');
+
+    // Atualizar lista de notas
+    if (typeof renderListaNF === 'function') {
+      if (typeof setFiscalTab === 'function') setFiscalTab('notas', null);
+      else renderListaNF();
+    }
+
+    // Abrir PDF se disponível
+    if (nota.pdf_url) {
+      setTimeout(function() {
+        if (confirm('Nota emitida! Abrir PDF da DANFE?')) window.open(nota.pdf_url, '_blank');
+      }, 500);
+    }
+
+  } catch(e) {
+    hideLoading();
+    toast('❌ ' + e.message, 'error');
+    console.error('[emitirNotaFiscal]', e);
+  } finally {
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '📄 Emitir NF'; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SUBSTITUIR enviarCertificado para usar o backend
+// ─────────────────────────────────────────────────────────────────────
+var _enviarCertOriginal = typeof enviarCertificado === 'function' ? enviarCertificado : null;
+
+async function enviarCertificado() {
+  // Se backend configurado, usar o backend (sem CORS)
+  var backendUrl = getBackendUrl();
+  if (backendUrl) {
+    return _enviarCertViaBackendUI();
+  }
+  // Fallback: tentar direto (CORS pode bloquear)
+  if (_enviarCertOriginal) return _enviarCertOriginal();
+  toast('Configure o Backend URL primeiro', 'warn');
+}
+
+async function _enviarCertViaBackendUI() {
+  var senha  = (document.getElementById('cert-senha')  || {}).value || '';
+  var cnpj   = ((document.getElementById('nf-cnpj')    || {}).value || '').replace(/\D/g,'');
+  var apiKey = getBackendApiKey();
+
+  if (!_certState || !_certState.arquivo) { toast('Selecione o arquivo .pfx primeiro', 'warn'); return; }
+  if (!senha)   { toast('Informe a senha do certificado', 'warn'); return; }
+  if (!cnpj || cnpj.length !== 14) { toast('CNPJ inválido. Configure os dados do emitente.', 'warn'); return; }
+
+  var btn = document.getElementById('btn-enviar-cert');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+
+  try {
+    var base64 = await _fileToBase64(_certState.arquivo);
+    var resultado = await enviarCertViaBackend(base64, senha, cnpj);
+
+    // Limpar campos sensíveis
+    _certState.arquivo = null;
+    var senhaEl = document.getElementById('cert-senha');
+    if (senhaEl) senhaEl.value = '';
+
+    await _salvarMetadadosCert({ provedor: 'nuvemfiscal', cert_nome: _certState.nomeArquivo, cert_status: 'configurado', cnpj });
+    _atualizarStatusCert('configurado', _certState.nomeArquivo);
+
+    toast('✅ Certificado enviado ao backend e encaminhado à Nuvem Fiscal!', 'success');
+  } catch(e) {
+    toast('❌ ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔐 Enviar ao Provedor'; }
+  }
+}
+
+
+
+// ─────────────────────────────────────────────────────────────────────
+// UI: Configuração do Backend
+// ─────────────────────────────────────────────────────────────────────
+function salvarBackendConfig() {
+  var url = (document.getElementById('cfg-backend-url') || {}).value || '';
+  var key = (document.getElementById('cfg-backend-key') || {}).value || '';
+  if (!url) { toast('Informe a URL do backend', 'warn'); return; }
+  if (!url.startsWith('http')) { toast('URL inválida (deve começar com http/https)', 'warn'); return; }
+  setBackendUrl(url);
+  if (key) localStorage.setItem('vc_backend_api_key', key);
+  var line = document.getElementById('backend-status-line');
+  if (line) line.innerHTML = '<span style="color:var(--cyan)">URL salva: ' + url + '. Clique em Testar para verificar.</span>';
+}
+
+async function testarBackend() {
+  var btn = document.getElementById('btn-testar-backend');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  var url = (document.getElementById('cfg-backend-url') || {}).value || getBackendUrl();
+  if (!url) { toast('Configure a URL do backend primeiro', 'warn'); if(btn){btn.disabled=false;btn.textContent='Testar';} return; }
+  
+  // Salvar temporariamente para o teste
+  var original = localStorage.getItem('vc_backend_url');
+  localStorage.setItem('vc_backend_url', url.replace(/\/$/, ''));
+  
+  var line = document.getElementById('backend-status-line');
+  if (line) line.innerHTML = '<span style="color:var(--text3)">Testando conexao...</span>';
+  
+  var r = await verificarBackend();
+  if (r.ok) {
+    if (line) line.innerHTML = '<span style="color:var(--green)">Backend online! Servico: ' + (r.data && r.data.service ? r.data.service : 'OK') + ' | Ambiente: ' + (r.data && r.data.ambiente ? r.data.ambiente : 'sandbox') + '</span>';
+    toast('Backend conectado!', 'success');
+  } else {
+    if (line) line.innerHTML = '<span style="color:var(--red)">Erro: ' + r.erro + '</span>';
+    toast('Backend nao respondeu: ' + r.erro, 'error');
+    localStorage.setItem('vc_backend_url', original || '');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Testar'; }
+}
+
+// Carregar config do backend ao abrir aba
+var _origCarregarConfigFiscal = typeof carregarConfigFiscal === 'function' ? carregarConfigFiscal : null;
+async function carregarConfigFiscal() {
+  // Chamar original
+  if (_origCarregarConfigFiscal) await _origCarregarConfigFiscal();
+  // Preencher campos do backend
+  var url = getBackendUrl();
+  var key = getBackendApiKey();
+  var urlEl = document.getElementById('cfg-backend-url');
+  if (urlEl && url) urlEl.value = url;
+  // Nao preencher key automaticamente (seguranca - exige redigitar)
+  if (url) {
+    var line = document.getElementById('backend-status-line');
+    if (line) line.innerHTML = '<span style="color:var(--cyan)">Backend configurado: ' + url + '</span>';
+  }
+}
 
 async function iniciarControleAssinatura() {
   console.log('[VisualCalc] iniciarControleAssinatura | sb:', isSbOk(), '| empresa:', currentEmpresaId);
