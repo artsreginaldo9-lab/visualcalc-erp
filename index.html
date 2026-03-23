@@ -634,7 +634,7 @@ textarea{resize:vertical;}
     <button class="sb-item" id="sb-pcp-item" data-page="pcp" data-module="pcp" onclick="navTo('pcp')"><span class="sb-item-icon">🏭</span>PCP — Produção</button>
     <button class="sb-item" id="sb-admin-saas-item" data-page="admin-saas" style="display:none;color:var(--gold);font-weight:600" onclick="navTo('admin-saas')"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
     <button class="sb-item" data-page="config" onclick="navTo('config')"><span class="sb-item-icon">⚙️</span>Configurações</button>
-    <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="navTo('config');setTimeout(function(){showInner('cfg-admin',document.getElementById('cfg-tab-admin'));renderAdmin();},150)"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
+    <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="navTo('config');setTimeout(function(){var t=document.getElementById('cfg-tab-admin');if(t)t.style.display='';showInner('cfg-admin',t);renderAdmin();},800)"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
   </div>
   <div class="sb-footer">
     <div class="user-chip" onclick="abrirLogoEditor()">
@@ -4883,7 +4883,7 @@ function renderConfig() {
   // Render plan cards with module info
   renderPlanosCards();
   // Admin SaaS painel: owner + ADMIN_EMAILS
-  var adminShow = canAccess('admin_painel');
+  var adminShow = isOwner() || canAccess('admin_painel');
   var adminTab = document.getElementById('cfg-tab-admin');
   var admSb    = document.getElementById('sb-admin-item');
   if (adminTab) adminTab.style.display = adminShow ? '' : 'none';
