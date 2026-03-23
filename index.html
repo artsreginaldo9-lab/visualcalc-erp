@@ -70,7 +70,32 @@ body::after{
 ::-webkit-scrollbar-track{background:var(--ink);}
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px;}
 
-/* ── APP LAYOUT ──────────────────────────────────────────── */
+/* ── NOVOS MÓDULOS v5 — Metalon · Produção · Simulador ──────────── */
+.sim-bar-segment { transition: width .5s ease; }
+#metalon_section { animation: pgIn .2s ease; }
+#prod_resultado  { transition: all .2s; }
+#simulador_lucro_box { animation: pgIn .3s ease; }
+#sim_barra_custo div:hover { filter: brightness(1.2); cursor: pointer; }
+
+/* ── CHAT IA ─────────────────────────────────────────────────────── */
+#modal-chat-ia { display:none; }
+#modal-chat-ia.open { display:flex; }
+.ia-msg { max-width:88%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.55; animation:pgIn .2s ease; }
+.ia-msg-bot { background:var(--ink3);border:1px solid var(--line);border-radius:12px 12px 12px 4px;align-self:flex-start; }
+.ia-msg-user { background:linear-gradient(135deg,rgba(139,92,246,.25),rgba(56,197,224,.15));border:1px solid rgba(139,92,246,.3);border-radius:12px 12px 4px 12px;align-self:flex-end;text-align:right; }
+.ia-msg-loading { align-self:flex-start; }
+.ia-typing { display:flex;gap:4px;align-items:center;padding:10px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:12px 12px 12px 4px; }
+.ia-typing span { width:6px;height:6px;border-radius:50%;background:var(--purple);animation:ia-bounce .8s infinite; }
+.ia-typing span:nth-child(2) { animation-delay:.15s; }
+.ia-typing span:nth-child(3) { animation-delay:.3s; }
+@keyframes ia-bounce { 0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)} }
+
+/* ── FLUXO STATUS ────────────────────────────────────────────────── */
+.fluxo-step { display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--line);margin-bottom:6px;font-size:13px; }
+.fluxo-step.active { border-color:var(--gold);background:var(--gold-d); }
+.fluxo-step.done { border-color:rgba(46,212,122,.3);background:rgba(46,212,122,.05);color:var(--text3); }
+.fluxo-arrow { color:var(--text3);font-size:18px;text-align:center;margin:2px 0; }
+/* ─────────────────────────────────────────────────────────────────── */
 #app{display:flex;min-height:100vh;position:relative;z-index:1;}
 .sidebar{
   width:var(--sb-w);background:var(--ink2);
@@ -638,6 +663,7 @@ textarea{resize:vertical;}
     <button class="sb-item" id="sb-admin-saas-item" data-page="admin-saas" style="display:none;color:var(--gold);font-weight:600" onclick="navTo('admin-saas')"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
     <button class="sb-item" data-page="config" onclick="navTo('config')"><span class="sb-item-icon">⚙️</span>Configurações</button>
     <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="abrirAdminConfig()"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
+    <button class="sb-item" onclick="abrirChatIA()" style="background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(56,197,224,.08));border:1px solid rgba(139,92,246,.3);margin-top:6px"><span class="sb-item-icon">🤖</span>Assistente IA <span class="sb-badge" style="background:var(--purple);color:#fff">GPT</span></button>
   </div>
   <div class="sb-footer">
     <div class="user-chip" onclick="abrirLogoEditor()">
@@ -759,6 +785,74 @@ textarea{resize:vertical;}
         </div>
       </div>
       <div class="card"><div class="card-title"><div class="card-icon">✂️</div>Acabamentos</div><div id="acabamentos_container"><div style="color:var(--text3);font-size:12px">Selecione um produto</div></div></div>
+
+      <!-- ══ CÁLCULO ESTRUTURAL METALON ══ -->
+      <div class="card" style="margin-top:16px;border-color:rgba(139,92,246,.3)">
+        <div class="card-title"><div class="card-icon" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3)">🏗</div>Estrutura Metálica (Metalon)
+          <label class="toggle" style="margin-left:auto"><input type="checkbox" id="tog_metalon" onchange="toggleMetalonSection()"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="metalon_section" style="display:none">
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label>Tipo de Estrutura</label>
+              <select id="met_tipo" onchange="calcularMetalon()">
+                <option value="simples">Simples (perímetro)</option>
+                <option value="reforcada">Reforçada (travessas)</option>
+                <option value="fachada_acm">Fachada ACM (densa)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0"><label>Espaç. Travessas (m)</label>
+              <input type="number" id="met_espacamento" value="0.5" step="0.05" min="0.1" oninput="calcularMetalon()">
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label>Custo Metalon (R$/m)</label>
+              <input type="number" id="met_custo_metro" value="8.50" step="0.10" min="0" oninput="calcularMetalon()">
+            </div>
+            <div class="form-group" style="margin:0"><label>Custo Parafusos/Solda</label>
+              <input type="number" id="met_custo_fixacao" value="25" step="1" min="0" oninput="calcularMetalon()">
+            </div>
+          </div>
+          <div id="metalon_resultado" style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:var(--r);padding:12px;font-size:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Metalon Total</div><div id="met_total_m" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--purple)">0.00 m</div></div>
+              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Travessas</div><div id="met_travessas" style="font-family:'DM Mono',monospace;font-weight:600">0</div></div>
+              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Custo Estrutura</div><div id="met_custo_total" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--gold)">R$ 0,00</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ MOTOR DE PRODUÇÃO ══ -->
+      <div class="card" style="margin-top:16px;border-color:rgba(56,197,224,.2)">
+        <div class="card-title"><div class="card-icon" style="background:rgba(56,197,224,.1);border-color:rgba(56,197,224,.25)">⚙️</div>Motor de Produção</div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label>Vel. Máquina (m²/h)</label>
+            <input type="number" id="prod_vel_maquina" value="25" step="1" min="1" oninput="calcularCustoProducao()">
+          </div>
+          <div class="form-group" style="margin:0"><label>Custo Hora Máquina (R$)</label>
+            <input type="number" id="prod_custo_hora_maq" value="45" step="1" min="0" oninput="calcularCustoProducao()">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0"><label>Custo Hora Funcionário (R$)</label>
+            <input type="number" id="prod_custo_hora_func" value="18" step="0.50" min="0" oninput="calcularCustoProducao()">
+          </div>
+          <div class="form-group" style="margin:0"><label>Desperdício (%)</label>
+            <input type="number" id="prod_desperdicio" value="10" step="1" min="0" max="50" oninput="calcularCustoProducao()">
+          </div>
+        </div>
+        <div id="prod_resultado" style="background:rgba(56,197,224,.05);border:1px solid rgba(56,197,224,.15);border-radius:var(--r);padding:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;font-size:11px">
+            <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Tempo Produção</div><div id="prod_tempo" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--cyan)">0.00h</div></div>
+            <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Custo Máquina</div><div id="prod_custo_maq" style="font-family:'DM Mono',monospace;font-weight:600">R$ 0,00</div></div>
+            <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Custo M.O.</div><div id="prod_custo_mo" style="font-family:'DM Mono',monospace;font-weight:600">R$ 0,00</div></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <label class="toggle"><input type="checkbox" id="tog_incluir_producao" onchange="calcularCustoProducao()"><span class="toggle-slider"></span></label>
+          <span style="font-size:12px;color:var(--text2)">Incluir custos de produção no orçamento</span>
+        </div>
+      </div>
     </div>
     <div>
       <div class="card" style="margin-bottom:16px">
@@ -776,6 +870,34 @@ textarea{resize:vertical;}
           <div class="form-group" style="margin:0"><label>Desconto (%)</label><input type="number" id="desconto_input" value="0" min="0" max="100"></div>
         </div>
       </div>
+
+      <!-- ══ ESCALA DE PRODUÇÃO ══ -->
+      <div class="card" style="margin-bottom:16px;border-color:rgba(46,212,122,.2)">
+        <div class="card-title"><div class="card-icon" style="background:rgba(46,212,122,.1);border-color:rgba(46,212,122,.25)">📈</div>Escala & Ajuste de Preço</div>
+        <div id="escala_badge" style="display:none;margin-bottom:10px"></div>
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="form-group" style="margin:0"><label>Tipo de Cliente</label>
+            <select id="tipo_cliente_preco" onchange="calcularAjustesPreco()">
+              <option value="normal">Normal</option>
+              <option value="vip">⭐ VIP (desconto extra)</option>
+              <option value="novo">🆕 Novo Cliente (promoção)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0"><label>Urgência</label>
+            <select id="urgencia_preco" onchange="calcularAjustesPreco()">
+              <option value="normal">Normal</option>
+              <option value="urgente">🔥 Urgente (+15%)</option>
+              <option value="super_urgente">⚡ Super Urgente (+30%)</option>
+            </select>
+          </div>
+        </div>
+        <div id="ajuste_preco_info" style="font-size:11px;color:var(--text3);padding:6px 8px;background:var(--ink3);border-radius:var(--r)">
+          Sem ajustes aplicados
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">
+          <strong style="color:var(--green)">Escala automática:</strong> 100+ un → -5% · 500+ un → -10% · 1000+ un → -15%
+        </div>
+      </div>
       <div class="card" style="margin-bottom:16px">
         <div class="card-title"><div class="card-icon">📄</div>Dados para o PDF</div>
         <div class="form-row">
@@ -789,12 +911,19 @@ textarea{resize:vertical;}
   </div>
   <div id="resultado_container" style="display:none;margin-top:20px">
     <div class="result-box">
-      <div class="card-title" style="margin-bottom:14px"><div class="card-icon">📄</div>Resultado</div>
+      <div class="card-title" style="margin-bottom:14px"><div class="card-icon">📄</div>Resultado & Simulador de Lucro</div>
       <div class="g4" style="margin-bottom:16px">
         <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Custo Total</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500" id="res_custo">—</div></div>
         <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Preço Final</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--gold)" id="res_preco">—</div></div>
         <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Lucro Bruto</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--green)" id="res_lucro">—</div></div>
         <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:5px">Margem Real</div><div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500" id="res_margem">—</div></div>
+      </div>
+      <!-- Simulador de Lucro Visual -->
+      <div id="simulador_lucro_box" style="display:none;margin-bottom:16px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">📊 Composição do Preço</div>
+        <div id="sim_barra_custo" style="height:28px;border-radius:var(--r);overflow:hidden;display:flex;margin-bottom:8px"></div>
+        <div id="sim_legenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px"></div>
+        <div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px" id="sim_kpis"></div>
       </div>
       <div id="detalhamento_resultado"></div>
       <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
@@ -4006,7 +4135,7 @@ function renderAcabamentosOrcamento() {
   }).join('');
 }
 
-function calcular() {
+function _calcularLegado_UNUSED() {
   const area = getArea();
   if (area <= 0) { toast('Informe as medidas!', 'warn'); return; }
   const mid = parseInt(document.getElementById('orc_material')?.value)||0;
@@ -4186,12 +4315,9 @@ function limparFiltro() {
 async function avancarOrc(id) {
   const o = state.orcamentos.find(x=>(x._db_id||x.id)==id||(x._db_id||x.id)===id);
   if (!o) return;
-  const cfg = STATUS_CFG[o.status||'orcamento'];
-  if (!cfg?.next) return;
-  showLoading('Atualizando...');
-  await dbUpdateOrcStatus(o.id, cfg.next);
-  hideLoading(); renderOrcamentos(); renderDashboard();
-  toast('Status: ' + STATUS_CFG[cfg.next].label, 'success');
+  // Usar novo fluxo automático com modal de confirmação e integração financeiro/produção
+  const orcId = o._db_id || o.id;
+  await avancarFluxo(orcId, o.status || 'orcamento');
 }
 
 async function cancelarOrc(id) {
@@ -9789,7 +9915,788 @@ async function handleMercadoPagoWebhook(paymentId) {
   // await dbRenovarAssinatura(currentAssinatura.id, 30);
 }
 
-// ─── INTEGRAÇÃO COM checkAuth/initApp v5 ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc ERP Pro — calculo.js (inline) v6.0
+// Motor completo: Metalon · Produção · Precificação · Escala · IA · Fluxo
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 1: calcularMetalon(largura, altura, tipo, params)
+// ─────────────────────────────────────────────────────────────────────
+function calcularMetalon(largura, altura, tipo, params) {
+  params = params || {};
+  tipo = tipo || 'simples';
+  var espacamento   = params.espacamento   || 0.5;
+  var custoPorMetro = params.custoPorMetro || 8.50;
+  var custoFixacao  = params.custoFixacao  || 25;
+  var qtd           = params.qtd           || 1;
+
+  if (!largura || !altura || largura <= 0 || altura <= 0) {
+    return { perimetro:0, numTravessasH:0, numTravessasV:0, totalMetalon:0, custoEstrutura:0, detalhes:[] };
+  }
+
+  var perimetro = (largura + altura) * 2;
+  var numTravessasH = tipo === 'simples' ? 0 : Math.max(0, Math.floor(altura / espacamento) - 1);
+  var numTravessasV = tipo === 'fachada_acm' ? Math.max(0, Math.floor(largura / espacamento) - 1) : 0;
+  var metrosTravessasH = numTravessasH * largura;
+  var metrosTravessasV = numTravessasV * altura;
+  var metalonPorPeca   = perimetro + metrosTravessasH + metrosTravessasV;
+  var totalMetalon     = metalonPorPeca * qtd;
+  var custoMetalon     = totalMetalon * custoPorMetro;
+  var custoEstrutura   = custoMetalon + (custoFixacao * qtd);
+
+  return {
+    largura: largura, altura: altura, tipo: tipo, qtd: qtd,
+    perimetro: perimetro,
+    numTravessasH: numTravessasH, numTravessasV: numTravessasV,
+    totalTravessas: (numTravessasH + numTravessasV) * qtd,
+    metalonPorPeca: metalonPorPeca, totalMetalon: totalMetalon,
+    custoMetalon: custoMetalon, custoFixacaoTotal: custoFixacao * qtd,
+    custoEstrutura: custoEstrutura,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 2: calcularCustoTotal(params) — Motor central
+// ─────────────────────────────────────────────────────────────────────
+function calcularCustoTotal(params) {
+  var area   = params.area   || 0;
+  var qtd    = params.qtd    || 1;
+
+  var custoMaterial    = params.custoMaterialM2 ? params.custoMaterialM2 * area : (params.custoMaterial || 0);
+  var custoImpressao   = (params.custoImpressaoM2 || 0) * area;
+
+  var velMaquina    = params.velMaquina    || 25;
+  var custoHoraMaq  = params.custoHoraMaq  || 45;
+  var custoHoraFunc = params.custoHoraFunc || 18;
+  var tempoProducao = (area > 0 && velMaquina > 0) ? area / velMaquina : 0;
+  var custoProducao = params.incluirProducaoMO ? tempoProducao * custoHoraMaq : 0;
+  var custoMaoObra  = (params.custoMaoObraM2 || 0) * area
+    + (params.incluirProducaoMO ? tempoProducao * custoHoraFunc : 0);
+
+  var percDesperdicio  = params.percDesperdicio || 0;
+  var custoDesperdicio = (custoMaterial + custoImpressao) * (percDesperdicio / 100);
+
+  var custoEstrutura  = params.custoEstrutura  || 0;
+  var custoInstalacao = params.custoInstalacao || 0;
+
+  var kmTransporte    = params.kmTransporte || 0;
+  var custoKm         = params.custoKm      || 2.50;
+  var custoTransporte = kmTransporte * custoKm;
+
+  var percOverhead  = params.percOverhead || 0;
+  var fixoOverhead  = params.fixoOverhead || 0;
+  var baseOverhead  = custoMaterial + custoImpressao + custoProducao + custoMaoObra;
+  var custoOverhead = baseOverhead * (percOverhead / 100) + fixoOverhead;
+
+  var custoAcabamentos = params.custoAcabamentos || 0;
+  var custoServicos    = params.custoServicos    || 0;
+
+  var custoTotal =
+    custoMaterial + custoImpressao + custoProducao + custoMaoObra +
+    custoDesperdicio + custoEstrutura + custoInstalacao + custoTransporte +
+    custoOverhead + custoAcabamentos + custoServicos;
+
+  return {
+    area: area, qtd: qtd, tempoProducao: tempoProducao,
+    custoMaterial: custoMaterial, custoImpressao: custoImpressao,
+    custoProducao: custoProducao, custoMaoObra: custoMaoObra,
+    custoDesperdicio: custoDesperdicio, custoEstrutura: custoEstrutura,
+    custoInstalacao: custoInstalacao, custoTransporte: custoTransporte,
+    custoOverhead: custoOverhead, custoAcabamentos: custoAcabamentos,
+    custoServicos: custoServicos, custoTotal: custoTotal,
+    custoTotalUnitario: qtd > 0 ? custoTotal / qtd : custoTotal,
+    custoTotalM2: area > 0 ? custoTotal / area : 0,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 3: calcularPreco(custoTotal, params) — Precificação inteligente
+// Fórmula: preco = custoTotal / (1 - margem)
+// ─────────────────────────────────────────────────────────────────────
+function calcularPreco(custoTotal, params) {
+  params = params || {};
+  var margem   = Math.min(params.margem  || 40, 99);
+  var desconto = params.desconto || 0;
+
+  var precoBase = custoTotal / (1 - margem / 100);
+
+  var urgenciaAdj = { normal: 0, urgente: 15, super_urgente: 30 };
+  var adjUrgencia = urgenciaAdj[params.urgencia] || 0;
+  precoBase *= (1 + adjUrgencia / 100);
+
+  var clienteAdj = { normal: 0, vip: -8, novo: -5 };
+  var adjCliente = clienteAdj[params.tipoCliente] || 0;
+  precoBase *= (1 + adjCliente / 100);
+
+  var escala = aplicarEscala(params.qtd || 1);
+  precoBase *= (1 - escala.perc / 100);
+
+  var precoFinal = precoBase * (1 - desconto / 100);
+  var lucro      = precoFinal - custoTotal;
+  var margemReal = precoFinal > 0 ? (lucro / precoFinal) * 100 : 0;
+  var markupReal = custoTotal > 0 ? (lucro / custoTotal) * 100 : 0;
+
+  return {
+    precoBase: precoBase, precoFinal: precoFinal, lucro: lucro,
+    margemReal: margemReal, markupReal: markupReal,
+    adjUrgencia: adjUrgencia, adjCliente: adjCliente,
+    descontoEscala: escala.perc, labelEscala: escala.label,
+    descontoManual: desconto,
+    precoUnitario: (params.qtd || 1) > 1 ? precoFinal / (params.qtd || 1) : precoFinal,
+    precoM2: (params.area || 0) > 0 ? precoFinal / params.area : 0,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 4: aplicarEscala(quantidade) — Desconto por volume
+// ─────────────────────────────────────────────────────────────────────
+function aplicarEscala(qtd) {
+  var tabela = (window._escalaConfig) || [
+    { min: 1000, perc: 15, label: '⚡ Industrial (1000+)' },
+    { min: 500,  perc: 10, label: '🏭 Grande Escala (500+)' },
+    { min: 100,  perc: 5,  label: '📦 Escala Média (100+)' },
+    { min: 1,    perc: 0,  label: '' },
+  ];
+  for (var i = 0; i < tabela.length; i++) {
+    if (qtd >= tabela[i].min) return tabela[i];
+  }
+  return { perc: 0, label: '' };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 5: UI helpers para os campos do orçamento
+// ─────────────────────────────────────────────────────────────────────
+function toggleMetalonSection() {
+  var tog = document.getElementById('tog_metalon');
+  var sec = document.getElementById('metalon_section');
+  if (!sec) return;
+  sec.style.display = tog && tog.checked ? 'block' : 'none';
+  if (tog && tog.checked) _atualizarUIMetalon();
+}
+
+function _atualizarUIMetalon() {
+  var l = parseFloat(document.getElementById('orc_largura') && document.getElementById('orc_largura').value) || 0;
+  var h = parseFloat(document.getElementById('orc_altura')  && document.getElementById('orc_altura').value)  || 0;
+  var t = (document.getElementById('met_tipo') && document.getElementById('met_tipo').value) || 'simples';
+  var r = calcularMetalon(l, h, t, {
+    espacamento:   parseFloat((document.getElementById('met_espacamento')  || {}).value) || 0.5,
+    custoPorMetro: parseFloat((document.getElementById('met_custo_metro')  || {}).value) || 8.50,
+    custoFixacao:  parseFloat((document.getElementById('met_custo_fixacao')|| {}).value) || 25,
+    qtd: parseInt((document.getElementById('orc_qtd') || {}).value) || 1,
+  });
+  function sEl(id) { return document.getElementById(id); }
+  if (sEl('met_total_m'))    sEl('met_total_m').textContent    = r.totalMetalon.toFixed(2) + ' m';
+  if (sEl('met_travessas'))  sEl('met_travessas').textContent  = r.totalTravessas + (r.tipo==='simples'?' (simples)':'');
+  if (sEl('met_custo_total'))sEl('met_custo_total').textContent= 'R$ ' + fmtBR(r.custoEstrutura);
+  return r.custoEstrutura;
+}
+
+function _atualizarUIProducao() {
+  var area = getArea ? getArea() : 0;
+  var vel  = parseFloat((document.getElementById('prod_vel_maquina')    || {}).value) || 25;
+  var hMaq = parseFloat((document.getElementById('prod_custo_hora_maq') || {}).value) || 45;
+  var hF   = parseFloat((document.getElementById('prod_custo_hora_func')|| {}).value) || 18;
+  if (!area) return { tempo:0, custoMaquina:0, custoMaoObra:0 };
+  var tempo = area / vel;
+  var cMaq  = tempo * hMaq;
+  var cMO   = tempo * hF;
+  function sEl(id) { return document.getElementById(id); }
+  if (sEl('prod_tempo'))    sEl('prod_tempo').textContent    = tempo.toFixed(2) + 'h';
+  if (sEl('prod_custo_maq'))sEl('prod_custo_maq').textContent= 'R$ ' + fmtBR(cMaq);
+  if (sEl('prod_custo_mo')) sEl('prod_custo_mo').textContent = 'R$ ' + fmtBR(cMO);
+  return { tempo: tempo, custoMaquina: cMaq, custoMaoObra: cMO };
+}
+
+function _getAjustesPrecoUI() {
+  var urgencia    = (document.getElementById('urgencia_preco')    || {}).value || 'normal';
+  var tipoCliente = (document.getElementById('tipo_cliente_preco')|| {}).value || 'normal';
+  var qtd         = parseInt((document.getElementById('orc_qtd')  || {}).value) || 1;
+  var escala      = aplicarEscala(qtd);
+  var ajustes     = [];
+  if (urgencia === 'urgente')       ajustes.push({ label:'🔥 Urgente',         perc:+15 });
+  if (urgencia === 'super_urgente') ajustes.push({ label:'⚡ Super Urgente',   perc:+30 });
+  if (tipoCliente === 'vip')        ajustes.push({ label:'⭐ Cliente VIP',     perc:-8  });
+  if (tipoCliente === 'novo')       ajustes.push({ label:'🆕 Novo Cliente',    perc:-5  });
+  if (escala.perc > 0)              ajustes.push({ label:escala.label,         perc:-escala.perc });
+
+  var infoEl  = document.getElementById('ajuste_preco_info');
+  var badgeEl = document.getElementById('escala_badge');
+  if (!ajustes.length) {
+    if (infoEl)  infoEl.textContent = 'Sem ajustes aplicados';
+    if (badgeEl) badgeEl.style.display = 'none';
+  } else {
+    if (infoEl) {
+      infoEl.innerHTML = ajustes.map(function(a) {
+        return '<span style="margin-right:10px;color:' + (a.perc<0?'var(--green)':'var(--warn)') + '">' + a.label + ': ' + (a.perc>0?'+':'') + a.perc + '%</span>';
+      }).join('') + '<strong style="color:var(--text)">→ Total: ' + ajustes.reduce(function(s,a){ return s+a.perc; }, 0) + '%</strong>';
+    }
+    if (badgeEl && escala.perc > 0) {
+      badgeEl.style.display = 'block';
+      badgeEl.innerHTML = '<span class="badge badge-green">' + escala.label + '</span>';
+    }
+  }
+  return { urgencia: urgencia, tipoCliente: tipoCliente, qtd: qtd };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 6: calcular() — Função principal do orçamento (motor completo)
+// ─────────────────────────────────────────────────────────────────────
+function calcular() {
+  var area = getArea ? getArea() : 0;
+  if (area <= 0) { toast('Informe as medidas!', 'warn'); return; }
+
+  var mid = parseInt((document.getElementById('orc_material') || {}).value) || 0;
+  var mat = state.materiais.find(function(m) { return m.id === mid; });
+  var qtd = parseInt((document.getElementById('orc_qtd') || {}).value) || 1;
+
+  function gV(id)  { var el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 0; }
+  function gVi(id) { var el = document.getElementById(id); return el ? parseInt(el.value)   || 0 : 0; }
+  function gC(id)  { var el = document.getElementById(id); return el ? el.checked : false; }
+
+  // Material
+  var custoMaterialM2 = 0;
+  if (gC('tog_material')) {
+    var vm = gV('custo_material');
+    custoMaterialM2 = vm > 0 ? vm / area : (mat ? mat.custo_m2 : 0);
+  }
+
+  // Overhead
+  var percOverhead = 0, fixoOverhead = 0;
+  (state.overhead || []).filter(function(o){ return o.ativo; }).forEach(function(o) {
+    if (o.tipo === 'percentual') percOverhead += o.valor;
+    else fixoOverhead += o.valor;
+  });
+
+  // Acabamentos
+  var custoAcabamentos = 0;
+  var detAcab = [];
+  (state.acabamentos || []).filter(function(a){ return a.ativo; }).forEach(function(a) {
+    var tog = document.getElementById('tog_acab_' + a.id);
+    if (!tog || !tog.checked) return;
+    var val = gV('val_acab_' + a.id) || a.valor;
+    var c = 0;
+    if (a.tipo === 'm2') c = val * area;
+    else if (a.tipo === 'fixo') c = val;
+    else { var qty = gV('qty_acab_' + a.id); c = val * qty; }
+    if (c > 0) { custoAcabamentos += c; detAcab.push({ label:'✂️ ' + a.nome, valor: c }); }
+  });
+
+  // Serviços
+  var custoServicos = 0;
+  var detSvc = [];
+  (state.servicos || []).filter(function(s){ return s.ativo; }).forEach(function(s) {
+    var tog = document.getElementById('tog_svc_' + s.id);
+    if (!tog || !tog.checked) return;
+    var val = gV('val_svc_' + s.id) || s.valor;
+    var c = 0;
+    if (s.tipo === 'fixo') c = val;
+    else if (s.tipo === 'm2') c = val * area;
+    else { var km = gV('km_svc_' + s.id); c = val * km; }
+    if (c > 0) { custoServicos += c; detSvc.push({ label:'🚚 ' + s.nome, valor: c }); }
+  });
+
+  // Parâmetros para o motor
+  var motParams = {
+    area: area, qtd: qtd,
+    custoMaterialM2:   custoMaterialM2,
+    custoImpressaoM2:  gC('tog_impressao') ? gV('custo_impressao') : 0,
+    custoMaoObraM2:    gC('tog_mao_obra')  ? gV('custo_mao_obra')  : 0,
+    velMaquina:        gV('prod_vel_maquina')     || 25,
+    custoHoraMaq:      gV('prod_custo_hora_maq')  || 45,
+    custoHoraFunc:     gV('prod_custo_hora_func') || 18,
+    incluirProducaoMO: gC('tog_incluir_producao'),
+    percDesperdicio:   gC('tog_incluir_producao') ? (gV('prod_desperdicio') || 0) : 0,
+    custoEstrutura:    gC('tog_metalon') ? _atualizarUIMetalon() : 0,
+    percOverhead: percOverhead, fixoOverhead: fixoOverhead,
+    custoAcabamentos: custoAcabamentos,
+    custoServicos: custoServicos,
+  };
+
+  // Executar motor
+  var custos = calcularCustoTotal(motParams);
+  var margem  = gV('margem_input') || 40;
+  var desconto= gV('desconto_input') || 0;
+  var adj     = _getAjustesPrecoUI();
+  var preco   = calcularPreco(custos.custoTotal, {
+    margem: margem, desconto: desconto,
+    urgencia:    adj.urgencia,
+    tipoCliente: adj.tipoCliente,
+    qtd: qtd, area: area,
+  });
+
+  // Atualizar KPIs
+  function sEl(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  sEl('res_custo',  'R$ ' + fmtBR(custos.custoTotal));
+  sEl('res_preco',  'R$ ' + fmtBR(preco.precoFinal));
+  sEl('res_lucro',  'R$ ' + fmtBR(preco.lucro));
+  sEl('res_margem', preco.margemReal.toFixed(1) + '%');
+  var mEl = document.getElementById('res_margem');
+  if (mEl) mEl.style.color = preco.margemReal >= 30 ? 'var(--green)' : preco.margemReal >= 15 ? 'var(--gold)' : 'var(--red)';
+
+  // Montar linhas de detalhamento
+  var linhas = [];
+  if (custos.custoMaterial    > 0) linhas.push({ label:'📦 Material' + (mat ? ' (' + mat.nome + ')' : ''), valor: custos.custoMaterial });
+  if (custos.custoImpressao   > 0) linhas.push({ label:'🖨 Impressão (R$ ' + fmt(motParams.custoImpressaoM2) + '/m²)', valor: custos.custoImpressao });
+  if (custos.custoMaoObra     > 0) linhas.push({ label:'👷 Mão de Obra', valor: custos.custoMaoObra });
+  if (custos.custoProducao    > 0) linhas.push({ label:'⚙️ Máquina (' + custos.tempoProducao.toFixed(2) + 'h)', valor: custos.custoProducao });
+  if (custos.custoDesperdicio > 0) linhas.push({ label:'🗑 Desperdício (' + motParams.percDesperdicio + '%)', valor: custos.custoDesperdicio });
+  if (custos.custoEstrutura   > 0) linhas.push({ label:'🏗 Estrutura Metalon', valor: custos.custoEstrutura });
+  if (custos.custoInstalacao  > 0) linhas.push({ label:'🔧 Instalação', valor: custos.custoInstalacao });
+  if (custos.custoTransporte  > 0) linhas.push({ label:'🚐 Transporte', valor: custos.custoTransporte });
+  if (custos.custoOverhead    > 0) linhas.push({ label:'📊 Overhead', valor: custos.custoOverhead });
+  detAcab.forEach(function(d) { linhas.push(d); });
+  detSvc.forEach(function(d)  { linhas.push(d); });
+
+  var html = linhas.map(function(d) {
+    return '<div class="result-row"><span class="result-label">' + d.label + '</span><span class="result-value">R$ ' + fmtBR(d.valor) + '</span></div>';
+  }).join('');
+  html += '<div class="result-row"><span class="result-label" style="font-weight:600">Custo Total</span><span class="result-value" style="font-weight:600">R$ ' + fmtBR(custos.custoTotal) + '</span></div>';
+  if (preco.adjUrgencia !== 0) html += '<div class="result-row"><span class="result-label">🔥 Urgência</span><span class="result-value" style="color:var(--warn)">+' + preco.adjUrgencia + '%</span></div>';
+  if (preco.adjCliente  !== 0) html += '<div class="result-row"><span class="result-label">' + (adj.tipoCliente==='vip'?'⭐':'🆕') + ' Ajuste Cliente</span><span class="result-value" style="color:var(--green)">' + preco.adjCliente + '%</span></div>';
+  if (preco.descontoEscala > 0) html += '<div class="result-row"><span class="result-label">' + preco.labelEscala + '</span><span class="result-value" style="color:var(--green)">-' + preco.descontoEscala + '%</span></div>';
+  if (preco.descontoManual > 0) html += '<div class="result-row"><span class="result-label">🎁 Desconto</span><span class="result-value" style="color:var(--red)">-' + preco.descontoManual + '%</span></div>';
+  html += '<div class="result-row total"><span class="result-label main">Preço Final</span><span class="result-value main">R$ ' + fmtBR(preco.precoFinal) + '</span></div>';
+  html += '<div class="result-row"><span class="result-label" style="color:var(--green)">Lucro Bruto</span><span class="result-value green">R$ ' + fmtBR(preco.lucro) + ' (' + preco.margemReal.toFixed(1) + '% margem)</span></div>';
+  if (qtd > 1)   html += '<div class="result-row"><span class="result-label">Unitário</span><span class="result-value">R$ ' + fmtBR(preco.precoUnitario) + '</span></div>';
+  if (area > 0)  html += '<div class="result-row"><span class="result-label">Preço/m²</span><span class="result-value" style="color:var(--cyan)">R$ ' + fmtBR(preco.precoM2) + '</span></div>';
+  // Botão analisar com IA
+  html += '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" style="border-color:rgba(139,92,246,.4);color:var(--purple)">🤖 Analisar com IA</button></div>';
+
+  var dr = document.getElementById('detalhamento_resultado');
+  if (dr) dr.innerHTML = html;
+  var rc = document.getElementById('resultado_container');
+  if (rc) { rc.style.display = 'block'; rc.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+
+  _renderSimuladorLucro(custos, preco, linhas);
+
+  var cli_nome = (function() {
+    var sel = document.getElementById('orc_cliente_id');
+    if (sel && sel.value) { var c = state.clientes.find(function(x){ return (x._db_id||x.id)===sel.value; }); return c ? c.nome : ''; }
+    var inp = document.getElementById('orc_cliente');
+    return inp ? inp.value : '';
+  })();
+
+  window._lastCalc = {
+    area: area, qtd: qtd,
+    custoTotal: custos.custoTotal, precoFinal: preco.precoFinal,
+    lucro: preco.lucro, margemReal: preco.margemReal,
+    margem: margem, desconto: desconto,
+    detalhes: linhas, custoDetalhe: custos, precoDetalhe: preco,
+    cliente: cli_nome,
+    ref:      (document.getElementById('orc_ref')      || {}).value || '',
+    telefone: (document.getElementById('orc_telefone') || {}).value || '',
+    produto:  (document.getElementById('orc_produto')  || {}).value || '',
+    material: mat ? mat.nome : '',
+    largura:  (document.getElementById('orc_largura')  || {}).value || '',
+    altura:   (document.getElementById('orc_altura')   || {}).value || '',
+    prazo:    (document.getElementById('orc_prazo')    || {}).value || '5 dias úteis',
+    pagamento:(document.getElementById('orc_pagamento')|| {}).value || '',
+    validade: (document.getElementById('orc_validade') || {}).value || '7',
+    data:     new Date().toLocaleString('pt-BR'),
+  };
+  toast('Calculado: R$ ' + fmtBR(preco.precoFinal) + ' | Margem: ' + preco.margemReal.toFixed(1) + '%', 'success', '✅ Cálculo completo');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 7: Simulador Visual de Lucro
+// ─────────────────────────────────────────────────────────────────────
+function _renderSimuladorLucro(custos, preco, linhas) {
+  var box    = document.getElementById('simulador_lucro_box');
+  var barra  = document.getElementById('sim_barra_custo');
+  var legenda= document.getElementById('sim_legenda');
+  var kpis   = document.getElementById('sim_kpis');
+  if (!box || !barra) return;
+  box.style.display = 'block';
+
+  var cores = ['#38c5e0','#e8b84b','#8b5cf6','#f0913a','#6bcf8a','#a78bfa','#34d399','#fb923c'];
+  var segs  = linhas.filter(function(l){ return l.valor > 0; }).map(function(l, i) {
+    return { label: l.label, valor: l.valor, cor: cores[i % cores.length] };
+  });
+  if (preco.lucro > 0) segs.push({ label:'💰 Lucro', valor: preco.lucro, cor:'var(--green)' });
+
+  var total = segs.reduce(function(s,x){ return s + x.valor; }, 0);
+  if (!total) return;
+
+  barra.innerHTML = segs.map(function(s) {
+    var pct = (s.valor / total * 100).toFixed(1);
+    return '<div style="width:' + pct + '%;background:' + s.cor + ';transition:width .6s ease;cursor:pointer" title="' + s.label + ': R$ ' + fmtBR(s.valor) + ' (' + pct + '%)"></div>';
+  }).join('');
+
+  legenda.innerHTML = segs.map(function(s) {
+    var pct = (s.valor / total * 100).toFixed(1);
+    return '<span style="display:flex;align-items:center;gap:4px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:2px;background:' + s.cor + ';flex-shrink:0"></span><span style="font-size:10.5px">' + s.label + ' (' + pct + '%)</span></span>';
+  }).join('');
+
+  var area = custos.area || 0;
+  var qtd  = custos.qtd  || 1;
+  var kpList = [
+    { l:'Custo/m²',    v: area > 0 ? 'R$ ' + fmtBR(custos.custoTotal  / area) : '—', c:'var(--cyan)'   },
+    { l:'Preço/m²',    v: area > 0 ? 'R$ ' + fmtBR(preco.precoFinal   / area) : '—', c:'var(--gold)'   },
+    { l:'Lucro/m²',    v: area > 0 ? 'R$ ' + fmtBR(preco.lucro        / area) : '—', c:'var(--green)'  },
+    { l:'Lucro/unid.', v: qtd  > 1 ? 'R$ ' + fmtBR(preco.lucro        / qtd)  : '—', c:'var(--green)'  },
+    { l:'Markup',      v: preco.markupReal.toFixed(1) + '%',                           c:'var(--purple)' },
+    { l:'Margem liq.', v: preco.margemReal.toFixed(1) + '%',
+      c: preco.margemReal >= 30 ? 'var(--green)' : preco.margemReal >= 15 ? 'var(--gold)' : 'var(--red)' },
+  ];
+  kpis.innerHTML = kpList.map(function(k) {
+    return '<div style="background:var(--ink4);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;text-align:center"><div style="font-size:9px;text-transform:uppercase;font-weight:700;color:var(--text3);margin-bottom:2px">' + k.l + '</div><div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:600;color:' + k.c + '">' + k.v + '</div></div>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 8: Fluxo Automático
+// ─────────────────────────────────────────────────────────────────────
+var FLUXO_CONFIG = {
+  orcamento: { prox:'aprovado',   label:'✅ Aprovar',         icon:'📋', cor:'var(--cyan)'  },
+  aprovado:  { prox:'producao',   label:'🔧 Enviar Produção', icon:'✅', cor:'var(--green)' },
+  producao:  { prox:'finalizado', label:'🎉 Finalizar',       icon:'🔧', cor:'var(--gold)'  },
+  finalizado:{ prox:null, label:null, icon:'🎉', cor:'#6bcf8a' },
+  cancelado: { prox:null, label:null, icon:'❌', cor:'var(--red)' },
+};
+
+async function avancarFluxo(orcId, statusAtual) {
+  var cfg = FLUXO_CONFIG[statusAtual];
+  if (!cfg || !cfg.prox) { toast('Status final — sem próximo passo', 'info'); return; }
+  var modal  = document.getElementById('modal-fluxo-auto');
+  var titulo = document.getElementById('fluxo-modal-titulo');
+  var sub    = document.getElementById('fluxo-modal-sub');
+  var body   = document.getElementById('fluxo-modal-body');
+  var btn    = document.getElementById('fluxo-modal-confirmar');
+  if (!modal) return;
+
+  var orc = (state.orcamentos || []).find(function(o){ return String(o._db_id || o.id) === String(orcId); });
+  var statusProx = cfg.prox;
+
+  titulo.textContent = cfg.label;
+  sub.textContent    = 'Orçamento: ' + (orc ? (orc.ref || orc.cliente || orcId) : orcId);
+
+  var steps = ['orcamento','aprovado','producao','finalizado'];
+  var stepsHtml = steps.map(function(s) {
+    var c       = FLUXO_CONFIG[s];
+    var isDone  = steps.indexOf(s) < steps.indexOf(statusAtual);
+    var isActive= s === statusAtual;
+    var isNext  = s === statusProx;
+    return '<div class="fluxo-step ' + (isDone?'done':'') + ' ' + (isActive||isNext?'active':'') + '">' +
+      '<span style="font-size:18px">' + c.icon + '</span>' +
+      '<div style="flex:1"><div style="font-weight:' + (isActive||isNext?700:400) + ';color:' + (isDone?'var(--text3)':isNext?c.cor:'var(--text)') + '">' + s.charAt(0).toUpperCase()+s.slice(1) + '</div>' +
+      (isActive ? '<div style="font-size:10px;color:var(--text3)">Status atual</div>' : '') +
+      (isNext   ? '<div style="font-size:10px;color:' + c.cor + '">→ Próximo passo</div>' : '') +
+      '</div>' + (isDone ? '<span style="color:var(--green);font-size:16px">✓</span>' : '') + '</div>';
+  }).join('');
+  body.innerHTML = stepsHtml;
+
+  if (statusProx === 'finalizado' && orc && orc.precoFinal > 0) {
+    body.innerHTML += '<div class="alert alert-info" style="margin-top:10px;font-size:12px">💡 Lançamento de <strong>R$ ' + fmtBR(orc.precoFinal) + '</strong> será criado no financeiro (a receber).</div>';
+  }
+  if (statusProx === 'aprovado') {
+    body.innerHTML += '<div class="alert alert-success" style="margin-top:10px;font-size:12px">🔧 Pedido de produção será criado automaticamente.</div>';
+  }
+
+  btn.textContent = cfg.label;
+  btn.onclick = async function() {
+    modal.style.display = 'none';
+    await _executarFluxo(orcId, statusAtual, statusProx, orc);
+  };
+  modal.style.display = 'flex';
+}
+
+async function _executarFluxo(orcId, statusAtual, statusNovo, orc) {
+  showLoading('Avançando fluxo...');
+  try {
+    await dbUpdateStatusOrcamento(orcId, statusNovo);
+    if (statusNovo === 'aprovado' && orc) await _criarPedidoDaOrcamento(orc);
+    if (statusNovo === 'finalizado' && orc && orc.precoFinal > 0) await _criarLancamentoFinanceiro(orc);
+    await dbFetchOrcamentos();
+    renderOrcamentos();
+    renderDashboard();
+    updateHistBadge();
+    hideLoading();
+    var msgs = { aprovado:'✅ Aprovado! Pedido criado na produção.', producao:'🔧 Enviado à produção!', finalizado:'🎉 Finalizado! Lançamento criado no financeiro.' };
+    toast(msgs[statusNovo] || 'Status atualizado!', 'success', 'Fluxo avançado');
+  } catch(e) { hideLoading(); toast('Erro no fluxo: ' + e.message, 'error'); }
+}
+
+async function dbUpdateStatusOrcamento(orcId, novoStatus) {
+  var orc = (state.orcamentos || []).find(function(o){ return String(o._db_id||o.id) === String(orcId); });
+  if (orc) orc.status = novoStatus;
+  saveState();
+  if (dbMode() !== 'supabase') return;
+  var sb = getSb(); if (!sb) return;
+  try { var r = await sb.from('orcamentos').update({ status: novoStatus }).eq('id', orcId); if (r.error) throw r.error; }
+  catch(e) { console.warn('dbUpdateStatusOrcamento:', e.message); }
+}
+
+async function _criarPedidoDaOrcamento(orc) {
+  var pedido = {
+    id: Date.now(), numero: 'PED-' + String(Date.now()).slice(-5),
+    cliente_nome: orc.cliente, produto: orc.produto, material: orc.material,
+    largura: parseFloat(orc.largura)||0, altura: parseFloat(orc.altura)||0,
+    area: orc.area, qtd: orc.qtd||1, valor: orc.precoFinal, custo: orc.custoTotal,
+    lucro: orc.lucro, status: 'aguardando', prioridade: 'normal',
+    orcamento_id: orc._db_id || orc.id, data_entrada: new Date().toISOString(), prazo: orc.prazo,
+  };
+  if (!state.pedidos) state.pedidos = [];
+  state.pedidos.unshift(pedido); saveState();
+  if (dbMode() !== 'supabase') return;
+  var sb = getSb(); if (!sb) return;
+  try {
+    var row = withEmpresa({ numero:pedido.numero, cliente_nome:pedido.cliente_nome, produto:pedido.produto,
+      material:pedido.material, largura:pedido.largura, altura:pedido.altura, area:pedido.area,
+      qtd:pedido.qtd, valor:pedido.valor, status:'aguardando', prioridade:'normal', orcamento_id:orc._db_id||null });
+    var r = await sb.from('pedidos').insert(row).select('id').single();
+    if (r.data) pedido._db_id = r.data.id;
+  } catch(e) { console.warn('_criarPedidoDaOrcamento:', e.message); }
+}
+
+async function _criarLancamentoFinanceiro(orc) {
+  var lanc = {
+    id: Date.now(), tipo:'receita',
+    descricao: 'Recebimento: ' + orc.cliente + ' — ' + (orc.ref || orc.produto || ''),
+    valor: orc.precoFinal, custo: orc.custoTotal, lucro: orc.lucro,
+    status:'pendente', data: new Date().toISOString().split('T')[0],
+    orcamento_id: orc._db_id || orc.id, created_at: new Date().toISOString(),
+  };
+  if (!state.financeiro) state.financeiro = [];
+  state.financeiro.unshift(lanc); saveState();
+  if (dbMode() !== 'supabase') return;
+  var sb = getSb(); if (!sb) return;
+  try {
+    var row = withEmpresa({ tipo:'receita', descricao:lanc.descricao, valor:lanc.valor,
+      status:'pendente', data:lanc.data, referencia:orc._db_id||null });
+    await sb.from('financeiro').insert(row);
+  } catch(e) { console.warn('_criarLancamentoFinanceiro:', e.message); }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 9: Assistente IA — OpenAI GPT-4o-mini
+// ─────────────────────────────────────────────────────────────────────
+var _iaState = { messages: [], loading: false, systemContext: null };
+
+function getApiKeyIA() { return localStorage.getItem('openai_api_key') || ''; }
+
+function salvarApiKeyIA() {
+  var key = (document.getElementById('ia-apikey-input') || {}).value;
+  if (!key || !key.trim().startsWith('sk-')) { toast('Chave inválida. Deve começar com sk-', 'error'); return; }
+  localStorage.setItem('openai_api_key', key.trim());
+  var cb = document.getElementById('ia-config-bar'); if (cb) cb.style.display = 'none';
+  var sl = document.getElementById('ia-status-lbl'); if (sl) sl.textContent = '✅ Conectado via OpenAI';
+  toast('API Key salva com sucesso!', 'success');
+}
+
+function abrirChatIA() {
+  var modal = document.getElementById('modal-chat-ia');
+  if (!modal) return;
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+  var cfgBar = document.getElementById('ia-config-bar');
+  if (cfgBar) cfgBar.style.display = getApiKeyIA() ? 'none' : 'block';
+  // Construir contexto do orçamento atual
+  if (!_iaState.systemContext) {
+    var ctx = window._lastCalc;
+    var ctxStr = ctx
+      ? '\n\nContexto do orçamento atual:\n- Produto: ' + (ctx.produto||'N/A') +
+        '\n- Dimensões: ' + ctx.largura + 'm × ' + ctx.altura + 'm = ' + (ctx.area||0).toFixed(4) + ' m²' +
+        '\n- Qtd: ' + ctx.qtd +
+        '\n- Custo: R$ ' + fmtBR(ctx.custoTotal) + ' | Preço: R$ ' + fmtBR(ctx.precoFinal) +
+        '\n- Lucro: R$ ' + fmtBR(ctx.lucro) + ' | Margem: ' + (ctx.margemReal||0).toFixed(1) + '%'
+      : '';
+    _iaState.systemContext = 'Você é o assistente IA do VisualCalc ERP Pro, especializado em comunicação visual (gráficas, banners, fachadas ACM, letras caixa, estruturas metálicas, adesivos, totens).\n\nVocê ajuda com:\n- Cálculo de custos (material, produção, metalon, instalação, transporte)\n- Sugestão de preços com margem de lucro adequada\n- Análise de margens e lucratividade\n- Cálculo de metalon para estruturas\n- Estratégias comerciais e descontos por escala\n\nFórmula de precificação: preco = custo / (1 - margem). Margem saudável para comunicação visual: 35-55%.\nResponda em português brasileiro de forma objetiva, com números concretos.' + ctxStr;
+  }
+  setTimeout(function() { var inp = document.getElementById('ia-input'); if (inp) inp.focus(); }, 100);
+}
+
+function fecharChatIA() {
+  var modal = document.getElementById('modal-chat-ia');
+  if (modal) { modal.classList.remove('open'); modal.style.display = 'none'; }
+}
+
+function limparChatIA() {
+  _iaState.messages = []; _iaState.systemContext = null;
+  var msgs = document.getElementById('ia-messages');
+  if (msgs) msgs.innerHTML = '<div class="ia-msg ia-msg-bot"><div style="font-size:13px;line-height:1.6">Conversa reiniciada! Como posso ajudar?</div></div>';
+}
+
+function autoResizeIA(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 90) + 'px'; }
+
+function enviarSugestaoIA(texto) {
+  var inp = document.getElementById('ia-input');
+  if (inp) { inp.value = texto; autoResizeIA(inp); }
+  enviarMensagemIA();
+}
+
+function _adicionarMensagemIA(role, content) {
+  var msgs = document.getElementById('ia-messages');
+  if (!msgs) return;
+  var div = document.createElement('div');
+  div.className = 'ia-msg ia-msg-' + (role === 'user' ? 'user' : 'bot');
+  var html = role === 'user' ? '<span style="font-size:13px">' + content.replace(/\n/g,'<br>') + '</span>'
+    : '<span style="font-size:13px;line-height:1.6">' + _formatIAResponse(content) + '</span>';
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function _formatIAResponse(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code style="background:var(--ink4);padding:1px 5px;border-radius:4px;font-family:DM Mono,monospace;font-size:12px">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function _mostrarTypingIA() {
+  var msgs = document.getElementById('ia-messages'); if (!msgs) return null;
+  var div = document.createElement('div');
+  div.id = 'ia-typing-indicator'; div.className = 'ia-typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+function _removerTypingIA() { var el = document.getElementById('ia-typing-indicator'); if (el) el.remove(); }
+
+async function enviarMensagemIA() {
+  if (_iaState.loading) return;
+  var inp   = document.getElementById('ia-input');
+  var texto = inp ? inp.value.trim() : '';
+  if (!texto) return;
+  if (!getApiKeyIA()) {
+    var cb = document.getElementById('ia-config-bar'); if (cb) cb.style.display = 'block';
+    toast('Configure sua OpenAI API Key primeiro', 'warn'); return;
+  }
+  inp.value = ''; if (inp) inp.style.height = '38px';
+  _adicionarMensagemIA('user', texto);
+  _iaState.messages.push({ role:'user', content:texto });
+  var sugestoesEl = document.getElementById('ia-sugestoes');
+  if (sugestoesEl && _iaState.messages.length > 2) sugestoesEl.style.display = 'none';
+  _iaState.loading = true;
+  var sb = document.getElementById('ia-send-btn'); if (sb) sb.disabled = true;
+  var si = document.getElementById('ia-send-icon'); if (si) si.textContent = '⏳';
+  _mostrarTypingIA();
+  try {
+    var resposta = await perguntarIA(_iaState.messages, _iaState.systemContext);
+    _removerTypingIA();
+    _adicionarMensagemIA('assistant', resposta);
+    _iaState.messages.push({ role:'assistant', content:resposta });
+  } catch(e) {
+    _removerTypingIA();
+    _adicionarMensagemIA('assistant', '❌ Erro: ' + e.message + '\n\nVerifique sua API Key nas configurações acima.');
+  } finally {
+    _iaState.loading = false;
+    if (sb) sb.disabled = false;
+    if (si) si.textContent = '➤';
+  }
+}
+
+// Chamada real à API OpenAI — funcional
+async function perguntarIA(messages, systemPrompt) {
+  var apiKey = getApiKeyIA();
+  if (!apiKey) throw new Error('API Key não configurada');
+  var payload = {
+    model: 'gpt-4o-mini',
+    max_tokens: 800,
+    temperature: 0.7,
+    messages: [
+      { role:'system', content: systemPrompt || 'Você é um assistente especializado em comunicação visual e precificação para gráficas.' },
+    ].concat(messages.slice(-12)),
+  };
+  var resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    var errData = await resp.json().catch(function(){ return {}; });
+    var errMsg = (errData.error && errData.error.message) || ('HTTP ' + resp.status);
+    if (resp.status === 401) throw new Error('API Key inválida ou expirada');
+    if (resp.status === 429) throw new Error('Limite de requisições atingido. Aguarde.');
+    if (resp.status === 402) throw new Error('Créditos OpenAI esgotados. Recarregue em platform.openai.com');
+    throw new Error(errMsg);
+  }
+  var data = await resp.json();
+  return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'Sem resposta.';
+}
+
+// Analisar orçamento atual com IA
+async function analisarOrcamentoComIA() {
+  if (!window._lastCalc) { toast('Calcule um orçamento primeiro!', 'warn'); return; }
+  var c   = window._lastCalc;
+  var txt = 'Analise este orçamento de comunicação visual:\n' +
+    '- Produto: ' + (c.produto||'N/A') + ' | Material: ' + (c.material||'N/A') + '\n' +
+    '- Dimensões: ' + c.largura + 'm × ' + c.altura + 'm (' + c.qtd + ' unidade' + (c.qtd>1?'s':'') + ')\n' +
+    '- Custo total: R$ ' + fmtBR(c.custoTotal) + '\n' +
+    '- Preço sugerido: R$ ' + fmtBR(c.precoFinal) + '\n' +
+    '- Margem: ' + (c.margemReal||0).toFixed(1) + '% | Lucro: R$ ' + fmtBR(c.lucro) + '\n\n' +
+    'O preço está adequado para o mercado brasileiro de comunicação visual? Há otimizações possíveis? Analise a margem.';
+  abrirChatIA();
+  setTimeout(function() {
+    var inp = document.getElementById('ia-input');
+    if (inp) { inp.value = txt; autoResizeIA(inp); }
+    enviarMensagemIA();
+  }, 300);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 10: Checklist por tipo de produto
+// ─────────────────────────────────────────────────────────────────────
+var CHECKLIST_POR_PRODUTO_MAPA = {
+  'Banner':       ['Preparar arquivo','Imprimir','Acabamento (ilhós/bastão)','Controle qualidade','Embalar','Entregar'],
+  'Adesivo':      ['Preparar arquivo','Imprimir','Laminação','Recorte','Controle qualidade','Entregar'],
+  'ACM':          ['Estrutura metalon','Corte ACM','Impressão/pintura','Montagem painel','Instalação','Vistoria'],
+  'Fachada':      ['Estrutura metalon','Corte ACM','Impressão/pintura','Montagem painel','Instalação','Vistoria'],
+  'Letra Caixa':  ['Corte CNC','Solda estrutura','Cabear LED','Pintura/acabamento','Instalação','Teste','Vistoria'],
+  'Totem':        ['Estrutura base','Painéis laterais','Impressão interna','Montagem','Iluminação','Instalação','Vistoria'],
+  'Placa':        ['Impressão/gravação','Recorte','Acabamento','Furação','Controle qualidade','Entregar'],
+  'default':      ['Preparar material','Produção','Acabamento','Controle qualidade','Entregar'],
+};
+
+function _gerarChecklistPadrao(pedidoId) {
+  var pedido = (state.pedidos || []).find(function(p){ return String(p._db_id||p.id) === String(pedidoId); });
+  var nomeProd = pedido ? (pedido.produto || '') : '';
+  var etapas = CHECKLIST_POR_PRODUTO_MAPA['default'];
+  var keys = Object.keys(CHECKLIST_POR_PRODUTO_MAPA);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (key !== 'default' && nomeProd.toLowerCase().indexOf(key.toLowerCase()) >= 0) {
+      etapas = CHECKLIST_POR_PRODUTO_MAPA[key]; break;
+    }
+  }
+  return etapas.map(function(etapa, idx) {
+    return { id: 'local-' + pedidoId + '-' + idx, pedido_id: pedidoId,
+      etapa: etapa, ordem: idx + 1, concluido: false, empresa_id: currentEmpresaId };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MÓDULO 11: Auto-update de UI ao mudar dimensões
+// ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  ['orc_largura','orc_altura','orc_qtd'].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return;
+    el.addEventListener('input', function() {
+      if (document.getElementById('tog_metalon') && document.getElementById('tog_metalon').checked) _atualizarUIMetalon();
+      _atualizarUIProducao();
+      _getAjustesPrecoUI();
+    });
+  });
+  ['met_tipo','met_espacamento','met_custo_metro','met_custo_fixacao'].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return;
+    el.addEventListener('change', _atualizarUIMetalon);
+    el.addEventListener('input',  _atualizarUIMetalon);
+  });
+  ['prod_vel_maquina','prod_custo_hora_maq','prod_custo_hora_func'].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return;
+    el.addEventListener('input', _atualizarUIProducao);
+  });
+  ['tipo_cliente_preco','urgencia_preco'].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return;
+    el.addEventListener('change', _getAjustesPrecoUI);
+  });
+});
+
+
+
+
 async function iniciarControleAssinatura() {
   console.log('[VisualCalc] iniciarControleAssinatura | sb:', isSbOk(), '| empresa:', currentEmpresaId);
 
@@ -9844,6 +10751,71 @@ async function iniciarControleAssinatura() {
     <div class="modal-title">💳 Pagamento via PIX</div>
     <div class="modal-sub">Pague com PIX e ative seu plano instantaneamente</div>
     <div id="pix-modal-status" style="min-height:120px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL CHAT IA ═══════════════════ -->
+<div id="modal-chat-ia" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(6,8,15,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:flex-end;padding:20px">
+  <div style="width:420px;max-width:calc(100vw - 40px);height:600px;max-height:calc(100vh - 40px);background:var(--ink2);border:1px solid var(--line2);border-radius:var(--r-xl);display:flex;flex-direction:column;box-shadow:var(--sh-lg);overflow:hidden">
+    <!-- Header IA -->
+    <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--ink3)">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#8b5cf6,#38c5e0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🤖</div>
+      <div style="flex:1">
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:14px">Assistente IA — VisualCalc</div>
+        <div style="font-size:11px;color:var(--text3)" id="ia-status-lbl">Conectado via OpenAI</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="limparChatIA()" title="Limpar conversa">🗑</button>
+        <button class="btn btn-ghost btn-xs" onclick="fecharChatIA()">✕</button>
+      </div>
+    </div>
+    <!-- Config API Key (inline se não configurado) -->
+    <div id="ia-config-bar" style="display:none;padding:10px 14px;background:rgba(240,145,58,.08);border-bottom:1px solid rgba(240,145,58,.2)">
+      <div style="font-size:11px;color:var(--warn);margin-bottom:6px">⚠️ Configure sua OpenAI API Key para usar o assistente</div>
+      <div style="display:flex;gap:6px">
+        <input type="password" id="ia-apikey-input" placeholder="sk-..." style="flex:1;font-size:12px;padding:6px 10px">
+        <button class="btn btn-primary btn-xs" onclick="salvarApiKeyIA()">Salvar</button>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">A chave é salva apenas no seu navegador (localStorage)</div>
+    </div>
+    <!-- Mensagens -->
+    <div id="ia-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div class="ia-msg ia-msg-bot">
+        <div style="font-size:13px;line-height:1.6">Olá! Sou o assistente IA do VisualCalc ERP. Posso ajudar você a:<br><br>
+        • 💰 <strong>Sugerir preços</strong> para seus produtos<br>
+        • 📐 <strong>Calcular custos</strong> de metalon e produção<br>
+        • 📊 <strong>Analisar margens</strong> e lucratividade<br>
+        • 🔄 <strong>Otimizar seu fluxo</strong> de produção<br><br>
+        Me descreva seu produto ou diga o que precisa calcular!</div>
+      </div>
+    </div>
+    <!-- Sugestões rápidas -->
+    <div id="ia-sugestoes" style="padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line)">
+      <button class="btn btn-ghost btn-xs" onclick="enviarSugestaoIA('Qual o preço ideal para um banner 3x1m em lona 440g?')">💰 Sugerir preço banner</button>
+      <button class="btn btn-ghost btn-xs" onclick="enviarSugestaoIA('Como calcular metalon para uma fachada ACM 4x2m?')">🏗 Calcular metalon</button>
+      <button class="btn btn-ghost btn-xs" onclick="enviarSugestaoIA('Qual margem de lucro ideal para comunicação visual?')">📊 Margem ideal</button>
+    </div>
+    <!-- Input -->
+    <div style="padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end">
+      <textarea id="ia-input" placeholder="Pergunte sobre custos, preços, metalon, produção..." style="flex:1;resize:none;min-height:38px;max-height:90px;font-size:13px;line-height:1.5;padding:8px 12px" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensagemIA()}" oninput="autoResizeIA(this)"></textarea>
+      <button class="btn btn-primary btn-sm" id="ia-send-btn" onclick="enviarMensagemIA()" style="flex-shrink:0;padding:9px 14px">
+        <span id="ia-send-icon">➤</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL FLUXO AUTOMÁTICO ═══════════════════ -->
+<div id="modal-fluxo-auto" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box" style="max-width:500px">
+    <button class="modal-close" onclick="document.getElementById('modal-fluxo-auto').style.display='none'">✕</button>
+    <div class="modal-title" id="fluxo-modal-titulo">🔄 Avançar Status</div>
+    <div class="modal-sub" id="fluxo-modal-sub">Confirme a transição do orçamento</div>
+    <div id="fluxo-modal-body" style="margin:16px 0"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-fluxo-auto').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" id="fluxo-modal-confirmar">Confirmar</button>
+    </div>
   </div>
 </div>
 
