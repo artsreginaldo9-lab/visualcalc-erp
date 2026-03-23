@@ -11370,124 +11370,7 @@ function _mostrarRelatorioCompleto() {
   var w = window.open('', '_blank', 'width=600,height=700');
   if (w) {
     var css = 'body{font-family:monospace;background:#06080f;color:#e8eaf0;padding:20px;white-space:pre-wrap;font-size:13px;line-height:1.7}';
-    w.document.write('<html><head><title>Relatorio VisualCalc</title><style>' + css + '</style></head><body>' + rel.texto.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '
-<!-- ═══════════════════ MODAL ITEM FISCAL ═══════════════════ -->
-<div id="modal-item-fiscal" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalItemFiscal()">
-  <div class="modal-box" style="max-width:580px">
-    <button class="modal-close" onclick="fecharModalItemFiscal()">✕</button>
-    <div class="modal-title" id="mif-title">+ Novo Produto Fiscal</div>
-    <div class="modal-sub" id="mif-sub">Preencha os dados fiscais para emissão de NF</div>
-
-    <input type="hidden" id="mif-id">
-    <input type="hidden" id="mif-tipo-item">
-
-    <!-- Campos comuns -->
-    <div class="form-row" style="margin-bottom:10px">
-      <div class="form-group" style="margin:0"><label>Código Interno *</label>
-        <input type="text" id="mif-codigo" placeholder="Ex: BAN-001, INST-001">
-      </div>
-      <div class="form-group" style="margin:0;flex:2"><label>Nome / Descrição *</label>
-        <input type="text" id="mif-nome" placeholder="Ex: Banner em Lona 440g, Instalação de Fachada">
-      </div>
-    </div>
-
-    <!-- Campos PRODUTO -->
-    <div id="mif-campos-produto">
-      <div class="form-row" style="margin-bottom:10px">
-        <div class="form-group" style="margin:0"><label>NCM *</label>
-          <input type="text" id="mif-ncm" placeholder="0000.00.00" maxlength="10"
-            list="dl-ncm-sugestoes" autocomplete="off">
-          <datalist id="dl-ncm-sugestoes">
-            <option value="4911.91.00">4911.91.00 — Impressos publicitários</option>
-            <option value="4911.99.00">4911.99.00 — Outros impressos</option>
-            <option value="3919.90.00">3919.90.00 — Adesivos autocolantes</option>
-            <option value="3920.49.00">3920.49.00 — Placas PVC/plástico</option>
-            <option value="7606.11.00">7606.11.00 — ACM/Alumínio</option>
-            <option value="7308.90.90">7308.90.90 — Estruturas metálicas</option>
-            <option value="9405.40.00">9405.40.00 — Painéis luminosos/LED</option>
-            <option value="3926.90.90">3926.90.90 — Outras obras de plástico</option>
-          </datalist>
-        </div>
-        <div class="form-group" style="margin:0"><label>CFOP</label>
-          <select id="mif-cfop">
-            <option value="5101">5101 — Venda prod. industrializado</option>
-            <option value="5102">5102 — Venda de mercadoria</option>
-            <option value="5405">5405 — Simples Nacional</option>
-            <option value="6101">6101 — Venda interestadual</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row" style="margin-bottom:10px">
-        <div class="form-group" style="margin:0"><label>Unidade de Medida</label>
-          <select id="mif-unidade">
-            <option value="M2">M2 — Metro quadrado</option>
-            <option value="UN">UN — Unidade</option>
-            <option value="M">M — Metro linear</option>
-            <option value="KG">KG — Quilograma</option>
-            <option value="CX">CX — Caixa</option>
-            <option value="PC">PC — Peça</option>
-            <option value="SV">SV — Serviço</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label>CST / CSOSN</label>
-          <select id="mif-cst">
-            <option value="400">400 — Simples Nacional (saída)</option>
-            <option value="102">102 — Simples Nacional sem permissão de crédito</option>
-            <option value="500">500 — ICMS cobrado por ST</option>
-            <option value="900">900 — Outros (Regime Normal)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Campos SERVIÇO -->
-    <div id="mif-campos-servico" style="display:none">
-      <div class="form-row" style="margin-bottom:10px">
-        <div class="form-group" style="margin:0"><label>Código LC 116/2003 *</label>
-          <input type="text" id="mif-lc116" placeholder="Ex: 7.06"
-            list="dl-lc116-sugestoes" autocomplete="off">
-          <datalist id="dl-lc116-sugestoes">
-            <option value="7.06">7.06 — Propaganda e publicidade</option>
-            <option value="7.09">7.09 — Disponibilização de espaço</option>
-            <option value="14.05">14.05 — Restauração e recondicionamento</option>
-            <option value="17.09">17.09 — Comunicação visual</option>
-            <option value="37.01">37.01 — Serviços em geral</option>
-          </datalist>
-        </div>
-        <div class="form-group" style="margin:0"><label>ISS (%)</label>
-          <input type="number" id="mif-iss" placeholder="2" step="0.1" min="0" max="5" value="2">
-        </div>
-      </div>
-      <div class="form-row" style="margin-bottom:10px">
-        <div class="form-group" style="margin:0"><label>Município de prestação</label>
-          <input type="text" id="mif-municipio" placeholder="Ex: São Paulo/SP">
-        </div>
-        <div class="form-group" style="margin:0"><label>Cód. IBGE do município</label>
-          <input type="text" id="mif-ibge-item" placeholder="Ex: 3550308">
-        </div>
-      </div>
-    </div>
-
-    <!-- Campos comuns (valor + obs) -->
-    <div class="form-row" style="margin-bottom:10px">
-      <div class="form-group" style="margin:0"><label>Valor Padrão (R$)</label>
-        <input type="number" id="mif-valor" placeholder="0.00" step="0.01" min="0">
-      </div>
-      <div class="form-group" style="margin:0;flex:2"><label>Descrição Fiscal Completa</label>
-        <input type="text" id="mif-desc-fiscal" placeholder="Descrição que aparece na nota fiscal">
-      </div>
-    </div>
-    <div class="form-group"><label>Observações</label>
-      <input type="text" id="mif-obs" placeholder="Informações adicionais (opcional)">
-    </div>
-
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
-      <button class="btn btn-ghost" onclick="fecharModalItemFiscal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarItemFiscal()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
-</body></html>');
+    w.document.write('<html><head><title>Relatorio VisualCalc</title><style>' + css + '</style></head><body>' + rel.texto.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</body></html>');
     w.document.close();
   } else {
     alert(rel.texto);
@@ -15234,6 +15117,456 @@ async function carregarConfigFiscal() {
   }
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════
+// VisualCalc ERP — Visual Improvements v1.0
+// SVG Icons · Product Preview · Animações · Breakdown Visual
+// 100% CSS+JS puro, zero bibliotecas externas, zero imagens pesadas
+// ═══════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────
+// SVG ICONS por tipo de produto (inline, leves, escaláveis)
+// ─────────────────────────────────────────────────────────────────────
+var VC_ICONS = {
+  banner: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="8" width="40" height="26" rx="2" fill="rgba(56,197,224,.15)" stroke="var(--cyan)" stroke-width="1.5"/><line x1="14" y1="8" x2="14" y2="4" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"/><line x1="34" y1="8" x2="34" y2="4" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"/><rect x="9" y="14" width="18" height="2.5" rx="1.25" fill="var(--cyan)" opacity=".7"/><rect x="9" y="20" width="12" height="2" rx="1" fill="var(--cyan)" opacity=".4"/><rect x="9" y="26" width="15" height="2" rx="1" fill="var(--cyan)" opacity=".4"/><rect x="31" y="14" width="9" height="12" rx="1" fill="rgba(232,184,75,.2)" stroke="var(--gold)" stroke-width="1" opacity=".8"/><line x1="10" y1="38" x2="38" y2="38" stroke="var(--line2)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>',
+
+  faixa: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="16" width="44" height="16" rx="2" fill="rgba(139,92,246,.12)" stroke="var(--purple)" stroke-width="1.5"/><line x1="2" y1="16" x2="2" y2="12" stroke="var(--purple)" stroke-width="2" stroke-linecap="round"/><line x1="46" y1="16" x2="46" y2="12" stroke="var(--purple)" stroke-width="2" stroke-linecap="round"/><rect x="7" y="20" width="20" height="2.5" rx="1.25" fill="var(--purple)" opacity=".6"/><rect x="7" y="25" width="14" height="2" rx="1" fill="var(--purple)" opacity=".4"/></svg>',
+
+  adesivo: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="6" width="36" height="36" rx="3" fill="rgba(46,212,122,.1)" stroke="var(--green)" stroke-width="1.5"/><path d="M6 6 L42 6 L42 42" stroke="rgba(46,212,122,.3)" stroke-width="1"/><circle cx="24" cy="24" r="8" fill="rgba(46,212,122,.15)" stroke="var(--green)" stroke-width="1.5"/><path d="M20 24 L23 27 L28 21" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 36 Q24 28 36 36" stroke="var(--green)" stroke-width="1" opacity=".4"/></svg>',
+
+  acm: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="10" width="36" height="28" rx="1" fill="rgba(232,184,75,.1)" stroke="var(--gold)" stroke-width="1.5"/><line x1="6" y1="18" x2="42" y2="18" stroke="var(--gold)" stroke-width="1" opacity=".4"/><line x1="6" y1="26" x2="42" y2="26" stroke="var(--gold)" stroke-width="1" opacity=".4"/><line x1="14" y1="10" x2="14" y2="38" stroke="var(--gold)" stroke-width="1" opacity=".4"/><line x1="22" y1="10" x2="22" y2="38" stroke="var(--gold)" stroke-width="1" opacity=".4"/><line x1="30" y1="10" x2="30" y2="38" stroke="var(--gold)" stroke-width="1" opacity=".4"/><rect x="2" y="6" width="4" height="36" rx="1" fill="rgba(232,184,75,.2)" stroke="var(--gold)" stroke-width="1"/><rect x="42" y="6" width="4" height="36" rx="1" fill="rgba(232,184,75,.2)" stroke="var(--gold)" stroke-width="1"/></svg>',
+
+  fachada: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="14" width="40" height="28" rx="1" fill="rgba(240,145,58,.1)" stroke="var(--warn)" stroke-width="1.5"/><rect x="4" y="8" width="40" height="8" rx="1" fill="rgba(240,145,58,.2)" stroke="var(--warn)" stroke-width="1.5"/><rect x="10" y="26" width="8" height="10" rx="1" fill="rgba(240,145,58,.2)" stroke="var(--warn)" stroke-width="1"/><rect x="22" y="26" width="8" height="10" rx="1" fill="rgba(240,145,58,.2)" stroke="var(--warn)" stroke-width="1"/><rect x="30" y="26" width="8" height="10" rx="1" fill="rgba(240,145,58,.2)" stroke="var(--warn)" stroke-width="1"/><line x1="20" y1="8" x2="20" y2="6" stroke="var(--warn)" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="8" x2="28" y2="6" stroke="var(--warn)" stroke-width="1.5" stroke-linecap="round"/><rect x="18" y="19" width="12" height="4" rx="1" fill="rgba(240,145,58,.3)" stroke="var(--warn)" stroke-width="1"/></svg>',
+
+  letra_caixa: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 36 L8 14 L16 14 L24 30 L32 14 L40 14 L40 36" stroke="var(--purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="12" y1="26" x2="36" y2="26" stroke="var(--purple)" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="14" r="2" fill="rgba(139,92,246,.4)"/><circle cx="24" cy="36" r="2" fill="rgba(139,92,246,.4)"/></svg>',
+
+  totem: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="4" width="20" height="30" rx="2" fill="rgba(56,197,224,.1)" stroke="var(--cyan)" stroke-width="1.5"/><rect x="17" y="8" width="14" height="8" rx="1" fill="rgba(56,197,224,.2)"/><rect x="17" y="19" width="14" height="4" rx="1" fill="rgba(56,197,224,.15)"/><rect x="17" y="26" width="14" height="3" rx="1" fill="rgba(56,197,224,.1)"/><rect x="20" y="34" width="8" height="8" rx="1" fill="rgba(56,197,224,.15)" stroke="var(--cyan)" stroke-width="1"/><line x1="16" y1="44" x2="32" y2="44" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"/></svg>',
+
+  placa: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="12" width="40" height="24" rx="3" fill="rgba(46,212,122,.1)" stroke="var(--green)" stroke-width="1.5"/><circle cx="10" cy="16" r="2" fill="var(--green)" opacity=".5"/><circle cx="10" cy="32" r="2" fill="var(--green)" opacity=".5"/><circle cx="38" cy="16" r="2" fill="var(--green)" opacity=".5"/><circle cx="38" cy="32" r="2" fill="var(--green)" opacity=".5"/><rect x="10" y="20" width="28" height="3" rx="1.5" fill="var(--green)" opacity=".5"/><rect x="14" y="26" width="20" height="2" rx="1" fill="var(--green)" opacity=".3"/></svg>',
+
+  cartao: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="12" width="40" height="24" rx="3" fill="rgba(139,92,246,.1)" stroke="var(--purple)" stroke-width="1.5"/><rect x="4" y="18" width="40" height="6" fill="rgba(139,92,246,.15)"/><rect x="8" y="28" width="12" height="2" rx="1" fill="var(--purple)" opacity=".5"/><rect x="8" y="32" width="8" height="2" rx="1" fill="var(--purple)" opacity=".3"/><rect x="34" y="26" width="6" height="6" rx="1" fill="rgba(139,92,246,.3)" stroke="var(--purple)" stroke-width="1"/></svg>',
+
+  rollup: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="4" width="16" height="36" rx="1" fill="rgba(56,197,224,.1)" stroke="var(--cyan)" stroke-width="1.5"/><line x1="6" y1="40" x2="42" y2="40" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"/><line x1="24" y1="40" x2="24" y2="44" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"/><rect x="19" y="8" width="10" height="6" rx="1" fill="rgba(56,197,224,.2)"/><rect x="19" y="17" width="10" height="3" rx="1" fill="rgba(56,197,224,.15)"/><rect x="19" y="23" width="7" height="2" rx="1" fill="rgba(56,197,224,.1)"/></svg>',
+
+  servico: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="16" fill="rgba(240,145,58,.1)" stroke="var(--warn)" stroke-width="1.5"/><path d="M17 24 Q17 18 24 16 Q31 18 31 24 Q31 30 24 32 Q17 30 17 24Z" fill="rgba(240,145,58,.2)" stroke="var(--warn)" stroke-width="1"/><path d="M24 16 L24 12 M24 36 L24 32 M16 24 L12 24 M36 24 L32 24" stroke="var(--warn)" stroke-width="2" stroke-linecap="round"/></svg>',
+
+  impressao: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="14" width="32" height="22" rx="2" fill="rgba(56,197,224,.1)" stroke="var(--cyan)" stroke-width="1.5"/><rect x="14" y="8" width="20" height="8" rx="1" fill="rgba(56,197,224,.2)" stroke="var(--cyan)" stroke-width="1"/><rect x="14" y="34" width="20" height="8" rx="1" fill="rgba(56,197,224,.2)" stroke="var(--cyan)" stroke-width="1"/><circle cx="36" cy="22" r="2" fill="var(--cyan)" opacity=".6"/><rect x="14" y="26" width="14" height="1.5" rx=".75" fill="var(--cyan)" opacity=".4"/><rect x="14" y="30" width="10" height="1.5" rx=".75" fill="var(--cyan)" opacity=".4"/></svg>',
+
+  default: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="6" width="36" height="36" rx="3" fill="rgba(56,197,224,.08)" stroke="var(--line2)" stroke-width="1.5"/><rect x="12" y="14" width="24" height="3" rx="1.5" fill="var(--text3)" opacity=".5"/><rect x="12" y="21" width="18" height="2" rx="1" fill="var(--text3)" opacity=".3"/><rect x="12" y="27" width="20" height="2" rx="1" fill="var(--text3)" opacity=".3"/><rect x="12" y="33" width="14" height="2" rx="1" fill="var(--text3)" opacity=".2"/></svg>',
+};
+
+/**
+ * Retorna o SVG icon para um tipo de produto
+ * Baseado no nome do produto (busca substring)
+ */
+function getProductIcon(nomeProduto, size) {
+  size = size || 36;
+  var nome = (nomeProduto || '').toLowerCase();
+  var key = 'default';
+
+  if (nome.includes('banner'))           key = 'banner';
+  else if (nome.includes('faixa'))       key = 'faixa';
+  else if (nome.includes('adesivo'))     key = 'adesivo';
+  else if (nome.includes('acm') || nome.includes('alumínio') || nome.includes('aluminio')) key = 'acm';
+  else if (nome.includes('fachada'))     key = 'fachada';
+  else if (nome.includes('letra') || nome.includes('caixa')) key = 'letra_caixa';
+  else if (nome.includes('totem'))       key = 'totem';
+  else if (nome.includes('placa') || nome.includes('pvc') || nome.includes('ps')) key = 'placa';
+  else if (nome.includes('cartão') || nome.includes('cartao') || nome.includes('card')) key = 'cartao';
+  else if (nome.includes('roll') || nome.includes('backdrop')) key = 'rollup';
+  else if (nome.includes('instal') || nome.includes('montag') || nome.includes('serviç')) key = 'servico';
+  else if (nome.includes('impress'))     key = 'impressao';
+
+  var svg = VC_ICONS[key] || VC_ICONS.default;
+  return '<div style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0">' + svg + '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PREVIEW PROPORCIONAL DO PRODUTO
+// Cria um box visual proporcional às dimensões informadas
+// ─────────────────────────────────────────────────────────────────────
+function renderProductPreview(largura, altura, nomeProduto, containerId) {
+  var container = containerId ? document.getElementById(containerId) : null;
+
+  largura = parseFloat(largura) || 0;
+  altura  = parseFloat(altura)  || 0;
+  if (!largura || !altura) {
+    if (container) container.innerHTML = '';
+    return '';
+  }
+
+  // Normalizar para caber no box (máx 280 x 180)
+  var maxW = 280, maxH = 180;
+  var ratio = largura / altura;
+  var boxW, boxH;
+
+  if (ratio >= 1) {
+    boxW = Math.min(maxW, maxW);
+    boxH = Math.min(boxW / ratio, maxH);
+    if (boxH < 40) { boxH = 40; boxW = boxH * ratio; }
+  } else {
+    boxH = Math.min(maxH, maxH);
+    boxW = Math.min(boxH * ratio, maxW);
+    if (boxW < 40) { boxW = 40; boxH = boxW / ratio; }
+  }
+  boxW = Math.round(boxW);
+  boxH = Math.round(boxH);
+
+  var nome = (nomeProduto || '').toLowerCase();
+  var bg, border, textColor, pattern;
+
+  if (nome.includes('banner') || nome.includes('faixa') || nome.includes('lona')) {
+    bg = 'linear-gradient(135deg, rgba(56,197,224,.12) 0%, rgba(56,197,224,.04) 100%)';
+    border = 'rgba(56,197,224,.4)';
+    textColor = 'var(--cyan)';
+    pattern = _patternStripes('rgba(56,197,224,.06)');
+  } else if (nome.includes('adesivo') || nome.includes('vinil')) {
+    bg = 'linear-gradient(135deg, rgba(46,212,122,.12) 0%, rgba(46,212,122,.04) 100%)';
+    border = 'rgba(46,212,122,.4)';
+    textColor = 'var(--green)';
+    pattern = _patternDots('rgba(46,212,122,.1)');
+  } else if (nome.includes('acm') || nome.includes('fachada') || nome.includes('alumin')) {
+    bg = 'linear-gradient(135deg, rgba(232,184,75,.12) 0%, rgba(232,184,75,.04) 100%)';
+    border = 'rgba(232,184,75,.5)';
+    textColor = 'var(--gold)';
+    pattern = _patternGrid('rgba(232,184,75,.08)');
+  } else if (nome.includes('letra') || nome.includes('caixa')) {
+    bg = 'linear-gradient(135deg, rgba(139,92,246,.12) 0%, rgba(139,92,246,.04) 100%)';
+    border = 'rgba(139,92,246,.4)';
+    textColor = 'var(--purple)';
+    pattern = '';
+  } else {
+    bg = 'linear-gradient(135deg, rgba(56,197,224,.08) 0%, rgba(139,92,246,.04) 100%)';
+    border = 'rgba(56,197,224,.25)';
+    textColor = 'var(--text2)';
+    pattern = '';
+  }
+
+  var html = '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">'
+    + '<div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:700">Preview proporcional</div>'
+    + '<div style="position:relative;width:' + boxW + 'px;height:' + boxH + 'px;'
+    +   'background:' + bg + ';'
+    +   'border:1.5px solid ' + border + ';'
+    +   'border-radius:4px;'
+    +   'overflow:hidden;'
+    +   'display:flex;align-items:center;justify-content:center;'
+    +   'transition:all .3s ease;'
+    +   'box-shadow:0 4px 18px rgba(0,0,0,.25)">'
+    + (pattern ? '<div style="position:absolute;inset:0;' + pattern + '"></div>' : '')
+    // Corner marks (like a physical print)
+    + '<div style="position:absolute;top:4px;left:4px;width:8px;height:8px;border-top:1px solid ' + border + ';border-left:1px solid ' + border + ';opacity:.6"></div>'
+    + '<div style="position:absolute;top:4px;right:4px;width:8px;height:8px;border-top:1px solid ' + border + ';border-right:1px solid ' + border + ';opacity:.6"></div>'
+    + '<div style="position:absolute;bottom:4px;left:4px;width:8px;height:8px;border-bottom:1px solid ' + border + ';border-left:1px solid ' + border + ';opacity:.6"></div>'
+    + '<div style="position:absolute;bottom:4px;right:4px;width:8px;height:8px;border-bottom:1px solid ' + border + ';border-right:1px solid ' + border + ';opacity:.6"></div>'
+    // Center content
+    + '<div style="position:relative;text-align:center;padding:8px">'
+    +   '<div style="font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:clamp(9px,2.5vw,13px);color:' + textColor + ';opacity:.7;letter-spacing:.05em">'
+    +     (nomeProduto || 'Produto')
+    +   '</div>'
+    +   '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:' + textColor + ';opacity:.5;margin-top:2px">'
+    +     largura.toFixed(2) + ' × ' + altura.toFixed(2) + ' m'
+    +   '</div>'
+    + '</div>'
+    + '</div>'
+    // Dimensions labels
+    + '<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text3)">'
+    +   '<span style="font-family:\'DM Mono\',monospace">' + largura.toFixed(2) + 'm</span>'
+    +   '<span>×</span>'
+    +   '<span style="font-family:\'DM Mono\',monospace">' + altura.toFixed(2) + 'm</span>'
+    +   '<span style="color:var(--text3);margin-left:4px">= ' + (largura * altura).toFixed(4) + ' m²</span>'
+    + '</div>'
+    + '</div>';
+
+  if (container) container.innerHTML = html;
+  return html;
+}
+
+function _patternStripes(color) {
+  return 'background:repeating-linear-gradient(45deg,' + color + ' 0px,' + color + ' 2px,transparent 2px,transparent 10px)';
+}
+function _patternDots(color) {
+  return 'background:radial-gradient(' + color + ' 1.5px,transparent 1.5px);background-size:10px 10px';
+}
+function _patternGrid(color) {
+  return 'background-image:linear-gradient(' + color + ' 1px,transparent 1px),linear-gradient(90deg,' + color + ' 1px,transparent 1px);background-size:12px 12px';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ANIMAÇÃO DE NÚMERO (contagem suave)
+// ─────────────────────────────────────────────────────────────────────
+function animateCountUp(element, targetValue, duration, prefix, suffix) {
+  if (!element) return;
+  prefix  = prefix  || '';
+  suffix  = suffix  || '';
+  duration= duration || 600;
+
+  var start     = 0;
+  var startTime = null;
+  var formatFn  = function(v) {
+    return prefix + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + suffix;
+  };
+
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / duration, 1);
+    // Ease out cubic
+    var eased = 1 - Math.pow(1 - progress, 3);
+    var current = eased * targetValue;
+    element.textContent = formatFn(current);
+    if (progress < 1) requestAnimationFrame(step);
+    else element.textContent = formatFn(targetValue);
+  }
+  requestAnimationFrame(step);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CARD VISUAL DO RESULTADO — substituir resultado padrão
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Adiciona o preview de produto ao resultado do cálculo.
+ * Chamada automaticamente após executarCalculo()
+ */
+function renderProductCardResult(lastCalc) {
+  if (!lastCalc) return;
+
+  var container = document.getElementById('vc-product-preview-box');
+  if (!container) {
+    // Criar e injetar o container logo acima do hero card
+    var heroCard = document.getElementById('res-hero-card');
+    if (!heroCard) return;
+    container = document.createElement('div');
+    container.id = 'vc-product-preview-box';
+    container.style.cssText = 'display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px;animation:resHeroIn .35s cubic-bezier(.22,1,.36,1)';
+    heroCard.parentNode.insertBefore(container, heroCard);
+  }
+
+  var largura = parseFloat(lastCalc.largura) || 0;
+  var altura  = parseFloat(lastCalc.altura)  || 0;
+  var produto = lastCalc.produto || '';
+  var qtd     = lastCalc.qtd || 1;
+
+  var previewHtml = '';
+  if (largura > 0 && altura > 0) {
+    previewHtml = renderProductPreview(largura, altura, produto, null);
+  }
+
+  container.innerHTML = '<div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;width:100%">'
+    // Ícone + info produto
+    + '<div style="display:flex;gap:10px;align-items:center;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;flex:1;min-width:200px">'
+    +   getProductIcon(produto, 44)
+    +   '<div>'
+    +     '<div style="font-family:\'Bricolage Grotesque\',sans-serif;font-weight:700;font-size:15px">' + (produto || 'Produto') + '</div>'
+    +     '<div style="font-size:11px;color:var(--text3);margin-top:3px">'
+    +       (lastCalc.material ? lastCalc.material + ' · ' : '')
+    +       (largura && altura ? largura + 'm × ' + altura + 'm' : '')
+    +       (qtd > 1 ? ' · ' + qtd + ' peças' : '')
+    +     '</div>'
+    +     (lastCalc.cliente ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">👤 ' + lastCalc.cliente + '</div>' : '')
+    +   '</div>'
+    + '</div>'
+    // Preview proporcional
+    + (previewHtml ? '<div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;display:flex;align-items:center;justify-content:center">' + previewHtml + '</div>' : '')
+    + '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PREVIEW EM TEMPO REAL — atualizar ao digitar dimensões
+// ─────────────────────────────────────────────────────────────────────
+function atualizarPreviewDimensoes() {
+  var largura = parseFloat((document.getElementById('orc_largura') || {}).value) || 0;
+  var altura  = parseFloat((document.getElementById('orc_altura')  || {}).value) || 0;
+  var produto = (document.getElementById('orc_produto') || {}).value || '';
+
+  var previewEl = document.getElementById('orc-preview-box');
+  if (!previewEl) return;
+
+  if (!largura || !altura) {
+    previewEl.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">Informe largura e altura para ver o preview</div>';
+    return;
+  }
+
+  renderProductPreview(largura, altura, produto, 'orc-preview-box');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ÍCONE NO CARD DE ORÇAMENTO (lista de orçamentos)
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Adiciona ícone de produto nos cards da lista de orçamentos.
+ * Sobrescreve parte do renderOrcamentos original via MutationObserver.
+ */
+function upgradeOrcamentoCards() {
+  var lista = document.getElementById('lista-orcamentos');
+  if (!lista) return;
+
+  // Adicionar ícone SVG a cada card existente
+  var cards = lista.querySelectorAll('[data-orc-id]');
+  cards.forEach(function(card) {
+    if (card.querySelector('.vc-prod-icon')) return; // já tem ícone
+    var prodEl = card.querySelector('[data-produto]');
+    if (!prodEl) return;
+    var icon = document.createElement('div');
+    icon.className = 'vc-prod-icon';
+    icon.style.cssText = 'flex-shrink:0';
+    icon.innerHTML = getProductIcon(prodEl.dataset.produto, 32);
+    prodEl.parentNode.insertBefore(icon, prodEl);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// HOOK: executarCalculo — adicionar preview após cálculo
+// ─────────────────────────────────────────────────────────────────────
+var _execCalcOriginal = typeof executarCalculo === 'function' ? executarCalculo : (typeof calcular === 'function' ? calcular : null);
+
+function executarCalculo() {
+  // Chamar função original
+  if (_execCalcOriginal) _execCalcOriginal.apply(this, arguments);
+
+  // Após o cálculo, renderizar card visual
+  setTimeout(function() {
+    if (window._lastCalc) {
+      renderProductCardResult(window._lastCalc);
+
+      // Animar KPI numbers
+      var kpis = [
+        { id: 'res_preco',  value: window._lastCalc.precoFinal,  prefix: 'R$ ' },
+        { id: 'res_custo',  value: window._lastCalc.custoTotal,  prefix: 'R$ ' },
+        { id: 'res_lucro',  value: window._lastCalc.lucro,       prefix: 'R$ ' },
+      ];
+      kpis.forEach(function(kpi) {
+        var el = document.getElementById(kpi.id);
+        if (el && kpi.value > 0) {
+          // Already set by calcular() — just add animation class
+          el.style.animation = 'none';
+          void el.offsetWidth;
+          el.style.animation = 'countUp .5s ease';
+        }
+      });
+    }
+  }, 100);
+}
+
+// Garantir que calcular() também use o novo executarCalculo
+if (typeof calcular === 'function' && calcular !== executarCalculo) {
+  var _calcularOriginal = calcular;
+  window.calcular = function() {
+    _calcularOriginal.apply(this, arguments);
+    setTimeout(function() {
+      if (window._lastCalc) renderProductCardResult(window._lastCalc);
+    }, 150);
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// INJETAR preview box no formulário de orçamento
+// ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  // Injetar box de preview proporcional abaixo do campo de área
+  setTimeout(function() {
+    var areaDisplay = document.getElementById('area_display');
+    if (areaDisplay) {
+      var parent = areaDisplay.parentNode;
+      if (parent && !document.getElementById('orc-preview-box')) {
+        var previewWrap = document.createElement('div');
+        previewWrap.id    = 'orc-preview-box';
+        previewWrap.style.cssText = 'margin-top:12px;min-height:40px;transition:all .3s ease';
+        parent.parentNode.insertBefore(previewWrap, parent.nextSibling);
+      }
+    }
+
+    // Bindar eventos de dimensões para atualizar preview
+    ['orc_largura','orc_altura','orc_produto'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input',  atualizarPreviewDimensoes);
+        el.addEventListener('change', atualizarPreviewDimensoes);
+      }
+    });
+
+    console.log('[VisualCalc] Visual improvements v1.0 carregadas. Ícones:', Object.keys(VC_ICONS).length);
+  }, 600);
+});
+
+
+// ─────────────────────────────────────────────────────────────────────
+// INJETAR CSS das melhorias visuais
+// ─────────────────────────────────────────────────────────────────────
+(function injectVisualCSS() {
+  var style = document.createElement('style');
+  style.id = 'vc-visual-css';
+  style.textContent = [
+
+    /* ── Hover cards de orçamento ── */
+    '#lista-orcamentos > div { transition: box-shadow .2s, transform .15s; }',
+    '#lista-orcamentos > div:hover { box-shadow: 0 4px 22px rgba(0,0,0,.35); transform: translateY(-1px); }',
+
+    /* ── Fade ao atualizar resultado ── */
+    '#resultado_container { animation: resContainerIn .4s ease; }',
+    '@keyframes resContainerIn { from { opacity:.4; transform:translateY(8px); } to { opacity:1; transform:none; } }',
+
+    /* ── Animação de contagem de números ── */
+    '@keyframes countUp { from { opacity:.3; transform:translateY(6px) scale(.96); } to { opacity:1; transform:none; } }',
+    '#res_preco, #res_custo, #res_lucro, #res_margem { transition: color .3s; }',
+
+    /* ── Breakdown cards hover ── */
+    '.breakdown-item { transition: transform .15s, border-color .15s, box-shadow .15s; cursor:default; }',
+    '.breakdown-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.3); }',
+
+    /* ── Botões com micro-interação ── */
+    '.btn { transition: transform .12s, box-shadow .12s, opacity .12s !important; }',
+    '.btn:active { transform: scale(.96) !important; }',
+    '.btn-primary:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(232,184,75,.25); }',
+    '.btn-success:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(46,212,122,.25); }',
+    '.btn-primary:not(:disabled), .btn-success:not(:disabled), .btn-cyan:not(:disabled) { transition: transform .12s, box-shadow .12s !important; }',
+
+    /* ── Product preview box ── */
+    '#orc-preview-box { transition: all .3s ease; }',
+    '#vc-product-preview-box { animation: resHeroIn .4s cubic-bezier(.22,1,.36,1); }',
+
+    /* ── Kanban cards hover ── */
+    '.kanban-card { transition: transform .15s, box-shadow .15s, border-color .15s; }',
+    '.kanban-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.3); border-color: rgba(232,184,75,.3) !important; }',
+
+    /* ── Fin cards hover ── */
+    '.fin-card { transition: transform .15s, box-shadow .15s; }',
+    '.fin-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.25); }',
+
+    /* ── KPI cards hover ── */
+    '.kpi-sm, .kpi-card { transition: transform .15s, box-shadow .15s; }',
+    '.kpi-sm:hover, .kpi-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }',
+
+    /* ── Material cards hover ── */
+    '#tbody-materiais tr { transition: background .15s; }',
+    '#tbody-materiais tr:hover { background: rgba(232,184,75,.04) !important; }',
+
+    /* ── Hero price animation ── */
+    '.res-hero-price { transition: color .4s, opacity .3s; }',
+    '.res-hero-price.updating { opacity:.5; }',
+
+    /* ── Gauge arc animation já existe, reforçar ── */
+    '.gauge-fill { transition: stroke-dashoffset .7s cubic-bezier(.4,0,.2,1), stroke .4s; }',
+
+    /* ── Smart alerts slide-in ── */
+    '.smart-alert { transition: opacity .25s, transform .25s; }',
+
+    /* ── Scroll suave ── */
+    'html { scroll-behavior: smooth; }',
+
+    /* ── Sidebar nav items ── */
+    '.nav-item { transition: background .15s, padding-left .15s; }',
+
+    /* ── Input focus ── */
+    'input:focus, select:focus, textarea:focus { transition: border-color .15s, box-shadow .15s; }',
+
+  ].join('\n');
+
+  if (document.head) document.head.appendChild(style);
+  else document.addEventListener('DOMContentLoaded', function() { document.head.appendChild(style); });
+})();
+
+
 async function iniciarControleAssinatura() {
   console.log('[VisualCalc] iniciarControleAssinatura | sb:', isSbOk(), '| empresa:', currentEmpresaId);
 
@@ -15279,7 +15612,127 @@ async function iniciarControleAssinatura() {
   dbFetchRecursosPlano().catch(function(){});
   return true;
 }
+
 </script>
+
+<!-- ═══════════════════ MODAL ITEM FISCAL ═══════════════════ -->
+<div id="modal-item-fiscal" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalItemFiscal()">
+  <div class="modal-box" style="max-width:580px">
+    <button class="modal-close" onclick="fecharModalItemFiscal()">✕</button>
+    <div class="modal-title" id="mif-title">+ Novo Produto Fiscal</div>
+    <div class="modal-sub" id="mif-sub">Preencha os dados fiscais para emissão de NF</div>
+
+    <input type="hidden" id="mif-id">
+    <input type="hidden" id="mif-tipo-item">
+
+    <!-- Campos comuns -->
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-group" style="margin:0"><label>Código Interno *</label>
+        <input type="text" id="mif-codigo" placeholder="Ex: BAN-001, INST-001">
+      </div>
+      <div class="form-group" style="margin:0;flex:2"><label>Nome / Descrição *</label>
+        <input type="text" id="mif-nome" placeholder="Ex: Banner em Lona 440g, Instalação de Fachada">
+      </div>
+    </div>
+
+    <!-- Campos PRODUTO -->
+    <div id="mif-campos-produto">
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>NCM *</label>
+          <input type="text" id="mif-ncm" placeholder="0000.00.00" maxlength="10"
+            list="dl-ncm-sugestoes" autocomplete="off">
+          <datalist id="dl-ncm-sugestoes">
+            <option value="4911.91.00">4911.91.00 — Impressos publicitários</option>
+            <option value="4911.99.00">4911.99.00 — Outros impressos</option>
+            <option value="3919.90.00">3919.90.00 — Adesivos autocolantes</option>
+            <option value="3920.49.00">3920.49.00 — Placas PVC/plástico</option>
+            <option value="7606.11.00">7606.11.00 — ACM/Alumínio</option>
+            <option value="7308.90.90">7308.90.90 — Estruturas metálicas</option>
+            <option value="9405.40.00">9405.40.00 — Painéis luminosos/LED</option>
+            <option value="3926.90.90">3926.90.90 — Outras obras de plástico</option>
+          </datalist>
+        </div>
+        <div class="form-group" style="margin:0"><label>CFOP</label>
+          <select id="mif-cfop">
+            <option value="5101">5101 — Venda prod. industrializado</option>
+            <option value="5102">5102 — Venda de mercadoria</option>
+            <option value="5405">5405 — Simples Nacional</option>
+            <option value="6101">6101 — Venda interestadual</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Unidade de Medida</label>
+          <select id="mif-unidade">
+            <option value="M2">M2 — Metro quadrado</option>
+            <option value="UN">UN — Unidade</option>
+            <option value="M">M — Metro linear</option>
+            <option value="KG">KG — Quilograma</option>
+            <option value="CX">CX — Caixa</option>
+            <option value="PC">PC — Peça</option>
+            <option value="SV">SV — Serviço</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>CST / CSOSN</label>
+          <select id="mif-cst">
+            <option value="400">400 — Simples Nacional (saída)</option>
+            <option value="102">102 — Simples Nacional sem permissão de crédito</option>
+            <option value="500">500 — ICMS cobrado por ST</option>
+            <option value="900">900 — Outros (Regime Normal)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campos SERVIÇO -->
+    <div id="mif-campos-servico" style="display:none">
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Código LC 116/2003 *</label>
+          <input type="text" id="mif-lc116" placeholder="Ex: 7.06"
+            list="dl-lc116-sugestoes" autocomplete="off">
+          <datalist id="dl-lc116-sugestoes">
+            <option value="7.06">7.06 — Propaganda e publicidade</option>
+            <option value="7.09">7.09 — Disponibilização de espaço</option>
+            <option value="14.05">14.05 — Restauração e recondicionamento</option>
+            <option value="17.09">17.09 — Comunicação visual</option>
+            <option value="37.01">37.01 — Serviços em geral</option>
+          </datalist>
+        </div>
+        <div class="form-group" style="margin:0"><label>ISS (%)</label>
+          <input type="number" id="mif-iss" placeholder="2" step="0.1" min="0" max="5" value="2">
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Município de prestação</label>
+          <input type="text" id="mif-municipio" placeholder="Ex: São Paulo/SP">
+        </div>
+        <div class="form-group" style="margin:0"><label>Cód. IBGE do município</label>
+          <input type="text" id="mif-ibge-item" placeholder="Ex: 3550308">
+        </div>
+      </div>
+    </div>
+
+    <!-- Campos comuns (valor + obs) -->
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-group" style="margin:0"><label>Valor Padrão (R$)</label>
+        <input type="number" id="mif-valor" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group" style="margin:0;flex:2"><label>Descrição Fiscal Completa</label>
+        <input type="text" id="mif-desc-fiscal" placeholder="Descrição que aparece na nota fiscal">
+      </div>
+    </div>
+    <div class="form-group"><label>Observações</label>
+      <input type="text" id="mif-obs" placeholder="Informações adicionais (opcional)">
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="fecharModalItemFiscal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarItemFiscal()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- ═══════════════════ MODAL PIX ═══════════════════ -->
 <div id="modal-pix-pagamento" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalPIX()">
