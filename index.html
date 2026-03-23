@@ -469,6 +469,7 @@ textarea{resize:vertical;}
 .pix-step-num{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#000;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
 
 .owner-show { display: inline-flex !important; }
+#cfg-tab-admin.active { display: inline-flex !important; }
 
 /* ═══════════════════════════════════════════════════════════════
    CHECKLIST DE PRODUÇÃO
@@ -636,7 +637,7 @@ textarea{resize:vertical;}
     <button class="sb-item" id="sb-pcp-item" data-page="pcp" data-module="pcp" onclick="navTo('pcp')"><span class="sb-item-icon">🏭</span>PCP — Produção</button>
     <button class="sb-item" id="sb-admin-saas-item" data-page="admin-saas" style="display:none;color:var(--gold);font-weight:600" onclick="navTo('admin-saas')"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
     <button class="sb-item" data-page="config" onclick="navTo('config')"><span class="sb-item-icon">⚙️</span>Configurações</button>
-    <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="_navToExecutar('config');setTimeout(function(){var t=document.getElementById('cfg-tab-admin');if(t){t.style.display='';t.style.cssText='display:inline-flex!important';}renderConfig();setTimeout(function(){showInner('cfg-admin',t);renderAdmin();},100);},200)"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
+    <button class="sb-item" id="sb-admin-item" style="display:none;color:var(--gold)" onclick="abrirAdminConfig()"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
   </div>
   <div class="sb-footer">
     <div class="user-chip" onclick="abrirLogoEditor()">
@@ -1098,7 +1099,7 @@ textarea{resize:vertical;}
     <button class="inner-tab" onclick="showInner('cfg-empresa',this)">🏢 Empresa</button>
     <button class="inner-tab" onclick="showInner('cfg-planos',this)">💎 Planos</button>
     <button class="inner-tab" onclick="showInner('cfg-backup',this)">💾 Backup</button>
-    <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="this.style.display='';showInner('cfg-admin',this);renderAdmin()">🛡️ Admin SaaS</button>
+    <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="_mostrarAbaAdmin()">🛡️ Admin SaaS</button>
   </div>
 
   <div class="inner-page active" id="cfg-supabase">
@@ -4867,6 +4868,52 @@ function usarSemLogin(){ toast('Login obrigatório. Configure o Supabase para ac
 // ═══════════════════════════════════════════════════════════════════
 // RENDER CONFIG (com SQL + Planos)
 // ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// abrirAdminConfig — abre Config e mostra aba Admin SaaS
+// Solução definitiva: sem setTimeout, sequência garantida
+// ═══════════════════════════════════════════════════════════
+function abrirAdminConfig() {
+  // 1. Navegar para config (sem ir ao banco — é owner)
+  _navToExecutar('config');
+
+  // 2. Aguardar renderConfig() terminar e então abrir aba admin
+  // requestAnimationFrame garante que o DOM já foi atualizado
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      _mostrarAbaAdmin();
+    });
+  });
+}
+
+function _mostrarAbaAdmin() {
+  // Forçar visibilidade da aba
+  var tab = document.getElementById('cfg-tab-admin');
+  if (tab) {
+    tab.style.setProperty('display', 'inline-flex', 'important');
+    tab.removeAttribute('hidden');
+  }
+
+  // Mostrar conteúdo cfg-admin
+  var inner = document.getElementById('cfg-admin');
+  if (inner) {
+    // Remover active de outros inner-pages
+    var page = document.getElementById('page-config');
+    if (page) {
+      page.querySelectorAll('.inner-page').forEach(function(x) {
+        x.classList.remove('active');
+      });
+      page.querySelectorAll('.inner-tab').forEach(function(x) {
+        x.classList.remove('active');
+      });
+    }
+    inner.classList.add('active');
+    if (tab) tab.classList.add('active');
+  }
+
+  // Renderizar conteúdo admin
+  renderAdmin();
+}
+
 function renderConfig() {
   const u=document.getElementById('cfg_sb_url');if(u)u.value=getSbUrl();
   const k=document.getElementById('cfg_sb_key');if(k)k.value=getSbKey();
