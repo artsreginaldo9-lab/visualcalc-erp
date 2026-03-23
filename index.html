@@ -2388,23 +2388,23 @@ function isOwner() { return currentRole === 'owner'; }
 
 // Mapa de permissões por plano — ÚNICA fonte de verdade
 var _PERMISSOES = {
-  basico:   ['dashboard','orcamento','historico','clientes','materiais','config'],
+  basico:   ['dashboard','orcamento','historico','clientes','materiais','config','assinatura'],
   medio:    ['dashboard','orcamento','historico','clientes','materiais','config',
-             'pedidos','financeiro','insumos','estoque','compras','fornecedores','produtos'],
+             'pedidos','financeiro','insumos','estoque','compras','fornecedores','produtos','assinatura'],
   avancado: ['dashboard','orcamento','historico','clientes','materiais','config',
              'pedidos','financeiro','insumos','estoque','compras','fornecedores','produtos',
-             'relatorios','nf','pcp'],
+             'relatorios','nf','pcp','assinatura'],
   // aliases
-  free:    ['dashboard','orcamento','historico','clientes','materiais','config'],
+  free:    ['dashboard','orcamento','historico','clientes','materiais','config','assinatura'],
   pro:     ['dashboard','orcamento','historico','clientes','materiais','config',
-            'pedidos','financeiro','insumos','estoque','compras','fornecedores','produtos'],
+            'pedidos','financeiro','insumos','estoque','compras','fornecedores','produtos','assinatura'],
   premium: ['dashboard','orcamento','historico','clientes','materiais','config',
             'pedidos','financeiro','insumos','estoque','compras','fornecedores','produtos',
-            'relatorios','nf','pcp'],
+            'relatorios','nf','pcp','assinatura'],
 };
 
 // Páginas exclusivas do owner (nunca acessíveis por plano)
-var _OWNER_ONLY = ['assinatura', 'admin-saas'];
+var _OWNER_ONLY = ['admin-saas']; // assinatura: acessível a todos os usuários logados
 
 // podeAcessarPagina(page, role, plano) — SOMENTE para UI da sidebar
 // NUNCA usar para decisão de acesso real. Use podeAcessarPaginaSeguro().
@@ -9297,9 +9297,20 @@ async function renderAssinatura() {
   const el = document.getElementById('page-assinatura-content');
   if (!el) return;
 
-  const planos = await dbFetchPlanosDB() || getPlanoConfig();
-  const pagamentos = await dbFetchPagamentos(currentEmpresaId);
-  const ass = currentAssinatura;
+  // Mostrar spinner enquanto carrega
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)"><div class="spinner" style="margin:0 auto 16px"></div>Carregando...</div>';
+
+  let planos = [], pagamentos = [], ass = currentAssinatura;
+  try {
+    // Timeout de 5s para não travar
+    const timeout = (ms) => new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), ms));
+    planos = await Promise.race([dbFetchPlanosDB(), timeout(5000)]) || getPlanoConfig();
+    pagamentos = await Promise.race([dbFetchPagamentos(currentEmpresaId), timeout(5000)]) || [];
+  } catch(e) {
+    console.warn('[renderAssinatura] erro nas queries:', e.message);
+    planos = getPlanoConfig();
+    pagamentos = [];
+  }
 
   // Status card
   let statusHTML = '';
