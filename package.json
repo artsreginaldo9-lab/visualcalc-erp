@@ -1,0 +1,13 @@
+{
+  "name": "visualcalc-erp",
+  "version": "1.0.0",
+  "description": "VisualCalc ERP Pro — SaaS para gráficas",
+  "private": true,
+  "dependencies": {
+    "stripe": "^13.0.0",
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
