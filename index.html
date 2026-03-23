@@ -9,6 +9,502 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..60,300;12..60,400;12..60,500;12..60,600;12..60,700;12..60,800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script id="calculo-js-engine">
+// VisualCalc calculo.js — Motor de Cálculo Standalone v7.0
+/**
+ * VisualCalc ERP Pro — calculo.js
+ * Motor de Cálculo Inteligente v7.0
+ * 
+ * Arquivo standalone — pode ser usado independentemente do ERP
+ * Todas as funções são puras (sem dependências externas)
+ * 
+ * Exportações principais:
+ *   calcularMetalon(largura, altura, tipo, params)
+ *   calcularCustoTotal(dados)
+ *   calcularPreco(custoTotal, params)
+ *   aplicarEscala(qtd, tabela?)
+ *   gerarRelatorioCalculo(dados)
+ */
+
+// ═══════════════════════════════════════════════════════════════════════
+// 1. CÁLCULO DE METALON — Estrutura metálica
+// ═══════════════════════════════════════════════════════════════════════
+/**
+ * calcularMetalon
+ * @param {number} largura - Largura em metros
+ * @param {number} altura  - Altura em metros
+ * @param {string} tipo    - 'simples' | 'reforcada' | 'fachada_acm'
+ * @param {object} params  - { espacamento, custoPorMetro, custoFixacao, qtd }
+ * @returns {object} Resultado completo com metros e custo
+ */
+function calcularMetalon(largura, altura, tipo, params) {
+  params = params || {};
+  tipo = tipo || 'simples';
+
+  // Parâmetros com defaults
+  var espacamento   = parseFloat(params.espacamento)   || 0.50; // metros entre travessas
+  var custoPorMetro = parseFloat(params.custoPorMetro) || 8.50; // R$ por metro linear
+  var custoFixacao  = parseFloat(params.custoFixacao)  || 25.00;// R$ parafusos+solda por peça
+  var qtd           = parseInt(params.qtd)             || 1;
+
+  // Validação de entrada
+  if (!largura || !altura || largura <= 0 || altura <= 0) {
+    return {
+      valido: false, erro: 'Dimensões inválidas',
+      largura: largura, altura: altura, tipo: tipo, qtd: qtd,
+      perimetro: 0, numTravessasH: 0, numTravessasV: 0,
+      totalTravessas: 0, metalonPorPeca: 0, totalMetalon: 0,
+      custoMetalon: 0, custoFixacaoTotal: 0, custoEstrutura: 0,
+      detalhes: [], resumo: 'Informe largura e altura para calcular'
+    };
+  }
+
+  // ── Perímetro por peça (sempre calculado)
+  var perimetro = (largura * 2) + (altura * 2);
+
+  // ── Travessas horizontais (estrutura reforçada e fachada_acm)
+  // Fórmula: quantas travessas cabem, excluindo as duas extremidades
+  var numTravessasH = 0;
+  if (tipo === 'reforcada' || tipo === 'fachada_acm') {
+    numTravessasH = Math.max(0, Math.floor(altura / espacamento) - 1);
+  }
+
+  // ── Travessas verticais (apenas fachada_acm — grade densa)
+  var numTravessasV = 0;
+  if (tipo === 'fachada_acm') {
+    numTravessasV = Math.max(0, Math.floor(largura / espacamento) - 1);
+  }
+
+  // ── Metros de travessas
+  var metrosTravessasH = numTravessasH * largura;   // cada travessa H tem comprimento = largura
+  var metrosTravessasV = numTravessasV * altura;    // cada travessa V tem comprimento = altura
+
+  // ── Total por peça
+  var metalonPorPeca = perimetro + metrosTravessasH + metrosTravessasV;
+
+  // ── Total para todas as peças
+  var totalMetalon = metalonPorPeca * qtd;
+  var totalTravessas = (numTravessasH + numTravessasV) * qtd;
+
+  // ── Custos
+  var custoMetalon     = totalMetalon * custoPorMetro;
+  var custoFixacaoTotal= custoFixacao * qtd;
+  var custoEstrutura   = custoMetalon + custoFixacaoTotal;
+
+  // ── Detalhamento linha a linha
+  var detalhes = [];
+  detalhes.push({
+    desc:   'Perímetro (' + largura.toFixed(2) + 'm × ' + altura.toFixed(2) + 'm × ' + qtd + ' peça(s))',
+    metros: perimetro * qtd,
+    custo:  perimetro * qtd * custoPorMetro
+  });
+  if (numTravessasH > 0) {
+    detalhes.push({
+      desc:   'Travessas horizontais (' + numTravessasH + ' × ' + largura.toFixed(2) + 'm × ' + qtd + ' peça(s))',
+      metros: metrosTravessasH * qtd,
+      custo:  metrosTravessasH * qtd * custoPorMetro
+    });
+  }
+  if (numTravessasV > 0) {
+    detalhes.push({
+      desc:   'Travessas verticais (' + numTravessasV + ' × ' + altura.toFixed(2) + 'm × ' + qtd + ' peça(s))',
+      metros: metrosTravessasV * qtd,
+      custo:  metrosTravessasV * qtd * custoPorMetro
+    });
+  }
+  detalhes.push({
+    desc:   'Fixação/solda (' + qtd + ' peça(s) × R$' + custoFixacao.toFixed(2) + ')',
+    metros: 0,
+    custo:  custoFixacaoTotal
+  });
+
+  var tipoLabel = { simples: 'Simples (só perímetro)', reforcada: 'Reforçada (c/ travessas H)', fachada_acm: 'Fachada ACM (grade densa)' };
+
+  return {
+    valido: true,
+    // Entradas
+    largura: largura, altura: altura, tipo: tipo, qtd: qtd,
+    espacamento: espacamento, custoPorMetro: custoPorMetro, custoFixacao: custoFixacao,
+    // Cálculos
+    perimetro: perimetro,
+    numTravessasH: numTravessasH,
+    numTravessasV: numTravessasV,
+    totalTravessas: totalTravessas,
+    metalonPorPeca: metalonPorPeca,
+    totalMetalon: totalMetalon,
+    // Custos
+    custoMetalon: custoMetalon,
+    custoFixacaoTotal: custoFixacaoTotal,
+    custoEstrutura: custoEstrutura,
+    // Detalhamento
+    detalhes: detalhes,
+    resumo: tipoLabel[tipo] + ' | ' + totalMetalon.toFixed(2) + 'm | R$' + custoEstrutura.toFixed(2)
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// 2. MOTOR DE CÁLCULO COMPLETO — calcularCustoTotal
+// ═══════════════════════════════════════════════════════════════════════
+/**
+ * calcularCustoTotal
+ * Motor central — calcula todos os componentes de custo
+ * 
+ * @param {object} dados - Todos os parâmetros do cálculo
+ * @returns {object} Breakdown completo de custos
+ * 
+ * Fórmula:
+ * custoTotal = material + impressao + producao + maoObra + 
+ *              desperdicio + estrutura + instalacao + transporte + 
+ *              overhead + acabamentos + servicos
+ */
+function calcularCustoTotal(dados) {
+  dados = dados || {};
+
+  var area = parseFloat(dados.area) || 0;
+  var qtd  = parseInt(dados.qtd)    || 1;
+
+  // ────────────────────────────────────────────
+  // 2.1 MATERIAL
+  // Pode ser informado como custo por m² ou custo total
+  // ────────────────────────────────────────────
+  var custoMaterial = 0;
+  if (dados.custoMaterialM2 && dados.custoMaterialM2 > 0) {
+    custoMaterial = parseFloat(dados.custoMaterialM2) * area;
+  } else if (dados.custoMaterial && dados.custoMaterial > 0) {
+    custoMaterial = parseFloat(dados.custoMaterial);
+  }
+  // Aplicar fator de perda do material (largura do rolo vs peça)
+  if (dados.larguraRolo && dados.larguraPeca && dados.larguraRolo > 0) {
+    var fatorPerda = Math.ceil(dados.larguraPeca / dados.larguraRolo) * dados.larguraRolo / dados.larguraPeca;
+    custoMaterial *= fatorPerda;
+  }
+
+  // ────────────────────────────────────────────
+  // 2.2 IMPRESSÃO / TINTA
+  // ────────────────────────────────────────────
+  var custoImpressao = (parseFloat(dados.custoImpressaoM2) || 0) * area;
+
+  // ────────────────────────────────────────────
+  // 2.3 PRODUÇÃO — Tempo de máquina
+  // tempo = área / velocidade_da_máquina (m²/h)
+  // custo_máquina = tempo × custo_hora_máquina
+  // ────────────────────────────────────────────
+  var velMaquina     = parseFloat(dados.velMaquina)    || 25;   // m²/hora
+  var custoHoraMaq   = parseFloat(dados.custoHoraMaq)  || 45;   // R$/hora
+  var custoHoraFunc  = parseFloat(dados.custoHoraFunc) || 18;   // R$/hora
+  var tempoProducao  = (area > 0 && velMaquina > 0) ? area / velMaquina : 0; // horas
+
+  var custoProducao = 0;
+  if (dados.incluirProducao) {
+    custoProducao = tempoProducao * custoHoraMaq;
+  }
+
+  // ────────────────────────────────────────────
+  // 2.4 MÃO DE OBRA
+  // Pode ser por m² (simples) ou por tempo (PCP)
+  // ────────────────────────────────────────────
+  var custoMaoObra = 0;
+  if (dados.custoMaoObraM2 && dados.custoMaoObraM2 > 0) {
+    custoMaoObra = parseFloat(dados.custoMaoObraM2) * area;
+  }
+  // Adicionar custo de mão de obra do tempo de produção
+  if (dados.incluirMaoObraProducao) {
+    custoMaoObra += tempoProducao * custoHoraFunc;
+  }
+
+  // ────────────────────────────────────────────
+  // 2.5 DESPERDÍCIO
+  // Percentual sobre material + impressão
+  // ────────────────────────────────────────────
+  var percDesperdicio  = parseFloat(dados.percDesperdicio) || 0;
+  var baseDesperdicio  = custoMaterial + custoImpressao;
+  var custoDesperdicio = baseDesperdicio * (percDesperdicio / 100);
+
+  // ────────────────────────────────────────────
+  // 2.6 ESTRUTURA METÁLICA (METALON)
+  // Pode ser passada pré-calculada ou calculada aqui
+  // ────────────────────────────────────────────
+  var custoEstrutura = 0;
+  if (dados.custoEstrutura && dados.custoEstrutura > 0) {
+    custoEstrutura = parseFloat(dados.custoEstrutura);
+  } else if (dados.metalon) {
+    // Calcular metalon automaticamente se os parâmetros foram passados
+    var m = dados.metalon;
+    var resultMetalon = calcularMetalon(m.largura, m.altura, m.tipo, {
+      espacamento:   m.espacamento,
+      custoPorMetro: m.custoPorMetro,
+      custoFixacao:  m.custoFixacao,
+      qtd:           qtd
+    });
+    custoEstrutura = resultMetalon.custoEstrutura;
+  }
+
+  // ────────────────────────────────────────────
+  // 2.7 INSTALAÇÃO
+  // Custo fixo por serviço ou por hora
+  // ────────────────────────────────────────────
+  var custoInstalacao = 0;
+  if (dados.custoInstalacao && dados.custoInstalacao > 0) {
+    custoInstalacao = parseFloat(dados.custoInstalacao);
+  } else if (dados.horasInstalacao && dados.custoHoraInstalacao) {
+    custoInstalacao = parseFloat(dados.horasInstalacao) * parseFloat(dados.custoHoraInstalacao);
+  }
+
+  // ────────────────────────────────────────────
+  // 2.8 TRANSPORTE
+  // custo = km × custo_por_km
+  // ────────────────────────────────────────────
+  var kmTransporte    = parseFloat(dados.kmTransporte)   || 0;
+  var custoKm         = parseFloat(dados.custoKm)        || 2.50; // R$/km
+  var custoTransporte = kmTransporte * custoKm;
+
+  // ────────────────────────────────────────────
+  // 2.9 OVERHEAD (custos fixos rateados)
+  // Percentual sobre custos diretos + valor fixo
+  // ────────────────────────────────────────────
+  var percOverhead = parseFloat(dados.percOverhead) || 0;
+  var fixoOverhead = parseFloat(dados.fixoOverhead) || 0;
+  var baseOverhead = custoMaterial + custoImpressao + custoProducao + custoMaoObra;
+  var custoOverhead = (baseOverhead * percOverhead / 100) + fixoOverhead;
+
+  // ────────────────────────────────────────────
+  // 2.10 ACABAMENTOS E SERVIÇOS EXTRAS
+  // ────────────────────────────────────────────
+  var custoAcabamentos = parseFloat(dados.custoAcabamentos) || 0;
+  var custoServicos    = parseFloat(dados.custoServicos)    || 0;
+
+  // ────────────────────────────────────────────
+  // 2.11 TOTAL FINAL
+  // ────────────────────────────────────────────
+  var custoTotal =
+    custoMaterial    +
+    custoImpressao   +
+    custoProducao    +
+    custoMaoObra     +
+    custoDesperdicio +
+    custoEstrutura   +
+    custoInstalacao  +
+    custoTransporte  +
+    custoOverhead    +
+    custoAcabamentos +
+    custoServicos;
+
+  return {
+    // Dados de entrada
+    area: area, qtd: qtd, tempoProducao: tempoProducao,
+    // Componentes individuais
+    custoMaterial:    custoMaterial,
+    custoImpressao:   custoImpressao,
+    custoProducao:    custoProducao,
+    custoMaoObra:     custoMaoObra,
+    custoDesperdicio: custoDesperdicio,
+    custoEstrutura:   custoEstrutura,
+    custoInstalacao:  custoInstalacao,
+    custoTransporte:  custoTransporte,
+    custoOverhead:    custoOverhead,
+    custoAcabamentos: custoAcabamentos,
+    custoServicos:    custoServicos,
+    // Totais
+    custoTotal:          custoTotal,
+    custoTotalUnitario:  qtd > 1 ? custoTotal / qtd : custoTotal,
+    custoTotalM2:        area > 0 ? custoTotal / area : 0,
+    // Proporções (para gráfico)
+    proporcoes: {
+      material:    custoTotal > 0 ? (custoMaterial    / custoTotal * 100).toFixed(1) : 0,
+      impressao:   custoTotal > 0 ? (custoImpressao   / custoTotal * 100).toFixed(1) : 0,
+      producao:    custoTotal > 0 ? (custoProducao    / custoTotal * 100).toFixed(1) : 0,
+      maoObra:     custoTotal > 0 ? (custoMaoObra     / custoTotal * 100).toFixed(1) : 0,
+      desperdicio: custoTotal > 0 ? (custoDesperdicio / custoTotal * 100).toFixed(1) : 0,
+      estrutura:   custoTotal > 0 ? (custoEstrutura   / custoTotal * 100).toFixed(1) : 0,
+    }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// 3. PRECIFICAÇÃO INTELIGENTE — calcularPreco
+// Fórmula base: preco = custoTotal / (1 - margem%)
+// ═══════════════════════════════════════════════════════════════════════
+/**
+ * calcularPreco
+ * @param {number} custoTotal - Custo total calculado
+ * @param {object} params     - Parâmetros de precificação
+ *   margem (%)      - Margem desejada sobre o preço (não markup)
+ *   desconto (%)    - Desconto manual
+ *   urgencia        - 'normal' | 'urgente' (+15%) | 'super_urgente' (+30%)
+ *   tipoCliente     - 'normal' | 'vip' (-8%) | 'novo' (-5%)
+ *   qtd             - Quantidade (para escala)
+ *   area            - Área total (para preço/m²)
+ * @returns {object} Resultado completo de precificação
+ */
+function calcularPreco(custoTotal, params) {
+  params = params || {};
+  custoTotal = parseFloat(custoTotal) || 0;
+
+  // ── Margem (máximo 99% para evitar divisão por zero)
+  var margem = Math.min(Math.max(parseFloat(params.margem) || 40, 0), 99);
+
+  // ── Fórmula de markup inverso
+  // DIFERENÇA IMPORTANTE:
+  // Markup = lucro / custo  →  preco = custo × (1 + markup%)
+  // Margem = lucro / preco  →  preco = custo / (1 - margem%)  ← ESTA
+  var precoBase = custoTotal / (1 - margem / 100);
+
+  // ── Ajuste por urgência
+  var URGENCIA = { normal: 0, urgente: 15, super_urgente: 30 };
+  var adjUrgencia = URGENCIA[params.urgencia] || 0;
+  if (adjUrgencia !== 0) precoBase *= (1 + adjUrgencia / 100);
+
+  // ── Ajuste por tipo de cliente
+  var CLIENTE = { normal: 0, vip: -8, novo: -5 };
+  var adjCliente = CLIENTE[params.tipoCliente] || 0;
+  if (adjCliente !== 0) precoBase *= (1 + adjCliente / 100);
+
+  // ── Desconto por escala de produção
+  var escala = aplicarEscala(parseInt(params.qtd) || 1);
+  if (escala.perc > 0) precoBase *= (1 - escala.perc / 100);
+
+  // ── Desconto manual (aplicado por último)
+  var desconto = Math.min(parseFloat(params.desconto) || 0, 99);
+  var precoFinal = precoBase * (1 - desconto / 100);
+
+  // ── Métricas derivadas
+  var lucro      = precoFinal - custoTotal;
+  var margemReal = precoFinal > 0 ? (lucro / precoFinal) * 100 : 0;
+  var markupReal = custoTotal > 0 ? (lucro / custoTotal) * 100 : 0;
+  var qtd        = parseInt(params.qtd) || 1;
+  var area       = parseFloat(params.area) || 0;
+
+  return {
+    // Entradas
+    custoTotal: custoTotal, margem: margem, desconto: desconto,
+    // Ajustes
+    adjUrgencia: adjUrgencia, adjCliente: adjCliente,
+    descontoEscala: escala.perc, labelEscala: escala.label,
+    // Preços
+    precoBase: precoBase, precoFinal: precoFinal,
+    // Métricas
+    lucro: lucro, margemReal: margemReal, markupReal: markupReal,
+    // Por unidade e m²
+    precoUnitario: qtd > 1 ? precoFinal / qtd : precoFinal,
+    precoM2:       area > 0 ? precoFinal / area : 0,
+    custoM2:       area > 0 ? custoTotal / area : 0,
+    lucroM2:       area > 0 ? lucro / area : 0,
+    // Status da margem
+    statusMargem: margemReal >= 40 ? 'excelente' : margemReal >= 30 ? 'boa' : margemReal >= 15 ? 'regular' : 'baixa',
+    alertaMargem: margemReal < 15 ? 'Margem abaixo do mínimo recomendado (15%)' : null,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// 4. ESCALA DE PRODUÇÃO — aplicarEscala
+// ═══════════════════════════════════════════════════════════════════════
+/**
+ * aplicarEscala
+ * Retorna o desconto e label para a faixa de quantidade
+ * @param {number} qtd     - Quantidade de peças
+ * @param {array}  tabela  - Tabela customizada (opcional)
+ */
+function aplicarEscala(qtd, tabela) {
+  // Tabela padrão — sobrescritível via window._escalaConfig
+  tabela = tabela || (typeof window !== 'undefined' && window._escalaConfig) || [
+    { min: 1000, perc: 15, label: '⚡ Industrial (1000+)',    descricao: 'Produção em larga escala' },
+    { min: 500,  perc: 10, label: '🏭 Grande Escala (500+)',  descricao: 'Volume alto' },
+    { min: 100,  perc: 5,  label: '📦 Escala Média (100+)',   descricao: 'Volume médio' },
+    { min: 1,    perc: 0,  label: '',                          descricao: 'Unitário' },
+  ];
+  qtd = parseInt(qtd) || 1;
+  for (var i = 0; i < tabela.length; i++) {
+    if (qtd >= tabela[i].min) return tabela[i];
+  }
+  return { min: 1, perc: 0, label: '', descricao: 'Unitário' };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// 5. RELATÓRIO COMPLETO — gerarRelatorioCalculo
+// Gera um relatório legível de todo o cálculo
+// ═══════════════════════════════════════════════════════════════════════
+function gerarRelatorioCalculo(dados) {
+  var custos = calcularCustoTotal(dados);
+  var preco  = calcularPreco(custos.custoTotal, dados);
+
+  var linhas = [];
+  var fmt2 = function(v) { return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
+  var pct  = function(v) { return v > 0 ? ' (' + (v / custos.custoTotal * 100).toFixed(1) + '%)' : ''; };
+
+  linhas.push('═══════════════════════════════════════');
+  linhas.push('   RELATÓRIO DE CUSTO — VisualCalc ERP');
+  linhas.push('═══════════════════════════════════════');
+  linhas.push('Produto:  ' + (dados.produto || '—'));
+  linhas.push('Dimensões: ' + (dados.largura||0) + 'm × ' + (dados.altura||0) + 'm | Qtd: ' + custos.qtd);
+  linhas.push('Área total: ' + custos.area.toFixed(4) + ' m²');
+  linhas.push('');
+  linhas.push('─── CUSTOS ───────────────────────────');
+  if (custos.custoMaterial    > 0) linhas.push('Material:      ' + fmt2(custos.custoMaterial)    + pct(custos.custoMaterial));
+  if (custos.custoImpressao   > 0) linhas.push('Impressão:     ' + fmt2(custos.custoImpressao)   + pct(custos.custoImpressao));
+  if (custos.custoProducao    > 0) linhas.push('Produção:      ' + fmt2(custos.custoProducao)    + ' (' + custos.tempoProducao.toFixed(2) + 'h)');
+  if (custos.custoMaoObra     > 0) linhas.push('Mão de Obra:   ' + fmt2(custos.custoMaoObra)     + pct(custos.custoMaoObra));
+  if (custos.custoDesperdicio > 0) linhas.push('Desperdício:   ' + fmt2(custos.custoDesperdicio) + ' (' + (dados.percDesperdicio||0) + '%)');
+  if (custos.custoEstrutura   > 0) linhas.push('Metalon:       ' + fmt2(custos.custoEstrutura)   + pct(custos.custoEstrutura));
+  if (custos.custoInstalacao  > 0) linhas.push('Instalação:    ' + fmt2(custos.custoInstalacao)  + pct(custos.custoInstalacao));
+  if (custos.custoTransporte  > 0) linhas.push('Transporte:    ' + fmt2(custos.custoTransporte)  + ' (' + (dados.kmTransporte||0) + 'km)');
+  if (custos.custoOverhead    > 0) linhas.push('Overhead:      ' + fmt2(custos.custoOverhead));
+  linhas.push('─────────────────────────────────────');
+  linhas.push('CUSTO TOTAL:   ' + fmt2(custos.custoTotal));
+  linhas.push('Custo/m²:      ' + fmt2(custos.custoTotalM2));
+  if (custos.qtd > 1) linhas.push('Custo/unid.:   ' + fmt2(custos.custoTotalUnitario));
+  linhas.push('');
+  linhas.push('─── PRECIFICAÇÃO ─────────────────────');
+  linhas.push('Margem alvo:   ' + preco.margem.toFixed(1) + '%');
+  if (preco.adjUrgencia  > 0) linhas.push('Urgência:      +' + preco.adjUrgencia + '%');
+  if (preco.adjCliente   < 0) linhas.push('Desc. cliente: ' + preco.adjCliente + '%');
+  if (preco.descontoEscala>0) linhas.push('Desc. escala:  -' + preco.descontoEscala + '% ' + preco.labelEscala);
+  if (preco.descontoManual>0) linhas.push('Desc. manual:  -' + preco.descontoManual + '%');
+  linhas.push('─────────────────────────────────────');
+  linhas.push('PREÇO FINAL:   ' + fmt2(preco.precoFinal));
+  linhas.push('LUCRO BRUTO:   ' + fmt2(preco.lucro));
+  linhas.push('MARGEM REAL:   ' + preco.margemReal.toFixed(1) + '% (' + preco.statusMargem + ')');
+  linhas.push('MARKUP:        ' + preco.markupReal.toFixed(1) + '%');
+  if (custos.area > 0) linhas.push('Preço/m²:      ' + fmt2(preco.precoM2));
+  if (custos.qtd > 1)  linhas.push('Preço/unid.:   ' + fmt2(preco.precoUnitario));
+  if (preco.alertaMargem) {
+    linhas.push('');
+    linhas.push('⚠️  ' + preco.alertaMargem);
+  }
+  linhas.push('═══════════════════════════════════════');
+
+  return {
+    texto:  linhas.join('\n'),
+    linhas: linhas,
+    custos: custos,
+    preco:  preco,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// 6. EXPORTAÇÃO (compatível com Node.js e Browser)
+// ═══════════════════════════════════════════════════════════════════════
+if (typeof module !== 'undefined' && module.exports) {
+  // Node.js
+  module.exports = {
+    calcularMetalon:       calcularMetalon,
+    calcularCustoTotal:    calcularCustoTotal,
+    calcularPreco:         calcularPreco,
+    aplicarEscala:         aplicarEscala,
+    gerarRelatorioCalculo: gerarRelatorioCalculo,
+  };
+} else if (typeof window !== 'undefined') {
+  // Browser — expor no objeto global
+  window.VC_Calculo = {
+    calcularMetalon:       calcularMetalon,
+    calcularCustoTotal:    calcularCustoTotal,
+    calcularPreco:         calcularPreco,
+    aplicarEscala:         aplicarEscala,
+    gerarRelatorioCalculo: gerarRelatorioCalculo,
+  };
+}
+
+</script>
+
 <style>
 
 /* ═══════════════════════════════════════════════════════════
@@ -862,6 +1358,37 @@ textarea{resize:vertical;}
         <div class="toggle-row"><div><div class="toggle-label">Mão de Obra</div><div class="toggle-sub">R$/m²</div></div><div style="display:flex;align-items:center;gap:8px"><input type="number" id="custo_mao_obra" value="5" step="0.01" style="width:94px;text-align:right"><label class="toggle"><input type="checkbox" checked id="tog_mao_obra"><span class="toggle-slider"></span></label></div></div>
       </div>
       <div class="card" style="margin-bottom:16px"><div class="card-title"><div class="card-icon">🚚</div>Serviços Adicionais</div><div id="servicos_container"></div></div>
+
+      <!-- ══ INSTALAÇÃO & TRANSPORTE ══ -->
+      <div class="card" style="margin-bottom:16px;border-color:rgba(240,145,58,.25)">
+        <div class="card-title"><div class="card-icon" style="background:rgba(240,145,58,.1);border-color:rgba(240,145,58,.25)">🔧</div>Instalação & Transporte
+          <span style="font-size:10px;color:var(--text3);margin-left:8px">(integrados no custo total)</span>
+        </div>
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="form-group" style="margin:0">
+            <label>Custo Instalação (R$)</label>
+            <input type="number" id="custo_instalacao" value="0" step="10" min="0" placeholder="0"
+              oninput="this.value>0?document.getElementById('ins_badge').style.display='inline':document.getElementById('ins_badge').style.display='none'">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Distância Transporte (km)</label>
+            <input type="number" id="km_transporte" value="0" step="1" min="0" placeholder="0"
+              oninput="_calcularTransporte()">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="form-group" style="margin:0">
+            <label>Custo por km (R$)</label>
+            <input type="number" id="custo_por_km" value="2.50" step="0.10" min="0" oninput="_calcularTransporte()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="display:flex;align-items:center;gap:6px">
+              Custo Transporte <span id="ins_badge" style="display:none;background:rgba(240,145,58,.15);color:var(--warn);border:1px solid rgba(240,145,58,.3);border-radius:99px;font-size:10px;padding:1px 7px">ativo</span>
+            </label>
+            <div id="transporte_calc" style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--warn);padding:9px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
       <div class="card" style="margin-bottom:16px">
         <div class="card-title"><div class="card-icon">📊</div>Margem de Lucro</div>
         <div class="slider-row" style="margin-bottom:10px"><input type="range" id="margem_slider" min="0" max="200" value="40" oninput="syncMargem(this.value)"><div class="slider-val" id="margem_val">40%</div></div>
@@ -1228,7 +1755,114 @@ textarea{resize:vertical;}
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-empresa',this)">🏢 Empresa</button>
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-planos',this)">💎 Planos</button>
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-backup',this)">💾 Backup</button>
+    <button class="inner-tab" onclick="trocarAbaCfg('cfg-ia',this)">🤖 IA &amp; Motor</button>
     <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="trocarAbaCfg('cfg-admin',this)">🛡️ Admin SaaS</button>
+  </div>
+
+  <!-- ══ ABA IA & MOTOR ══ -->
+  <div class="inner-page" id="cfg-ia">
+    <div class="g2" style="gap:18px">
+      <!-- Configuração OpenAI -->
+      <div class="card">
+        <div class="card-title"><div class="card-icon" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3)">🤖</div>Assistente IA — OpenAI</div>
+        <div class="alert alert-info" style="margin-bottom:14px;font-size:12px">
+          A IA usa o modelo <strong>GPT-4o-mini</strong> para analisar orçamentos, sugerir preços e calcular metalon.
+          Sua API Key é salva <strong>somente no seu navegador</strong> (localStorage) e nunca é enviada ao nosso servidor.
+        </div>
+        <div class="form-group">
+          <label>OpenAI API Key</label>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="cfg_openai_key" placeholder="sk-proj-..." style="flex:1"
+              value="">
+            <button class="btn btn-ghost btn-sm" onclick="toggleCfgKeyVisibility()" id="cfg_key_eye">👁</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">
+            Obtenha em: <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--cyan)">platform.openai.com/api-keys</a>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" onclick="salvarCfgIA()">💾 Salvar API Key</button>
+          <button class="btn btn-ghost btn-sm" onclick="testarCfgIA()" id="btn-testar-ia">🧪 Testar conexão</button>
+          <span id="ia-test-status" style="font-size:12px"></span>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title" style="font-size:13px;margin-bottom:10px"><div class="card-icon">⚙️</div>Parâmetros da IA</div>
+        <div class="form-row">
+          <div class="form-group" style="margin:0">
+            <label>Modelo</label>
+            <select id="cfg_ia_modelo">
+              <option value="gpt-4o-mini">GPT-4o-mini (rápido, barato)</option>
+              <option value="gpt-4o">GPT-4o (mais inteligente)</option>
+              <option value="gpt-3.5-turbo">GPT-3.5-turbo (legado)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Tokens máximos por resposta</label>
+            <input type="number" id="cfg_ia_tokens" value="800" min="200" max="4000" step="100">
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="salvarCfgIAParams()">Salvar parâmetros</button>
+      </div>
+
+      <!-- Configuração do Motor de Cálculo -->
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title"><div class="card-icon" style="background:rgba(56,197,224,.1);border-color:rgba(56,197,224,.25)">⚙️</div>Motor de Cálculo — Defaults</div>
+          <div class="alert alert-warn" style="margin-bottom:12px;font-size:12px">
+            Estes valores são usados como padrão em novos orçamentos. Você pode alterar por orçamento.
+          </div>
+          <div class="form-row" style="margin-bottom:8px">
+            <div class="form-group" style="margin:0"><label>Velocidade da Máquina (m²/h)</label>
+              <input type="number" id="cfg_vel_maquina" placeholder="25" step="1" min="1">
+            </div>
+            <div class="form-group" style="margin:0"><label>Custo Hora Máquina (R$)</label>
+              <input type="number" id="cfg_hora_maq" placeholder="45" step="1" min="0">
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:8px">
+            <div class="form-group" style="margin:0"><label>Custo Hora Funcionário (R$)</label>
+              <input type="number" id="cfg_hora_func" placeholder="18" step="0.5" min="0">
+            </div>
+            <div class="form-group" style="margin:0"><label>Desperdício Padrão (%)</label>
+              <input type="number" id="cfg_desperdicio" placeholder="10" step="1" min="0" max="50">
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:8px">
+            <div class="form-group" style="margin:0"><label>Custo Metalon (R$/m)</label>
+              <input type="number" id="cfg_custo_metalon" placeholder="8.50" step="0.10" min="0">
+            </div>
+            <div class="form-group" style="margin:0"><label>Custo por km (R$)</label>
+              <input type="number" id="cfg_custo_km" placeholder="2.50" step="0.10" min="0">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarCfgMotor()">💾 Salvar Defaults</button>
+          <button class="btn btn-ghost btn-sm" onclick="carregarCfgMotorNoForm()">↺ Carregar salvos</button>
+        </div>
+
+        <!-- Tabela de Escala -->
+        <div class="card">
+          <div class="card-title"><div class="card-icon" style="background:rgba(46,212,122,.1)">📈</div>Escala de Produção</div>
+          <div id="cfg-escala-tabela">
+            <div class="form-row" style="margin-bottom:6px">
+              <div class="form-group" style="margin:0"><label>A partir de (un.)</label><input type="number" id="esc_min_1" value="100" min="1"></div>
+              <div class="form-group" style="margin:0"><label>Desconto (%)</label><input type="number" id="esc_perc_1" value="5" min="0" max="50"></div>
+              <div class="form-group" style="margin:0"><label>Label</label><input type="text" id="esc_label_1" value="📦 Escala Média"></div>
+            </div>
+            <div class="form-row" style="margin-bottom:6px">
+              <div class="form-group" style="margin:0"><label>A partir de (un.)</label><input type="number" id="esc_min_2" value="500" min="1"></div>
+              <div class="form-group" style="margin:0"><label>Desconto (%)</label><input type="number" id="esc_perc_2" value="10" min="0" max="50"></div>
+              <div class="form-group" style="margin:0"><label>Label</label><input type="text" id="esc_label_2" value="🏭 Grande Escala"></div>
+            </div>
+            <div class="form-row" style="margin-bottom:10px">
+              <div class="form-group" style="margin:0"><label>A partir de (un.)</label><input type="number" id="esc_min_3" value="1000" min="1"></div>
+              <div class="form-group" style="margin:0"><label>Desconto (%)</label><input type="number" id="esc_perc_3" value="15" min="0" max="50"></div>
+              <div class="form-group" style="margin:0"><label>Label</label><input type="text" id="esc_label_3" value="⚡ Industrial"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarCfgEscala()">💾 Salvar Escala</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="inner-page active" id="cfg-supabase">
@@ -9915,210 +10549,83 @@ async function handleMercadoPagoWebhook(paymentId) {
   // await dbRenovarAssinatura(currentAssinatura.id, 30);
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════
-// VisualCalc ERP Pro — calculo.js (inline) v6.0
-// Motor completo: Metalon · Produção · Precificação · Escala · IA · Fluxo
+// VisualCalc ERP Pro — Módulos Integrados v7.0
+// Motor de Cálculo · IA Real · Fluxo Automático · Config
+// (calculo.js já foi injetado como script separado acima)
 // ═══════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 1: calcularMetalon(largura, altura, tipo, params)
+// HELPER: Calcular transporte em tempo real
 // ─────────────────────────────────────────────────────────────────────
-function calcularMetalon(largura, altura, tipo, params) {
-  params = params || {};
-  tipo = tipo || 'simples';
-  var espacamento   = params.espacamento   || 0.5;
-  var custoPorMetro = params.custoPorMetro || 8.50;
-  var custoFixacao  = params.custoFixacao  || 25;
-  var qtd           = params.qtd           || 1;
-
-  if (!largura || !altura || largura <= 0 || altura <= 0) {
-    return { perimetro:0, numTravessasH:0, numTravessasV:0, totalMetalon:0, custoEstrutura:0, detalhes:[] };
-  }
-
-  var perimetro = (largura + altura) * 2;
-  var numTravessasH = tipo === 'simples' ? 0 : Math.max(0, Math.floor(altura / espacamento) - 1);
-  var numTravessasV = tipo === 'fachada_acm' ? Math.max(0, Math.floor(largura / espacamento) - 1) : 0;
-  var metrosTravessasH = numTravessasH * largura;
-  var metrosTravessasV = numTravessasV * altura;
-  var metalonPorPeca   = perimetro + metrosTravessasH + metrosTravessasV;
-  var totalMetalon     = metalonPorPeca * qtd;
-  var custoMetalon     = totalMetalon * custoPorMetro;
-  var custoEstrutura   = custoMetalon + (custoFixacao * qtd);
-
-  return {
-    largura: largura, altura: altura, tipo: tipo, qtd: qtd,
-    perimetro: perimetro,
-    numTravessasH: numTravessasH, numTravessasV: numTravessasV,
-    totalTravessas: (numTravessasH + numTravessasV) * qtd,
-    metalonPorPeca: metalonPorPeca, totalMetalon: totalMetalon,
-    custoMetalon: custoMetalon, custoFixacaoTotal: custoFixacao * qtd,
-    custoEstrutura: custoEstrutura,
-  };
+function _calcularTransporte() {
+  var km    = parseFloat((document.getElementById('km_transporte')  || {}).value) || 0;
+  var ckm   = parseFloat((document.getElementById('custo_por_km')   || {}).value) || 2.50;
+  var total = km * ckm;
+  var el    = document.getElementById('transporte_calc');
+  var badge = document.getElementById('ins_badge');
+  if (el) el.textContent = 'R$ ' + fmtBR(total);
+  if (badge) badge.style.display = total > 0 ? 'inline' : 'none';
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 2: calcularCustoTotal(params) — Motor central
-// ─────────────────────────────────────────────────────────────────────
-function calcularCustoTotal(params) {
-  var area   = params.area   || 0;
-  var qtd    = params.qtd    || 1;
-
-  var custoMaterial    = params.custoMaterialM2 ? params.custoMaterialM2 * area : (params.custoMaterial || 0);
-  var custoImpressao   = (params.custoImpressaoM2 || 0) * area;
-
-  var velMaquina    = params.velMaquina    || 25;
-  var custoHoraMaq  = params.custoHoraMaq  || 45;
-  var custoHoraFunc = params.custoHoraFunc || 18;
-  var tempoProducao = (area > 0 && velMaquina > 0) ? area / velMaquina : 0;
-  var custoProducao = params.incluirProducaoMO ? tempoProducao * custoHoraMaq : 0;
-  var custoMaoObra  = (params.custoMaoObraM2 || 0) * area
-    + (params.incluirProducaoMO ? tempoProducao * custoHoraFunc : 0);
-
-  var percDesperdicio  = params.percDesperdicio || 0;
-  var custoDesperdicio = (custoMaterial + custoImpressao) * (percDesperdicio / 100);
-
-  var custoEstrutura  = params.custoEstrutura  || 0;
-  var custoInstalacao = params.custoInstalacao || 0;
-
-  var kmTransporte    = params.kmTransporte || 0;
-  var custoKm         = params.custoKm      || 2.50;
-  var custoTransporte = kmTransporte * custoKm;
-
-  var percOverhead  = params.percOverhead || 0;
-  var fixoOverhead  = params.fixoOverhead || 0;
-  var baseOverhead  = custoMaterial + custoImpressao + custoProducao + custoMaoObra;
-  var custoOverhead = baseOverhead * (percOverhead / 100) + fixoOverhead;
-
-  var custoAcabamentos = params.custoAcabamentos || 0;
-  var custoServicos    = params.custoServicos    || 0;
-
-  var custoTotal =
-    custoMaterial + custoImpressao + custoProducao + custoMaoObra +
-    custoDesperdicio + custoEstrutura + custoInstalacao + custoTransporte +
-    custoOverhead + custoAcabamentos + custoServicos;
-
-  return {
-    area: area, qtd: qtd, tempoProducao: tempoProducao,
-    custoMaterial: custoMaterial, custoImpressao: custoImpressao,
-    custoProducao: custoProducao, custoMaoObra: custoMaoObra,
-    custoDesperdicio: custoDesperdicio, custoEstrutura: custoEstrutura,
-    custoInstalacao: custoInstalacao, custoTransporte: custoTransporte,
-    custoOverhead: custoOverhead, custoAcabamentos: custoAcabamentos,
-    custoServicos: custoServicos, custoTotal: custoTotal,
-    custoTotalUnitario: qtd > 0 ? custoTotal / qtd : custoTotal,
-    custoTotalM2: area > 0 ? custoTotal / area : 0,
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// MÓDULO 3: calcularPreco(custoTotal, params) — Precificação inteligente
-// Fórmula: preco = custoTotal / (1 - margem)
-// ─────────────────────────────────────────────────────────────────────
-function calcularPreco(custoTotal, params) {
-  params = params || {};
-  var margem   = Math.min(params.margem  || 40, 99);
-  var desconto = params.desconto || 0;
-
-  var precoBase = custoTotal / (1 - margem / 100);
-
-  var urgenciaAdj = { normal: 0, urgente: 15, super_urgente: 30 };
-  var adjUrgencia = urgenciaAdj[params.urgencia] || 0;
-  precoBase *= (1 + adjUrgencia / 100);
-
-  var clienteAdj = { normal: 0, vip: -8, novo: -5 };
-  var adjCliente = clienteAdj[params.tipoCliente] || 0;
-  precoBase *= (1 + adjCliente / 100);
-
-  var escala = aplicarEscala(params.qtd || 1);
-  precoBase *= (1 - escala.perc / 100);
-
-  var precoFinal = precoBase * (1 - desconto / 100);
-  var lucro      = precoFinal - custoTotal;
-  var margemReal = precoFinal > 0 ? (lucro / precoFinal) * 100 : 0;
-  var markupReal = custoTotal > 0 ? (lucro / custoTotal) * 100 : 0;
-
-  return {
-    precoBase: precoBase, precoFinal: precoFinal, lucro: lucro,
-    margemReal: margemReal, markupReal: markupReal,
-    adjUrgencia: adjUrgencia, adjCliente: adjCliente,
-    descontoEscala: escala.perc, labelEscala: escala.label,
-    descontoManual: desconto,
-    precoUnitario: (params.qtd || 1) > 1 ? precoFinal / (params.qtd || 1) : precoFinal,
-    precoM2: (params.area || 0) > 0 ? precoFinal / params.area : 0,
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// MÓDULO 4: aplicarEscala(quantidade) — Desconto por volume
-// ─────────────────────────────────────────────────────────────────────
-function aplicarEscala(qtd) {
-  var tabela = (window._escalaConfig) || [
-    { min: 1000, perc: 15, label: '⚡ Industrial (1000+)' },
-    { min: 500,  perc: 10, label: '🏭 Grande Escala (500+)' },
-    { min: 100,  perc: 5,  label: '📦 Escala Média (100+)' },
-    { min: 1,    perc: 0,  label: '' },
-  ];
-  for (var i = 0; i < tabela.length; i++) {
-    if (qtd >= tabela[i].min) return tabela[i];
-  }
-  return { perc: 0, label: '' };
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// MÓDULO 5: UI helpers para os campos do orçamento
+// TOGGLE METALON
 // ─────────────────────────────────────────────────────────────────────
 function toggleMetalonSection() {
   var tog = document.getElementById('tog_metalon');
   var sec = document.getElementById('metalon_section');
   if (!sec) return;
-  sec.style.display = tog && tog.checked ? 'block' : 'none';
+  sec.style.display = (tog && tog.checked) ? 'block' : 'none';
   if (tog && tog.checked) _atualizarUIMetalon();
 }
 
 function _atualizarUIMetalon() {
-  var l = parseFloat(document.getElementById('orc_largura') && document.getElementById('orc_largura').value) || 0;
-  var h = parseFloat(document.getElementById('orc_altura')  && document.getElementById('orc_altura').value)  || 0;
-  var t = (document.getElementById('met_tipo') && document.getElementById('met_tipo').value) || 'simples';
-  var r = calcularMetalon(l, h, t, {
-    espacamento:   parseFloat((document.getElementById('met_espacamento')  || {}).value) || 0.5,
-    custoPorMetro: parseFloat((document.getElementById('met_custo_metro')  || {}).value) || 8.50,
-    custoFixacao:  parseFloat((document.getElementById('met_custo_fixacao')|| {}).value) || 25,
-    qtd: parseInt((document.getElementById('orc_qtd') || {}).value) || 1,
-  });
-  function sEl(id) { return document.getElementById(id); }
-  if (sEl('met_total_m'))    sEl('met_total_m').textContent    = r.totalMetalon.toFixed(2) + ' m';
-  if (sEl('met_travessas'))  sEl('met_travessas').textContent  = r.totalTravessas + (r.tipo==='simples'?' (simples)':'');
-  if (sEl('met_custo_total'))sEl('met_custo_total').textContent= 'R$ ' + fmtBR(r.custoEstrutura);
+  var l = parseFloat((document.getElementById('orc_largura')     || {}).value) || 0;
+  var h = parseFloat((document.getElementById('orc_altura')      || {}).value) || 0;
+  var t = (document.getElementById('met_tipo') || {}).value || 'simples';
+  var esp = parseFloat((document.getElementById('met_espacamento')  || {}).value) || 0.5;
+  var cpm = parseFloat((document.getElementById('met_custo_metro')  || {}).value) || 8.50;
+  var cfix= parseFloat((document.getElementById('met_custo_fixacao')|| {}).value) || 25;
+  var qtd = parseInt((document.getElementById('orc_qtd')         || {}).value) || 1;
+
+  // Usar o motor standalone (injetado via calculo.js)
+  var r = (typeof calcularMetalon === 'function')
+    ? calcularMetalon(l, h, t, { espacamento: esp, custoPorMetro: cpm, custoFixacao: cfix, qtd: qtd })
+    : { totalMetalon: 0, totalTravessas: 0, custoEstrutura: 0, tipo: t };
+
+  function sEl(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  sEl('met_total_m',    r.totalMetalon.toFixed(2) + ' m');
+  sEl('met_travessas',  r.totalTravessas + (r.tipo === 'simples' ? ' (estrutura simples)' : ''));
+  sEl('met_custo_total','R$ ' + fmtBR(r.custoEstrutura));
   return r.custoEstrutura;
 }
 
 function _atualizarUIProducao() {
-  var area = getArea ? getArea() : 0;
-  var vel  = parseFloat((document.getElementById('prod_vel_maquina')    || {}).value) || 25;
-  var hMaq = parseFloat((document.getElementById('prod_custo_hora_maq') || {}).value) || 45;
-  var hF   = parseFloat((document.getElementById('prod_custo_hora_func')|| {}).value) || 18;
-  if (!area) return { tempo:0, custoMaquina:0, custoMaoObra:0 };
+  var area  = typeof getArea === 'function' ? getArea() : 0;
+  var vel   = parseFloat((document.getElementById('prod_vel_maquina')    || {}).value) || 25;
+  var hMaq  = parseFloat((document.getElementById('prod_custo_hora_maq') || {}).value) || 45;
+  var hFunc = parseFloat((document.getElementById('prod_custo_hora_func')|| {}).value) || 18;
+  if (!area) return;
   var tempo = area / vel;
-  var cMaq  = tempo * hMaq;
-  var cMO   = tempo * hF;
-  function sEl(id) { return document.getElementById(id); }
-  if (sEl('prod_tempo'))    sEl('prod_tempo').textContent    = tempo.toFixed(2) + 'h';
-  if (sEl('prod_custo_maq'))sEl('prod_custo_maq').textContent= 'R$ ' + fmtBR(cMaq);
-  if (sEl('prod_custo_mo')) sEl('prod_custo_mo').textContent = 'R$ ' + fmtBR(cMO);
-  return { tempo: tempo, custoMaquina: cMaq, custoMaoObra: cMO };
+  function sEl(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  sEl('prod_tempo',     tempo.toFixed(2) + 'h');
+  sEl('prod_custo_maq', 'R$ ' + fmtBR(tempo * hMaq));
+  sEl('prod_custo_mo',  'R$ ' + fmtBR(tempo * hFunc));
 }
 
 function _getAjustesPrecoUI() {
   var urgencia    = (document.getElementById('urgencia_preco')    || {}).value || 'normal';
   var tipoCliente = (document.getElementById('tipo_cliente_preco')|| {}).value || 'normal';
   var qtd         = parseInt((document.getElementById('orc_qtd')  || {}).value) || 1;
-  var escala      = aplicarEscala(qtd);
-  var ajustes     = [];
-  if (urgencia === 'urgente')       ajustes.push({ label:'🔥 Urgente',         perc:+15 });
-  if (urgencia === 'super_urgente') ajustes.push({ label:'⚡ Super Urgente',   perc:+30 });
-  if (tipoCliente === 'vip')        ajustes.push({ label:'⭐ Cliente VIP',     perc:-8  });
-  if (tipoCliente === 'novo')       ajustes.push({ label:'🆕 Novo Cliente',    perc:-5  });
-  if (escala.perc > 0)              ajustes.push({ label:escala.label,         perc:-escala.perc });
+  var escala      = typeof aplicarEscala === 'function' ? aplicarEscala(qtd) : { perc: 0, label: '' };
+
+  var ajustes = [];
+  if (urgencia === 'urgente')       ajustes.push({ label: '🔥 Urgente',        perc: +15 });
+  if (urgencia === 'super_urgente') ajustes.push({ label: '⚡ Super Urgente',  perc: +30 });
+  if (tipoCliente === 'vip')        ajustes.push({ label: '⭐ Cliente VIP',    perc:  -8 });
+  if (tipoCliente === 'novo')       ajustes.push({ label: '🆕 Novo Cliente',   perc:  -5 });
+  if (escala.perc > 0)              ajustes.push({ label: escala.label,         perc: -escala.perc });
 
   var infoEl  = document.getElementById('ajuste_preco_info');
   var badgeEl = document.getElementById('escala_badge');
@@ -10126,11 +10633,11 @@ function _getAjustesPrecoUI() {
     if (infoEl)  infoEl.textContent = 'Sem ajustes aplicados';
     if (badgeEl) badgeEl.style.display = 'none';
   } else {
-    if (infoEl) {
-      infoEl.innerHTML = ajustes.map(function(a) {
-        return '<span style="margin-right:10px;color:' + (a.perc<0?'var(--green)':'var(--warn)') + '">' + a.label + ': ' + (a.perc>0?'+':'') + a.perc + '%</span>';
-      }).join('') + '<strong style="color:var(--text)">→ Total: ' + ajustes.reduce(function(s,a){ return s+a.perc; }, 0) + '%</strong>';
-    }
+    var totalAdj = ajustes.reduce(function(s, a) { return s + a.perc; }, 0);
+    if (infoEl)  infoEl.innerHTML = ajustes.map(function(a) {
+      return '<span style="margin-right:10px;color:' + (a.perc < 0 ? 'var(--green)' : 'var(--warn)') + '">'
+           + a.label + ': ' + (a.perc > 0 ? '+' : '') + a.perc + '%</span>';
+    }).join('') + '<strong style="color:var(--text)">→ Total: ' + (totalAdj > 0 ? '+' : '') + totalAdj + '%</strong>';
     if (badgeEl && escala.perc > 0) {
       badgeEl.style.display = 'block';
       badgeEl.innerHTML = '<span class="badge badge-green">' + escala.label + '</span>';
@@ -10140,92 +10647,110 @@ function _getAjustesPrecoUI() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 6: calcular() — Função principal do orçamento (motor completo)
+// FUNÇÃO PRINCIPAL: calcular()
+// Usa o motor calcularCustoTotal + calcularPreco do calculo.js
 // ─────────────────────────────────────────────────────────────────────
 function calcular() {
-  var area = getArea ? getArea() : 0;
-  if (area <= 0) { toast('Informe as medidas!', 'warn'); return; }
+  var area = typeof getArea === 'function' ? getArea() : 0;
+  if (area <= 0) { toast('Informe as medidas (largura e altura)!', 'warn'); return; }
 
-  var mid = parseInt((document.getElementById('orc_material') || {}).value) || 0;
-  var mat = state.materiais.find(function(m) { return m.id === mid; });
-  var qtd = parseInt((document.getElementById('orc_qtd') || {}).value) || 1;
-
+  // Helpers de leitura de form
   function gV(id)  { var el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 0; }
-  function gVi(id) { var el = document.getElementById(id); return el ? parseInt(el.value)   || 0 : 0; }
-  function gC(id)  { var el = document.getElementById(id); return el ? el.checked : false; }
+  function gVs(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+  function gC(id)  { var el = document.getElementById(id); return el ? !!el.checked : false; }
 
-  // Material
+  var mid = parseInt(gVs('orc_material')) || 0;
+  var mat = (state.materiais || []).find(function(m) { return m.id === mid; });
+  var qtd = parseInt(gVs('orc_qtd'))      || 1;
+
+  // ── Material
   var custoMaterialM2 = 0;
   if (gC('tog_material')) {
     var vm = gV('custo_material');
-    custoMaterialM2 = vm > 0 ? vm / area : (mat ? mat.custo_m2 : 0);
+    custoMaterialM2 = vm > 0 ? vm / area : (mat ? (mat.custo_m2 || 0) : 0);
   }
 
-  // Overhead
+  // ── Overhead do state
   var percOverhead = 0, fixoOverhead = 0;
-  (state.overhead || []).filter(function(o){ return o.ativo; }).forEach(function(o) {
-    if (o.tipo === 'percentual') percOverhead += o.valor;
-    else fixoOverhead += o.valor;
+  (state.overhead || []).filter(function(o) { return o.ativo; }).forEach(function(o) {
+    if (o.tipo === 'percentual') percOverhead += (o.valor || 0);
+    else fixoOverhead += (o.valor || 0);
   });
 
-  // Acabamentos
-  var custoAcabamentos = 0;
-  var detAcab = [];
-  (state.acabamentos || []).filter(function(a){ return a.ativo; }).forEach(function(a) {
+  // ── Acabamentos
+  var custoAcabamentos = 0, detAcab = [];
+  (state.acabamentos || []).filter(function(a) { return a.ativo; }).forEach(function(a) {
     var tog = document.getElementById('tog_acab_' + a.id);
     if (!tog || !tog.checked) return;
-    var val = gV('val_acab_' + a.id) || a.valor;
+    var val = gV('val_acab_' + a.id) || a.valor || 0;
     var c = 0;
     if (a.tipo === 'm2') c = val * area;
     else if (a.tipo === 'fixo') c = val;
     else { var qty = gV('qty_acab_' + a.id); c = val * qty; }
-    if (c > 0) { custoAcabamentos += c; detAcab.push({ label:'✂️ ' + a.nome, valor: c }); }
+    if (c > 0) { custoAcabamentos += c; detAcab.push({ label: '✂️ ' + a.nome, valor: c }); }
   });
 
-  // Serviços
-  var custoServicos = 0;
-  var detSvc = [];
-  (state.servicos || []).filter(function(s){ return s.ativo; }).forEach(function(s) {
+  // ── Serviços
+  var custoServicos = 0, detSvc = [];
+  (state.servicos || []).filter(function(s) { return s.ativo; }).forEach(function(s) {
     var tog = document.getElementById('tog_svc_' + s.id);
     if (!tog || !tog.checked) return;
-    var val = gV('val_svc_' + s.id) || s.valor;
+    var val = gV('val_svc_' + s.id) || s.valor || 0;
     var c = 0;
     if (s.tipo === 'fixo') c = val;
     else if (s.tipo === 'm2') c = val * area;
-    else { var km = gV('km_svc_' + s.id); c = val * km; }
-    if (c > 0) { custoServicos += c; detSvc.push({ label:'🚚 ' + s.nome, valor: c }); }
+    else { var km2 = gV('km_svc_' + s.id); c = val * km2; }
+    if (c > 0) { custoServicos += c; detSvc.push({ label: '🚚 ' + s.nome, valor: c }); }
   });
 
-  // Parâmetros para o motor
+  // ── Estrutura metalon (se ativada)
+  var custoEstruturaMetalon = gC('tog_metalon') ? _atualizarUIMetalon() : 0;
+
+  // ── Montar parâmetros para o motor calcularCustoTotal
   var motParams = {
-    area: area, qtd: qtd,
+    area:              area,
+    qtd:               qtd,
     custoMaterialM2:   custoMaterialM2,
     custoImpressaoM2:  gC('tog_impressao') ? gV('custo_impressao') : 0,
     custoMaoObraM2:    gC('tog_mao_obra')  ? gV('custo_mao_obra')  : 0,
-    velMaquina:        gV('prod_vel_maquina')     || 25,
-    custoHoraMaq:      gV('prod_custo_hora_maq')  || 45,
-    custoHoraFunc:     gV('prod_custo_hora_func') || 18,
-    incluirProducaoMO: gC('tog_incluir_producao'),
-    percDesperdicio:   gC('tog_incluir_producao') ? (gV('prod_desperdicio') || 0) : 0,
-    custoEstrutura:    gC('tog_metalon') ? _atualizarUIMetalon() : 0,
-    percOverhead: percOverhead, fixoOverhead: fixoOverhead,
-    custoAcabamentos: custoAcabamentos,
-    custoServicos: custoServicos,
+    velMaquina:        gV('prod_vel_maquina')      || 25,
+    custoHoraMaq:      gV('prod_custo_hora_maq')   || 45,
+    custoHoraFunc:     gV('prod_custo_hora_func')  || 18,
+    incluirProducao:        gC('tog_incluir_producao'),
+    incluirMaoObraProducao: gC('tog_incluir_producao'),
+    percDesperdicio:   gC('tog_incluir_producao') ? gV('prod_desperdicio') : 0,
+    custoEstrutura:    custoEstruturaMetalon,
+    custoInstalacao:   gV('custo_instalacao'),
+    kmTransporte:      gV('km_transporte'),
+    custoKm:           gV('custo_por_km') || 2.50,
+    percOverhead:      percOverhead,
+    fixoOverhead:      fixoOverhead,
+    custoAcabamentos:  custoAcabamentos,
+    custoServicos:     custoServicos,
   };
 
-  // Executar motor
-  var custos = calcularCustoTotal(motParams);
-  var margem  = gV('margem_input') || 40;
-  var desconto= gV('desconto_input') || 0;
-  var adj     = _getAjustesPrecoUI();
-  var preco   = calcularPreco(custos.custoTotal, {
-    margem: margem, desconto: desconto,
-    urgencia:    adj.urgencia,
-    tipoCliente: adj.tipoCliente,
-    qtd: qtd, area: area,
-  });
+  // ── RODAR MOTOR (calculo.js)
+  var custos = (typeof calcularCustoTotal === 'function')
+    ? calcularCustoTotal(motParams)
+    : { custoTotal: 0, tempoProducao: 0, custoMaterial: 0, custoImpressao: 0, custoProducao: 0, custoMaoObra: 0, custoDesperdicio: 0, custoEstrutura: 0, custoInstalacao: 0, custoTransporte: 0, custoOverhead: 0, custoAcabamentos: 0, custoServicos: 0, area: area, qtd: qtd };
 
-  // Atualizar KPIs
+  var margem   = gV('margem_input') || 40;
+  var desconto = gV('desconto_input') || 0;
+  var adj      = _getAjustesPrecoUI();
+
+  // ── RODAR PRECIFICAÇÃO (calculo.js)
+  var preco = (typeof calcularPreco === 'function')
+    ? calcularPreco(custos.custoTotal, {
+        margem:      margem,
+        desconto:    desconto,
+        urgencia:    adj.urgencia,
+        tipoCliente: adj.tipoCliente,
+        qtd:         qtd,
+        area:        area,
+      })
+    : { precoFinal: custos.custoTotal * 1.4, lucro: custos.custoTotal * 0.4, margemReal: 28.57, markupReal: 40, precoUnitario: 0, precoM2: 0 };
+
+  // ── Atualizar KPIs
   function sEl(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
   sEl('res_custo',  'R$ ' + fmtBR(custos.custoTotal));
   sEl('res_preco',  'R$ ' + fmtBR(preco.precoFinal));
@@ -10234,72 +10759,113 @@ function calcular() {
   var mEl = document.getElementById('res_margem');
   if (mEl) mEl.style.color = preco.margemReal >= 30 ? 'var(--green)' : preco.margemReal >= 15 ? 'var(--gold)' : 'var(--red)';
 
-  // Montar linhas de detalhamento
+  // ── Montar detalhamento
   var linhas = [];
-  if (custos.custoMaterial    > 0) linhas.push({ label:'📦 Material' + (mat ? ' (' + mat.nome + ')' : ''), valor: custos.custoMaterial });
-  if (custos.custoImpressao   > 0) linhas.push({ label:'🖨 Impressão (R$ ' + fmt(motParams.custoImpressaoM2) + '/m²)', valor: custos.custoImpressao });
-  if (custos.custoMaoObra     > 0) linhas.push({ label:'👷 Mão de Obra', valor: custos.custoMaoObra });
-  if (custos.custoProducao    > 0) linhas.push({ label:'⚙️ Máquina (' + custos.tempoProducao.toFixed(2) + 'h)', valor: custos.custoProducao });
-  if (custos.custoDesperdicio > 0) linhas.push({ label:'🗑 Desperdício (' + motParams.percDesperdicio + '%)', valor: custos.custoDesperdicio });
-  if (custos.custoEstrutura   > 0) linhas.push({ label:'🏗 Estrutura Metalon', valor: custos.custoEstrutura });
-  if (custos.custoInstalacao  > 0) linhas.push({ label:'🔧 Instalação', valor: custos.custoInstalacao });
-  if (custos.custoTransporte  > 0) linhas.push({ label:'🚐 Transporte', valor: custos.custoTransporte });
-  if (custos.custoOverhead    > 0) linhas.push({ label:'📊 Overhead', valor: custos.custoOverhead });
+  if (custos.custoMaterial    > 0) linhas.push({ label: '📦 Material' + (mat ? ' (' + mat.nome + ')' : ''),           valor: custos.custoMaterial });
+  if (custos.custoImpressao   > 0) linhas.push({ label: '🖨 Impressão (R$ ' + fmt(motParams.custoImpressaoM2) + '/m²)', valor: custos.custoImpressao });
+  if (custos.custoMaoObra     > 0) linhas.push({ label: '👷 Mão de Obra',                                              valor: custos.custoMaoObra });
+  if (custos.custoProducao    > 0) linhas.push({ label: '⚙️ Máquina (' + custos.tempoProducao.toFixed(2) + 'h × R$' + fmt(motParams.custoHoraMaq) + '/h)', valor: custos.custoProducao });
+  if (custos.custoDesperdicio > 0) linhas.push({ label: '🗑 Desperdício (' + motParams.percDesperdicio + '%)',          valor: custos.custoDesperdicio });
+  if (custos.custoEstrutura   > 0) linhas.push({ label: '🏗 Estrutura Metalon',                                        valor: custos.custoEstrutura });
+  if (custos.custoInstalacao  > 0) linhas.push({ label: '🔧 Instalação',                                               valor: custos.custoInstalacao });
+  if (custos.custoTransporte  > 0) linhas.push({ label: '🚐 Transporte (' + motParams.kmTransporte + 'km)',            valor: custos.custoTransporte });
+  if (custos.custoOverhead    > 0) linhas.push({ label: '📊 Overhead',                                                 valor: custos.custoOverhead });
   detAcab.forEach(function(d) { linhas.push(d); });
   detSvc.forEach(function(d)  { linhas.push(d); });
 
   var html = linhas.map(function(d) {
     return '<div class="result-row"><span class="result-label">' + d.label + '</span><span class="result-value">R$ ' + fmtBR(d.valor) + '</span></div>';
   }).join('');
-  html += '<div class="result-row"><span class="result-label" style="font-weight:600">Custo Total</span><span class="result-value" style="font-weight:600">R$ ' + fmtBR(custos.custoTotal) + '</span></div>';
-  if (preco.adjUrgencia !== 0) html += '<div class="result-row"><span class="result-label">🔥 Urgência</span><span class="result-value" style="color:var(--warn)">+' + preco.adjUrgencia + '%</span></div>';
-  if (preco.adjCliente  !== 0) html += '<div class="result-row"><span class="result-label">' + (adj.tipoCliente==='vip'?'⭐':'🆕') + ' Ajuste Cliente</span><span class="result-value" style="color:var(--green)">' + preco.adjCliente + '%</span></div>';
-  if (preco.descontoEscala > 0) html += '<div class="result-row"><span class="result-label">' + preco.labelEscala + '</span><span class="result-value" style="color:var(--green)">-' + preco.descontoEscala + '%</span></div>';
-  if (preco.descontoManual > 0) html += '<div class="result-row"><span class="result-label">🎁 Desconto</span><span class="result-value" style="color:var(--red)">-' + preco.descontoManual + '%</span></div>';
-  html += '<div class="result-row total"><span class="result-label main">Preço Final</span><span class="result-value main">R$ ' + fmtBR(preco.precoFinal) + '</span></div>';
-  html += '<div class="result-row"><span class="result-label" style="color:var(--green)">Lucro Bruto</span><span class="result-value green">R$ ' + fmtBR(preco.lucro) + ' (' + preco.margemReal.toFixed(1) + '% margem)</span></div>';
-  if (qtd > 1)   html += '<div class="result-row"><span class="result-label">Unitário</span><span class="result-value">R$ ' + fmtBR(preco.precoUnitario) + '</span></div>';
-  if (area > 0)  html += '<div class="result-row"><span class="result-label">Preço/m²</span><span class="result-value" style="color:var(--cyan)">R$ ' + fmtBR(preco.precoM2) + '</span></div>';
-  // Botão analisar com IA
-  html += '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" style="border-color:rgba(139,92,246,.4);color:var(--purple)">🤖 Analisar com IA</button></div>';
+  html += '<div class="result-row" style="border-top:1px solid var(--line);margin-top:4px;padding-top:8px"><span class="result-label" style="font-weight:700">Custo Total</span><span class="result-value" style="font-weight:700">R$ ' + fmtBR(custos.custoTotal) + '</span></div>';
+  if (preco.adjUrgencia  > 0) html += '<div class="result-row"><span class="result-label" style="color:var(--warn)">🔥 Urgência (+' + preco.adjUrgencia + '%)</span><span class="result-value" style="color:var(--warn)">+ R$ ' + fmtBR(preco.precoFinal - preco.precoFinal / (1 + preco.adjUrgencia / 100)) + '</span></div>';
+  if (preco.adjCliente   < 0) html += '<div class="result-row"><span class="result-label" style="color:var(--green)">' + (adj.tipoCliente === 'vip' ? '⭐' : '🆕') + ' Ajuste cliente (' + preco.adjCliente + '%)</span><span class="result-value" style="color:var(--green)">-</span></div>';
+  if (preco.descontoEscala> 0)html += '<div class="result-row"><span class="result-label" style="color:var(--green)">' + preco.labelEscala + ' (-' + preco.descontoEscala + '%)</span><span class="result-value" style="color:var(--green)">desconto aplicado</span></div>';
+  if (preco.descontoManual> 0)html += '<div class="result-row"><span class="result-label" style="color:var(--red)">🎁 Desconto manual (-' + preco.descontoManual + '%)</span><span class="result-value" style="color:var(--red)">-R$ ' + fmtBR(preco.precoBase * preco.descontoManual / 100) + '</span></div>';
+  html += '<div class="result-row total"><span class="result-label main">💰 Preço Final</span><span class="result-value main">R$ ' + fmtBR(preco.precoFinal) + '</span></div>';
+  html += '<div class="result-row"><span class="result-label" style="color:var(--green)">Lucro Bruto</span><span class="result-value" style="color:var(--green);font-weight:600">R$ ' + fmtBR(preco.lucro) + ' (' + preco.margemReal.toFixed(1) + '% margem)</span></div>';
+  html += '<div class="result-row"><span class="result-label" style="color:var(--cyan)">Markup</span><span class="result-value" style="color:var(--cyan)">' + preco.markupReal.toFixed(1) + '%</span></div>';
+  if (qtd > 1)   html += '<div class="result-row"><span class="result-label">Por unidade</span><span class="result-value">R$ ' + fmtBR(preco.precoUnitario) + '</span></div>';
+  if (area > 0)  html += '<div class="result-row"><span class="result-label">Por m²</span><span class="result-value" style="color:var(--cyan)">R$ ' + fmtBR(preco.precoM2) + '</span></div>';
+  if (preco.alertaMargem) html += '<div class="alert alert-warn" style="margin-top:10px;font-size:12px">⚠️ ' + preco.alertaMargem + '</div>';
+  // Botão IA
+  html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'
+    + '<button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" style="border-color:rgba(139,92,246,.4);color:var(--purple)">🤖 Analisar com IA</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="_mostrarRelatorioCompleto()" style="border-color:rgba(56,197,224,.3);color:var(--cyan)">📋 Relatório completo</button>'
+    + '</div>';
 
   var dr = document.getElementById('detalhamento_resultado');
   if (dr) dr.innerHTML = html;
   var rc = document.getElementById('resultado_container');
-  if (rc) { rc.style.display = 'block'; rc.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  if (rc) { rc.style.display = 'block'; rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 
   _renderSimuladorLucro(custos, preco, linhas);
 
+  // Montar _lastCalc para salvar / PDF / WhatsApp
   var cli_nome = (function() {
     var sel = document.getElementById('orc_cliente_id');
-    if (sel && sel.value) { var c = state.clientes.find(function(x){ return (x._db_id||x.id)===sel.value; }); return c ? c.nome : ''; }
+    if (sel && sel.value) {
+      var c = (state.clientes || []).find(function(x) { return (x._db_id || x.id) === sel.value; });
+      return c ? c.nome : '';
+    }
     var inp = document.getElementById('orc_cliente');
     return inp ? inp.value : '';
   })();
 
   window._lastCalc = {
     area: area, qtd: qtd,
-    custoTotal: custos.custoTotal, precoFinal: preco.precoFinal,
-    lucro: preco.lucro, margemReal: preco.margemReal,
-    margem: margem, desconto: desconto,
-    detalhes: linhas, custoDetalhe: custos, precoDetalhe: preco,
-    cliente: cli_nome,
-    ref:      (document.getElementById('orc_ref')      || {}).value || '',
-    telefone: (document.getElementById('orc_telefone') || {}).value || '',
-    produto:  (document.getElementById('orc_produto')  || {}).value || '',
-    material: mat ? mat.nome : '',
-    largura:  (document.getElementById('orc_largura')  || {}).value || '',
-    altura:   (document.getElementById('orc_altura')   || {}).value || '',
-    prazo:    (document.getElementById('orc_prazo')    || {}).value || '5 dias úteis',
-    pagamento:(document.getElementById('orc_pagamento')|| {}).value || '',
-    validade: (document.getElementById('orc_validade') || {}).value || '7',
-    data:     new Date().toLocaleString('pt-BR'),
+    custoTotal:  custos.custoTotal,
+    precoFinal:  preco.precoFinal,
+    lucro:       preco.lucro,
+    margemReal:  preco.margemReal,
+    markupReal:  preco.markupReal,
+    margem:      margem,
+    desconto:    desconto,
+    detalhes:    linhas,
+    custoDetalhe:custos,
+    precoDetalhe:preco,
+    cliente:     cli_nome,
+    ref:         gVs('orc_ref'),
+    telefone:    gVs('orc_telefone'),
+    produto:     gVs('orc_produto'),
+    material:    mat ? mat.nome : '',
+    largura:     gVs('orc_largura'),
+    altura:      gVs('orc_altura'),
+    prazo:       gVs('orc_prazo')    || '5 dias úteis',
+    pagamento:   gVs('orc_pagamento')|| '',
+    validade:    gVs('orc_validade') || '7',
+    data:        new Date().toLocaleString('pt-BR'),
   };
-  toast('Calculado: R$ ' + fmtBR(preco.precoFinal) + ' | Margem: ' + preco.margemReal.toFixed(1) + '%', 'success', '✅ Cálculo completo');
+
+  toast('Calculado: R$ ' + fmtBR(preco.precoFinal) + ' | Margem: ' + preco.margemReal.toFixed(1) + '%', 'success', '✅ Motor de cálculo executado');
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 7: Simulador Visual de Lucro
+// Relatório completo via modal
+// ─────────────────────────────────────────────────────────────────────
+function _mostrarRelatorioCompleto() {
+  if (!window._lastCalc) { toast('Calcule um orçamento primeiro', 'warn'); return; }
+  var c = window._lastCalc;
+  if (typeof gerarRelatorioCalculo !== 'function') { toast('Motor não disponível', 'error'); return; }
+  var rel = gerarRelatorioCalculo({
+    produto: c.produto, largura: parseFloat(c.largura) || 0, altura: parseFloat(c.altura) || 0,
+    area: c.area, qtd: c.qtd, margem: c.margem,
+    custoMaterialM2: c.custoDetalhe ? c.custoDetalhe.custoMaterial / c.area : 0,
+    custoImpressaoM2: c.custoDetalhe ? c.custoDetalhe.custoImpressao / c.area : 0,
+  });
+  // Mostrar num alert/modal simples
+  var w = window.open('', '_blank', 'width=600,height=700');
+  if (w) {
+    w.document.write('<html><head><title>Relatório — VisualCalc</title>'
+      + '<style>body{font-family:monospace;background:#06080f;color:#e8eaf0;padding:20px;white-space:pre;font-size:13px;line-height:1.6}</style>'
+      + '</head><body>' + rel.texto.replace(/\n/g,'<br>') + '</body></html>');
+    w.document.close();
+  } else {
+    alert(rel.texto);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Simulador Visual de Lucro
 // ─────────────────────────────────────────────────────────────────────
 function _renderSimuladorLucro(custos, preco, linhas) {
   var box    = document.getElementById('simulador_lucro_box');
@@ -10309,215 +10875,319 @@ function _renderSimuladorLucro(custos, preco, linhas) {
   if (!box || !barra) return;
   box.style.display = 'block';
 
-  var cores = ['#38c5e0','#e8b84b','#8b5cf6','#f0913a','#6bcf8a','#a78bfa','#34d399','#fb923c'];
-  var segs  = linhas.filter(function(l){ return l.valor > 0; }).map(function(l, i) {
-    return { label: l.label, valor: l.valor, cor: cores[i % cores.length] };
+  var cores = ['#38c5e0','#e8b84b','#8b5cf6','#f0913a','#6bcf8a','#a78bfa','#34d399','#fb923c','#60a5fa'];
+  var segs  = linhas.filter(function(l) { return l.valor > 0; }).map(function(l, i) {
+    return { label: l.label.replace(/[^\w\sÀ-ú()²/,.R$%]/g,''), valor: l.valor, cor: cores[i % cores.length] };
   });
-  if (preco.lucro > 0) segs.push({ label:'💰 Lucro', valor: preco.lucro, cor:'var(--green)' });
+  if (preco.lucro > 0) segs.push({ label: '💰 Lucro', valor: preco.lucro, cor: 'var(--green)' });
 
-  var total = segs.reduce(function(s,x){ return s + x.valor; }, 0);
+  var total = segs.reduce(function(s, x) { return s + x.valor; }, 0);
   if (!total) return;
 
   barra.innerHTML = segs.map(function(s) {
     var pct = (s.valor / total * 100).toFixed(1);
-    return '<div style="width:' + pct + '%;background:' + s.cor + ';transition:width .6s ease;cursor:pointer" title="' + s.label + ': R$ ' + fmtBR(s.valor) + ' (' + pct + '%)"></div>';
+    return '<div style="width:' + pct + '%;background:' + s.cor + ';transition:width .6s ease;cursor:pointer;min-width:2px" title="' + s.label + ': R$ ' + fmtBR(s.valor) + ' (' + pct + '%)"></div>';
   }).join('');
 
   legenda.innerHTML = segs.map(function(s) {
     var pct = (s.valor / total * 100).toFixed(1);
-    return '<span style="display:flex;align-items:center;gap:4px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:2px;background:' + s.cor + ';flex-shrink:0"></span><span style="font-size:10.5px">' + s.label + ' (' + pct + '%)</span></span>';
+    return '<span style="display:flex;align-items:center;gap:4px;white-space:nowrap">'
+      + '<span style="width:9px;height:9px;border-radius:2px;background:' + s.cor + ';flex-shrink:0"></span>'
+      + '<span style="font-size:10.5px">' + s.label + ' (' + pct + '%)</span></span>';
   }).join('');
 
-  var area = custos.area || 0;
-  var qtd  = custos.qtd  || 1;
+  var area = custos.area || 0, qtd = custos.qtd || 1;
   var kpList = [
-    { l:'Custo/m²',    v: area > 0 ? 'R$ ' + fmtBR(custos.custoTotal  / area) : '—', c:'var(--cyan)'   },
-    { l:'Preço/m²',    v: area > 0 ? 'R$ ' + fmtBR(preco.precoFinal   / area) : '—', c:'var(--gold)'   },
-    { l:'Lucro/m²',    v: area > 0 ? 'R$ ' + fmtBR(preco.lucro        / area) : '—', c:'var(--green)'  },
-    { l:'Lucro/unid.', v: qtd  > 1 ? 'R$ ' + fmtBR(preco.lucro        / qtd)  : '—', c:'var(--green)'  },
-    { l:'Markup',      v: preco.markupReal.toFixed(1) + '%',                           c:'var(--purple)' },
-    { l:'Margem liq.', v: preco.margemReal.toFixed(1) + '%',
-      c: preco.margemReal >= 30 ? 'var(--green)' : preco.margemReal >= 15 ? 'var(--gold)' : 'var(--red)' },
+    { l: 'Custo/m²',    v: area > 0 ? 'R$ ' + fmtBR(custos.custoTotal / area) : '—',  c: 'var(--cyan)'   },
+    { l: 'Preço/m²',    v: area > 0 ? 'R$ ' + fmtBR(preco.precoFinal   / area) : '—', c: 'var(--gold)'   },
+    { l: 'Lucro/m²',    v: area > 0 ? 'R$ ' + fmtBR(preco.lucro        / area) : '—', c: 'var(--green)'  },
+    { l: 'Lucro/unid.', v: qtd  > 1 ? 'R$ ' + fmtBR(preco.lucro        / qtd)  : '—', c: 'var(--green)'  },
+    { l: 'Markup',      v: preco.markupReal.toFixed(1) + '%',                           c: 'var(--purple)' },
+    { l: 'Margem',      v: preco.margemReal.toFixed(1) + '%',
+      c: preco.margemReal >= 40 ? 'var(--green)' : preco.margemReal >= 30 ? '#6bcf8a' : preco.margemReal >= 15 ? 'var(--gold)' : 'var(--red)' },
   ];
   kpis.innerHTML = kpList.map(function(k) {
-    return '<div style="background:var(--ink4);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;text-align:center"><div style="font-size:9px;text-transform:uppercase;font-weight:700;color:var(--text3);margin-bottom:2px">' + k.l + '</div><div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:600;color:' + k.c + '">' + k.v + '</div></div>';
+    return '<div style="background:var(--ink4);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;text-align:center">'
+      + '<div style="font-size:9px;text-transform:uppercase;font-weight:700;color:var(--text3);margin-bottom:2px">' + k.l + '</div>'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:600;color:' + k.c + '">' + k.v + '</div>'
+      + '</div>';
   }).join('');
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 8: Fluxo Automático
+// FLUXO AUTOMÁTICO — Orçamento → Pedido → Produção → Financeiro
 // ─────────────────────────────────────────────────────────────────────
-var FLUXO_CONFIG = {
-  orcamento: { prox:'aprovado',   label:'✅ Aprovar',         icon:'📋', cor:'var(--cyan)'  },
-  aprovado:  { prox:'producao',   label:'🔧 Enviar Produção', icon:'✅', cor:'var(--green)' },
-  producao:  { prox:'finalizado', label:'🎉 Finalizar',       icon:'🔧', cor:'var(--gold)'  },
-  finalizado:{ prox:null, label:null, icon:'🎉', cor:'#6bcf8a' },
-  cancelado: { prox:null, label:null, icon:'❌', cor:'var(--red)' },
+var FLUXO_CFG = {
+  orcamento:  { prox: 'aprovado',   label: '✅ Aprovar Orçamento',  icon: '📋', cor: 'var(--cyan)' },
+  aprovado:   { prox: 'producao',   label: '🔧 Iniciar Produção',   icon: '✅', cor: 'var(--green)' },
+  producao:   { prox: 'finalizado', label: '🎉 Finalizar Pedido',   icon: '🔧', cor: 'var(--gold)' },
+  finalizado: { prox: null, label: null, icon: '🎉', cor: '#6bcf8a' },
+  cancelado:  { prox: null, label: null, icon: '❌', cor: 'var(--red)' },
 };
 
+async function avancarOrc(id) {
+  var o = (state.orcamentos || []).find(function(x) { return String(x._db_id || x.id) === String(id); });
+  if (!o) { toast('Orçamento não encontrado', 'error'); return; }
+  await avancarFluxo(o._db_id || o.id, o.status || 'orcamento');
+}
+
 async function avancarFluxo(orcId, statusAtual) {
-  var cfg = FLUXO_CONFIG[statusAtual];
-  if (!cfg || !cfg.prox) { toast('Status final — sem próximo passo', 'info'); return; }
+  var cfg = FLUXO_CFG[statusAtual];
+  if (!cfg || !cfg.prox) { toast('Este orçamento já está em seu status final.', 'info'); return; }
+
   var modal  = document.getElementById('modal-fluxo-auto');
   var titulo = document.getElementById('fluxo-modal-titulo');
   var sub    = document.getElementById('fluxo-modal-sub');
   var body   = document.getElementById('fluxo-modal-body');
   var btn    = document.getElementById('fluxo-modal-confirmar');
-  if (!modal) return;
+  if (!modal) { await _executarFluxo(orcId, statusAtual, cfg.prox); return; }
 
-  var orc = (state.orcamentos || []).find(function(o){ return String(o._db_id || o.id) === String(orcId); });
-  var statusProx = cfg.prox;
+  var orc    = (state.orcamentos || []).find(function(o) { return String(o._db_id || o.id) === String(orcId); });
+  var proxCfg= FLUXO_CFG[cfg.prox];
 
-  titulo.textContent = cfg.label;
-  sub.textContent    = 'Orçamento: ' + (orc ? (orc.ref || orc.cliente || orcId) : orcId);
+  if (titulo) titulo.textContent = cfg.label;
+  if (sub)    sub.textContent    = 'Orçamento: ' + (orc ? (orc.ref || orc.cliente || String(orcId)) : String(orcId));
 
-  var steps = ['orcamento','aprovado','producao','finalizado'];
+  // Montar passos visuais
+  var steps = ['orcamento', 'aprovado', 'producao', 'finalizado'];
   var stepsHtml = steps.map(function(s) {
-    var c       = FLUXO_CONFIG[s];
+    var c       = FLUXO_CFG[s];
     var isDone  = steps.indexOf(s) < steps.indexOf(statusAtual);
     var isActive= s === statusAtual;
-    var isNext  = s === statusProx;
-    return '<div class="fluxo-step ' + (isDone?'done':'') + ' ' + (isActive||isNext?'active':'') + '">' +
-      '<span style="font-size:18px">' + c.icon + '</span>' +
-      '<div style="flex:1"><div style="font-weight:' + (isActive||isNext?700:400) + ';color:' + (isDone?'var(--text3)':isNext?c.cor:'var(--text)') + '">' + s.charAt(0).toUpperCase()+s.slice(1) + '</div>' +
-      (isActive ? '<div style="font-size:10px;color:var(--text3)">Status atual</div>' : '') +
-      (isNext   ? '<div style="font-size:10px;color:' + c.cor + '">→ Próximo passo</div>' : '') +
-      '</div>' + (isDone ? '<span style="color:var(--green);font-size:16px">✓</span>' : '') + '</div>';
+    var isNext  = s === cfg.prox;
+    return '<div class="fluxo-step ' + (isDone ? 'done' : '') + ' ' + (isActive || isNext ? 'active' : '') + '">'
+      + '<span style="font-size:18px">' + c.icon + '</span>'
+      + '<div style="flex:1"><div style="font-weight:' + (isActive || isNext ? 700 : 400) + ';color:' + (isDone ? 'var(--text3)' : isNext ? c.cor : 'var(--text)') + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</div>'
+      + (isActive ? '<div style="font-size:10px;color:var(--text3)">Status atual</div>' : '')
+      + (isNext   ? '<div style="font-size:10px;color:' + c.cor + '">→ Próximo passo</div>' : '')
+      + '</div>' + (isDone ? '<span style="color:var(--green);font-size:16px">✓</span>' : '') + '</div>';
   }).join('');
-  body.innerHTML = stepsHtml;
 
-  if (statusProx === 'finalizado' && orc && orc.precoFinal > 0) {
-    body.innerHTML += '<div class="alert alert-info" style="margin-top:10px;font-size:12px">💡 Lançamento de <strong>R$ ' + fmtBR(orc.precoFinal) + '</strong> será criado no financeiro (a receber).</div>';
-  }
-  if (statusProx === 'aprovado') {
-    body.innerHTML += '<div class="alert alert-success" style="margin-top:10px;font-size:12px">🔧 Pedido de produção será criado automaticamente.</div>';
-  }
+  var extras = '';
+  if (cfg.prox === 'aprovado')   extras = '<div class="alert alert-success" style="margin-top:10px;font-size:12px">🔧 Um pedido de produção será criado automaticamente.</div>';
+  if (cfg.prox === 'finalizado' && orc && orc.precoFinal > 0)
+    extras = '<div class="alert alert-info" style="margin-top:10px;font-size:12px">💰 Lançamento de <strong>R$ ' + fmtBR(orc.precoFinal) + '</strong> será criado no Financeiro (conta a receber).</div>';
 
-  btn.textContent = cfg.label;
-  btn.onclick = async function() {
-    modal.style.display = 'none';
-    await _executarFluxo(orcId, statusAtual, statusProx, orc);
-  };
+  if (body) body.innerHTML = stepsHtml + extras;
+  if (btn) {
+    btn.textContent = cfg.label;
+    btn.onclick = async function() {
+      modal.style.display = 'none';
+      await _executarFluxo(orcId, statusAtual, cfg.prox, orc);
+    };
+  }
   modal.style.display = 'flex';
 }
 
 async function _executarFluxo(orcId, statusAtual, statusNovo, orc) {
-  showLoading('Avançando fluxo...');
+  showLoading('Avançando fluxo: ' + statusAtual + ' → ' + statusNovo + '...');
   try {
-    await dbUpdateStatusOrcamento(orcId, statusNovo);
-    if (statusNovo === 'aprovado' && orc) await _criarPedidoDaOrcamento(orc);
-    if (statusNovo === 'finalizado' && orc && orc.precoFinal > 0) await _criarLancamentoFinanceiro(orc);
+    // 1. Atualizar status do orçamento
+    await _dbUpdateStatusOrc(orcId, statusNovo);
+
+    // 2. Se aprovado → criar pedido de produção
+    if (statusNovo === 'aprovado' && orc) {
+      await _criarPedidoDaOrcamento(orc);
+      toast('🔧 Pedido criado na Produção!', 'info');
+    }
+
+    // 3. Se finalizado → lançar no financeiro
+    if (statusNovo === 'finalizado' && orc && orc.precoFinal > 0) {
+      await _criarLancamentoFinanceiro(orc);
+      toast('💰 Lançamento criado no Financeiro!', 'info');
+    }
+
+    // 4. Reload de dados
     await dbFetchOrcamentos();
-    renderOrcamentos();
-    renderDashboard();
-    updateHistBadge();
+    if (typeof renderOrcamentos === 'function') renderOrcamentos();
+    if (typeof renderDashboard  === 'function') renderDashboard();
+    if (typeof updateHistBadge  === 'function') updateHistBadge();
+
+    var msgs = {
+      aprovado:   '✅ Orçamento aprovado — pedido criado na produção!',
+      producao:   '🔧 Enviado à produção!',
+      finalizado: '🎉 Finalizado — receita lançada no financeiro!',
+    };
     hideLoading();
-    var msgs = { aprovado:'✅ Aprovado! Pedido criado na produção.', producao:'🔧 Enviado à produção!', finalizado:'🎉 Finalizado! Lançamento criado no financeiro.' };
-    toast(msgs[statusNovo] || 'Status atualizado!', 'success', 'Fluxo avançado');
-  } catch(e) { hideLoading(); toast('Erro no fluxo: ' + e.message, 'error'); }
+    toast(msgs[statusNovo] || 'Status: ' + statusNovo, 'success', '🔄 Fluxo avançado');
+  } catch(e) {
+    hideLoading();
+    toast('Erro no fluxo: ' + e.message, 'error');
+    console.error('[Fluxo]', e);
+  }
 }
 
-async function dbUpdateStatusOrcamento(orcId, novoStatus) {
-  var orc = (state.orcamentos || []).find(function(o){ return String(o._db_id||o.id) === String(orcId); });
-  if (orc) orc.status = novoStatus;
-  saveState();
-  if (dbMode() !== 'supabase') return;
-  var sb = getSb(); if (!sb) return;
-  try { var r = await sb.from('orcamentos').update({ status: novoStatus }).eq('id', orcId); if (r.error) throw r.error; }
-  catch(e) { console.warn('dbUpdateStatusOrcamento:', e.message); }
+async function _dbUpdateStatusOrc(orcId, novoStatus) {
+  // Local
+  var orc = (state.orcamentos || []).find(function(o) { return String(o._db_id || o.id) === String(orcId); });
+  if (orc) { orc.status = novoStatus; orc.updated_at = new Date().toISOString(); }
+  if (typeof saveState === 'function') saveState();
+  // Supabase
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try { await sb.from('orcamentos').update({ status: novoStatus, updated_at: new Date().toISOString() }).eq('id', orcId); }
+      catch(e) { console.warn('[dbUpdateStatusOrc]', e.message); }
+    }
+  }
 }
 
 async function _criarPedidoDaOrcamento(orc) {
+  var num = 'PED-' + String(Date.now()).slice(-5);
   var pedido = {
-    id: Date.now(), numero: 'PED-' + String(Date.now()).slice(-5),
-    cliente_nome: orc.cliente, produto: orc.produto, material: orc.material,
-    largura: parseFloat(orc.largura)||0, altura: parseFloat(orc.altura)||0,
-    area: orc.area, qtd: orc.qtd||1, valor: orc.precoFinal, custo: orc.custoTotal,
+    id: Date.now(), numero: num,
+    cliente_nome: orc.cliente || '—', produto: orc.produto, material: orc.material,
+    largura: parseFloat(orc.largura) || 0, altura: parseFloat(orc.altura) || 0,
+    area: orc.area, qtd: orc.qtd || 1, valor: orc.precoFinal, custo: orc.custoTotal,
     lucro: orc.lucro, status: 'aguardando', prioridade: 'normal',
-    orcamento_id: orc._db_id || orc.id, data_entrada: new Date().toISOString(), prazo: orc.prazo,
+    orcamento_id: orc._db_id || orc.id,
+    data_entrada: new Date().toISOString(), prazo: orc.prazo || '—',
   };
   if (!state.pedidos) state.pedidos = [];
-  state.pedidos.unshift(pedido); saveState();
-  if (dbMode() !== 'supabase') return;
-  var sb = getSb(); if (!sb) return;
-  try {
-    var row = withEmpresa({ numero:pedido.numero, cliente_nome:pedido.cliente_nome, produto:pedido.produto,
-      material:pedido.material, largura:pedido.largura, altura:pedido.altura, area:pedido.area,
-      qtd:pedido.qtd, valor:pedido.valor, status:'aguardando', prioridade:'normal', orcamento_id:orc._db_id||null });
-    var r = await sb.from('pedidos').insert(row).select('id').single();
-    if (r.data) pedido._db_id = r.data.id;
-  } catch(e) { console.warn('_criarPedidoDaOrcamento:', e.message); }
+  state.pedidos.unshift(pedido);
+  if (typeof saveState === 'function') saveState();
+
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try {
+        var row = typeof withEmpresa === 'function'
+          ? withEmpresa({ numero: num, cliente_nome: pedido.cliente_nome, produto: pedido.produto,
+              material: pedido.material, largura: pedido.largura, altura: pedido.altura,
+              area: pedido.area, qtd: pedido.qtd, valor: pedido.valor,
+              status: 'aguardando', prioridade: 'normal', orcamento_id: orc._db_id || null })
+          : {};
+        var r = await sb.from('pedidos').insert(row).select('id').single();
+        if (r.data) pedido._db_id = r.data.id;
+      } catch(e) { console.warn('[_criarPedidoDaOrcamento]', e.message); }
+    }
+  }
 }
 
 async function _criarLancamentoFinanceiro(orc) {
   var lanc = {
-    id: Date.now(), tipo:'receita',
-    descricao: 'Recebimento: ' + orc.cliente + ' — ' + (orc.ref || orc.produto || ''),
+    id: Date.now(), tipo: 'receita',
+    descricao: 'Recebimento: ' + (orc.cliente || '—') + ' — ' + (orc.ref || orc.produto || ''),
     valor: orc.precoFinal, custo: orc.custoTotal, lucro: orc.lucro,
-    status:'pendente', data: new Date().toISOString().split('T')[0],
+    status: 'pendente', data: new Date().toISOString().split('T')[0],
     orcamento_id: orc._db_id || orc.id, created_at: new Date().toISOString(),
   };
   if (!state.financeiro) state.financeiro = [];
-  state.financeiro.unshift(lanc); saveState();
-  if (dbMode() !== 'supabase') return;
-  var sb = getSb(); if (!sb) return;
-  try {
-    var row = withEmpresa({ tipo:'receita', descricao:lanc.descricao, valor:lanc.valor,
-      status:'pendente', data:lanc.data, referencia:orc._db_id||null });
-    await sb.from('financeiro').insert(row);
-  } catch(e) { console.warn('_criarLancamentoFinanceiro:', e.message); }
+  state.financeiro.unshift(lanc);
+  if (typeof saveState === 'function') saveState();
+
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb) {
+      try {
+        var row = typeof withEmpresa === 'function'
+          ? withEmpresa({ tipo: 'receita', descricao: lanc.descricao, valor: lanc.valor,
+              status: 'pendente', data: lanc.data, referencia: orc._db_id || null })
+          : {};
+        await sb.from('financeiro').insert(row);
+      } catch(e) { console.warn('[_criarLancamentoFinanceiro]', e.message); }
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 9: Assistente IA — OpenAI GPT-4o-mini
+// ASSISTENTE IA — OpenAI GPT (real, funcional)
 // ─────────────────────────────────────────────────────────────────────
-var _iaState = { messages: [], loading: false, systemContext: null };
+var _IA = {
+  messages:      [],
+  loading:       false,
+  systemContext: null,
+};
 
-function getApiKeyIA() { return localStorage.getItem('openai_api_key') || ''; }
-
-function salvarApiKeyIA() {
-  var key = (document.getElementById('ia-apikey-input') || {}).value;
-  if (!key || !key.trim().startsWith('sk-')) { toast('Chave inválida. Deve começar com sk-', 'error'); return; }
-  localStorage.setItem('openai_api_key', key.trim());
-  var cb = document.getElementById('ia-config-bar'); if (cb) cb.style.display = 'none';
-  var sl = document.getElementById('ia-status-lbl'); if (sl) sl.textContent = '✅ Conectado via OpenAI';
-  toast('API Key salva com sucesso!', 'success');
+function getApiKeyIA() {
+  return localStorage.getItem('openai_api_key') || '';
 }
 
+function getIAModelo() {
+  return localStorage.getItem('openai_modelo') || 'gpt-4o-mini';
+}
+
+function getIATokens() {
+  return parseInt(localStorage.getItem('openai_tokens') || '800');
+}
+
+// Chamada real à API OpenAI
+async function perguntarIA(messages, systemPrompt) {
+  var apiKey = getApiKeyIA();
+  if (!apiKey) throw new Error('API Key não configurada. Vá em Configurações → 🤖 IA & Motor');
+
+  var payload = {
+    model:       getIAModelo(),
+    max_tokens:  getIATokens(),
+    temperature: 0.7,
+    messages: [
+      { role: 'system', content: systemPrompt || _IA.systemContext || 'Você é assistente especializado em comunicação visual e precificação para gráficas. Responda em português brasileiro.' },
+    ].concat((messages || []).slice(-14)), // histórico de 14 mensagens
+  };
+
+  var resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': 'Bearer ' + apiKey,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!resp.ok) {
+    var errData = {};
+    try { errData = await resp.json(); } catch(e) {}
+    var msg = (errData.error && errData.error.message) || ('HTTP ' + resp.status);
+    if (resp.status === 401) throw new Error('API Key inválida ou expirada. Verifique em platform.openai.com');
+    if (resp.status === 429) throw new Error('Limite de requisições atingido. Aguarde um momento.');
+    if (resp.status === 402) throw new Error('Créditos OpenAI esgotados. Recarregue em platform.openai.com/billing');
+    if (resp.status === 400) throw new Error('Requisição inválida: ' + msg);
+    throw new Error(msg);
+  }
+
+  var data = await resp.json();
+  if (!data.choices || !data.choices[0]) throw new Error('Resposta vazia da OpenAI');
+  return data.choices[0].message.content;
+}
+
+// UI do chat IA
 function abrirChatIA() {
   var modal = document.getElementById('modal-chat-ia');
   if (!modal) return;
-  modal.classList.add('open');
   modal.style.display = 'flex';
+
   var cfgBar = document.getElementById('ia-config-bar');
   if (cfgBar) cfgBar.style.display = getApiKeyIA() ? 'none' : 'block';
-  // Construir contexto do orçamento atual
-  if (!_iaState.systemContext) {
-    var ctx = window._lastCalc;
-    var ctxStr = ctx
-      ? '\n\nContexto do orçamento atual:\n- Produto: ' + (ctx.produto||'N/A') +
-        '\n- Dimensões: ' + ctx.largura + 'm × ' + ctx.altura + 'm = ' + (ctx.area||0).toFixed(4) + ' m²' +
-        '\n- Qtd: ' + ctx.qtd +
-        '\n- Custo: R$ ' + fmtBR(ctx.custoTotal) + ' | Preço: R$ ' + fmtBR(ctx.precoFinal) +
-        '\n- Lucro: R$ ' + fmtBR(ctx.lucro) + ' | Margem: ' + (ctx.margemReal||0).toFixed(1) + '%'
-      : '';
-    _iaState.systemContext = 'Você é o assistente IA do VisualCalc ERP Pro, especializado em comunicação visual (gráficas, banners, fachadas ACM, letras caixa, estruturas metálicas, adesivos, totens).\n\nVocê ajuda com:\n- Cálculo de custos (material, produção, metalon, instalação, transporte)\n- Sugestão de preços com margem de lucro adequada\n- Análise de margens e lucratividade\n- Cálculo de metalon para estruturas\n- Estratégias comerciais e descontos por escala\n\nFórmula de precificação: preco = custo / (1 - margem). Margem saudável para comunicação visual: 35-55%.\nResponda em português brasileiro de forma objetiva, com números concretos.' + ctxStr;
-  }
-  setTimeout(function() { var inp = document.getElementById('ia-input'); if (inp) inp.focus(); }, 100);
+
+  // Injetar contexto do orçamento atual
+  if (!_IA.systemContext) _reconstruirContextoIA();
+
+  setTimeout(function() {
+    var inp = document.getElementById('ia-input');
+    if (inp) inp.focus();
+  }, 100);
 }
 
 function fecharChatIA() {
   var modal = document.getElementById('modal-chat-ia');
-  if (modal) { modal.classList.remove('open'); modal.style.display = 'none'; }
+  if (modal) modal.style.display = 'none';
 }
 
 function limparChatIA() {
-  _iaState.messages = []; _iaState.systemContext = null;
+  _IA.messages = [];
+  _IA.systemContext = null;
   var msgs = document.getElementById('ia-messages');
-  if (msgs) msgs.innerHTML = '<div class="ia-msg ia-msg-bot"><div style="font-size:13px;line-height:1.6">Conversa reiniciada! Como posso ajudar?</div></div>';
+  if (!msgs) return;
+  msgs.innerHTML = '<div class="ia-msg ia-msg-bot"><div style="font-size:13px;line-height:1.6">'
+    + 'Conversa reiniciada! Como posso ajudar?</div></div>';
+  var sug = document.getElementById('ia-sugestoes');
+  if (sug) sug.style.display = 'flex';
 }
 
-function autoResizeIA(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 90) + 'px'; }
+function autoResizeIA(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+}
 
 function enviarSugestaoIA(texto) {
   var inp = document.getElementById('ia-input');
@@ -10525,156 +11195,323 @@ function enviarSugestaoIA(texto) {
   enviarMensagemIA();
 }
 
+function _reconstruirContextoIA() {
+  var ctx = window._lastCalc;
+  var ctxStr = '';
+  if (ctx) {
+    ctxStr = '\n\n=== ORÇAMENTO ATUAL ===\n'
+      + 'Produto: ' + (ctx.produto || 'N/A') + '\n'
+      + 'Dimensões: ' + ctx.largura + 'm × ' + ctx.altura + 'm (' + ctx.qtd + ' peça(s))\n'
+      + 'Área: ' + (ctx.area || 0).toFixed(4) + ' m²\n'
+      + 'Custo total: R$ ' + fmtBR(ctx.custoTotal) + '\n'
+      + 'Preço sugerido: R$ ' + fmtBR(ctx.precoFinal) + '\n'
+      + 'Lucro: R$ ' + fmtBR(ctx.lucro) + '\n'
+      + 'Margem: ' + (ctx.margemReal || 0).toFixed(1) + '% | Markup: ' + (ctx.markupReal || 0).toFixed(1) + '%\n'
+      + '=====================';
+  }
+  _IA.systemContext = 'Você é o assistente IA do VisualCalc ERP Pro, especializado em comunicação visual.\n\n'
+    + 'Você domina:\n'
+    + '• Cálculo de custos: material, impressão, mão de obra, produção (tempo máquina), desperdício\n'
+    + '• Estruturas metálicas: cálculo de metalon (perímetro, travessas, custo por metro)\n'
+    + '• Precificação: margem = lucro/preço, markup = lucro/custo, preco = custo / (1 - margem%)\n'
+    + '• Margem saudável para comunicação visual: 35–55%\n'
+    + '• Escala: volume alto justifica desconto (100+ un: 5%, 500+: 10%, 1000+: 15%)\n'
+    + '• Produtos: banners, adesivos, fachadas ACM, letras caixa, totens, placas\n\n'
+    + 'Responda em português brasileiro. Seja direto e use números concretos.'
+    + ctxStr;
+}
+
 function _adicionarMensagemIA(role, content) {
   var msgs = document.getElementById('ia-messages');
   if (!msgs) return;
   var div = document.createElement('div');
   div.className = 'ia-msg ia-msg-' + (role === 'user' ? 'user' : 'bot');
-  var html = role === 'user' ? '<span style="font-size:13px">' + content.replace(/\n/g,'<br>') + '</span>'
-    : '<span style="font-size:13px;line-height:1.6">' + _formatIAResponse(content) + '</span>';
-  div.innerHTML = html;
+  div.innerHTML = role === 'user'
+    ? '<span style="font-size:13px">' + content.replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</span>'
+    : '<span style="font-size:13px;line-height:1.6">' + _fmtIAText(content) + '</span>';
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function _formatIAResponse(text) {
+function _fmtIAText(text) {
   return text
+    .replace(/</g, '&lt;')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code style="background:var(--ink4);padding:1px 5px;border-radius:4px;font-family:DM Mono,monospace;font-size:12px">$1</code>')
     .replace(/\n/g, '<br>');
 }
 
-function _mostrarTypingIA() {
-  var msgs = document.getElementById('ia-messages'); if (!msgs) return null;
-  var div = document.createElement('div');
-  div.id = 'ia-typing-indicator'; div.className = 'ia-typing';
-  div.innerHTML = '<span></span><span></span><span></span>';
-  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-function _removerTypingIA() { var el = document.getElementById('ia-typing-indicator'); if (el) el.remove(); }
-
 async function enviarMensagemIA() {
-  if (_iaState.loading) return;
-  var inp   = document.getElementById('ia-input');
-  var texto = inp ? inp.value.trim() : '';
-  if (!texto) return;
+  if (_IA.loading) return;
+  var inp  = document.getElementById('ia-input');
+  var txt  = inp ? inp.value.trim() : '';
+  if (!txt) return;
+
   if (!getApiKeyIA()) {
-    var cb = document.getElementById('ia-config-bar'); if (cb) cb.style.display = 'block';
-    toast('Configure sua OpenAI API Key primeiro', 'warn'); return;
+    var cb = document.getElementById('ia-config-bar');
+    if (cb) cb.style.display = 'block';
+    toast('Configure sua OpenAI API Key em Configurações → 🤖 IA & Motor', 'warn');
+    return;
   }
-  inp.value = ''; if (inp) inp.style.height = '38px';
-  _adicionarMensagemIA('user', texto);
-  _iaState.messages.push({ role:'user', content:texto });
-  var sugestoesEl = document.getElementById('ia-sugestoes');
-  if (sugestoesEl && _iaState.messages.length > 2) sugestoesEl.style.display = 'none';
-  _iaState.loading = true;
-  var sb = document.getElementById('ia-send-btn'); if (sb) sb.disabled = true;
-  var si = document.getElementById('ia-send-icon'); if (si) si.textContent = '⏳';
-  _mostrarTypingIA();
+
+  inp.value = '';
+  if (inp) inp.style.height = '38px';
+
+  _adicionarMensagemIA('user', txt);
+  _IA.messages.push({ role: 'user', content: txt });
+
+  var sug = document.getElementById('ia-sugestoes');
+  if (sug && _IA.messages.length > 2) sug.style.display = 'none';
+
+  _IA.loading = true;
+  var sendBtn  = document.getElementById('ia-send-btn');
+  var sendIcon = document.getElementById('ia-send-icon');
+  if (sendBtn)  sendBtn.disabled = true;
+  if (sendIcon) sendIcon.textContent = '⏳';
+
+  // Indicador de digitação
+  var msgs = document.getElementById('ia-messages');
+  var typDiv = null;
+  if (msgs) {
+    typDiv = document.createElement('div');
+    typDiv.id = 'ia-typing';
+    typDiv.className = 'ia-typing';
+    typDiv.innerHTML = '<span></span><span></span><span></span>';
+    msgs.appendChild(typDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
   try {
-    var resposta = await perguntarIA(_iaState.messages, _iaState.systemContext);
-    _removerTypingIA();
+    if (!_IA.systemContext) _reconstruirContextoIA();
+    var resposta = await perguntarIA(_IA.messages, _IA.systemContext);
+    if (typDiv) typDiv.remove();
     _adicionarMensagemIA('assistant', resposta);
-    _iaState.messages.push({ role:'assistant', content:resposta });
+    _IA.messages.push({ role: 'assistant', content: resposta });
   } catch(e) {
-    _removerTypingIA();
-    _adicionarMensagemIA('assistant', '❌ Erro: ' + e.message + '\n\nVerifique sua API Key nas configurações acima.');
+    if (typDiv) typDiv.remove();
+    _adicionarMensagemIA('assistant', '❌ Erro: ' + e.message);
+    // Se erro de API Key, mostrar barra de config
+    if (e.message.indexOf('API Key') !== -1) {
+      var cb2 = document.getElementById('ia-config-bar');
+      if (cb2) cb2.style.display = 'block';
+    }
   } finally {
-    _iaState.loading = false;
-    if (sb) sb.disabled = false;
-    if (si) si.textContent = '➤';
+    _IA.loading = false;
+    if (sendBtn)  sendBtn.disabled = false;
+    if (sendIcon) sendIcon.textContent = '➤';
   }
 }
 
-// Chamada real à API OpenAI — funcional
-async function perguntarIA(messages, systemPrompt) {
-  var apiKey = getApiKeyIA();
-  if (!apiKey) throw new Error('API Key não configurada');
-  var payload = {
-    model: 'gpt-4o-mini',
-    max_tokens: 800,
-    temperature: 0.7,
-    messages: [
-      { role:'system', content: systemPrompt || 'Você é um assistente especializado em comunicação visual e precificação para gráficas.' },
-    ].concat(messages.slice(-12)),
-  };
-  var resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
-    body: JSON.stringify(payload),
-  });
-  if (!resp.ok) {
-    var errData = await resp.json().catch(function(){ return {}; });
-    var errMsg = (errData.error && errData.error.message) || ('HTTP ' + resp.status);
-    if (resp.status === 401) throw new Error('API Key inválida ou expirada');
-    if (resp.status === 429) throw new Error('Limite de requisições atingido. Aguarde.');
-    if (resp.status === 402) throw new Error('Créditos OpenAI esgotados. Recarregue em platform.openai.com');
-    throw new Error(errMsg);
-  }
-  var data = await resp.json();
-  return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'Sem resposta.';
-}
-
-// Analisar orçamento atual com IA
+// Análise automática do orçamento com IA
 async function analisarOrcamentoComIA() {
   if (!window._lastCalc) { toast('Calcule um orçamento primeiro!', 'warn'); return; }
-  var c   = window._lastCalc;
-  var txt = 'Analise este orçamento de comunicação visual:\n' +
-    '- Produto: ' + (c.produto||'N/A') + ' | Material: ' + (c.material||'N/A') + '\n' +
-    '- Dimensões: ' + c.largura + 'm × ' + c.altura + 'm (' + c.qtd + ' unidade' + (c.qtd>1?'s':'') + ')\n' +
-    '- Custo total: R$ ' + fmtBR(c.custoTotal) + '\n' +
-    '- Preço sugerido: R$ ' + fmtBR(c.precoFinal) + '\n' +
-    '- Margem: ' + (c.margemReal||0).toFixed(1) + '% | Lucro: R$ ' + fmtBR(c.lucro) + '\n\n' +
-    'O preço está adequado para o mercado brasileiro de comunicação visual? Há otimizações possíveis? Analise a margem.';
+  var c = window._lastCalc;
+  var pergunta = 'Analise este orçamento:\n'
+    + 'Produto: ' + (c.produto || 'N/A') + ' | Material: ' + (c.material || 'N/A') + '\n'
+    + 'Dimensões: ' + c.largura + 'm × ' + c.altura + 'm ('
+    + c.qtd + ' peça' + (c.qtd > 1 ? 's' : '') + ') = ' + (c.area || 0).toFixed(2) + ' m²\n'
+    + 'Custo total: R$ ' + fmtBR(c.custoTotal) + '\n'
+    + 'Preço: R$ ' + fmtBR(c.precoFinal) + '\n'
+    + 'Lucro: R$ ' + fmtBR(c.lucro) + ' | Margem: ' + (c.margemReal || 0).toFixed(1) + '%\n\n'
+    + 'O preço está adequado para o mercado? A margem é saudável? Há como otimizar?';
+
   abrirChatIA();
   setTimeout(function() {
     var inp = document.getElementById('ia-input');
-    if (inp) { inp.value = txt; autoResizeIA(inp); }
+    if (inp) { inp.value = pergunta; autoResizeIA(inp); }
     enviarMensagemIA();
   }, 300);
 }
 
+// Salvar API Key da IA via modal do chat
+function salvarApiKeyIA() {
+  var key = ((document.getElementById('ia-apikey-input') || {}).value || '').trim();
+  if (!key.startsWith('sk-')) { toast('Chave inválida. Deve começar com sk-', 'error'); return; }
+  localStorage.setItem('openai_api_key', key);
+  var cb = document.getElementById('ia-config-bar');
+  if (cb) cb.style.display = 'none';
+  var sl = document.getElementById('ia-status-lbl');
+  if (sl) sl.textContent = '✅ Conectado via OpenAI (' + getIAModelo() + ')';
+  toast('API Key salva! Você pode usar o assistente.', 'success');
+}
+
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 10: Checklist por tipo de produto
+// CONFIGURAÇÕES DA IA E MOTOR — funções da aba cfg-ia
 // ─────────────────────────────────────────────────────────────────────
-var CHECKLIST_POR_PRODUTO_MAPA = {
-  'Banner':       ['Preparar arquivo','Imprimir','Acabamento (ilhós/bastão)','Controle qualidade','Embalar','Entregar'],
-  'Adesivo':      ['Preparar arquivo','Imprimir','Laminação','Recorte','Controle qualidade','Entregar'],
-  'ACM':          ['Estrutura metalon','Corte ACM','Impressão/pintura','Montagem painel','Instalação','Vistoria'],
-  'Fachada':      ['Estrutura metalon','Corte ACM','Impressão/pintura','Montagem painel','Instalação','Vistoria'],
-  'Letra Caixa':  ['Corte CNC','Solda estrutura','Cabear LED','Pintura/acabamento','Instalação','Teste','Vistoria'],
-  'Totem':        ['Estrutura base','Painéis laterais','Impressão interna','Montagem','Iluminação','Instalação','Vistoria'],
-  'Placa':        ['Impressão/gravação','Recorte','Acabamento','Furação','Controle qualidade','Entregar'],
-  'default':      ['Preparar material','Produção','Acabamento','Controle qualidade','Entregar'],
+function salvarCfgIA() {
+  var key = ((document.getElementById('cfg_openai_key') || {}).value || '').trim();
+  if (!key) { toast('Informe a API Key', 'warn'); return; }
+  if (!key.startsWith('sk-')) { toast('API Key inválida. Deve começar com sk-', 'error'); return; }
+  localStorage.setItem('openai_api_key', key);
+  var sl = document.getElementById('ia-status-lbl');
+  if (sl) sl.textContent = '✅ Conectado via OpenAI (' + getIAModelo() + ')';
+  toast('API Key salva com sucesso!', 'success');
+}
+
+function toggleCfgKeyVisibility() {
+  var inp = document.getElementById('cfg_openai_key');
+  var eye = document.getElementById('cfg_key_eye');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (eye) eye.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+async function testarCfgIA() {
+  var btn = document.getElementById('btn-testar-ia');
+  var status = document.getElementById('ia-test-status');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = '⏳ Testando...';
+  try {
+    var resp = await perguntarIA([{ role: 'user', content: 'Responda apenas: OK' }], 'Você é um assistente de teste. Responda apenas "OK".');
+    if (status) status.innerHTML = '<span style="color:var(--green)">✅ Conectado! Resposta: ' + resp.slice(0, 30) + '</span>';
+    toast('IA conectada com sucesso!', 'success');
+  } catch(e) {
+    if (status) status.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+    toast('Erro: ' + e.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function salvarCfgIAParams() {
+  var modelo = ((document.getElementById('cfg_ia_modelo') || {}).value || 'gpt-4o-mini');
+  var tokens = parseInt(((document.getElementById('cfg_ia_tokens') || {}).value || '800')) || 800;
+  localStorage.setItem('openai_modelo', modelo);
+  localStorage.setItem('openai_tokens', String(tokens));
+  toast('Parâmetros da IA salvos!', 'success');
+}
+
+function salvarCfgMotor() {
+  var cfg = {
+    velMaquina:    ((document.getElementById('cfg_vel_maquina')  || {}).value || '25'),
+    custoHoraMaq:  ((document.getElementById('cfg_hora_maq')     || {}).value || '45'),
+    custoHoraFunc: ((document.getElementById('cfg_hora_func')    || {}).value || '18'),
+    percDesperdicio:((document.getElementById('cfg_desperdicio') || {}).value || '10'),
+    custoPorMetro: ((document.getElementById('cfg_custo_metalon')|| {}).value || '8.50'),
+    custoKm:       ((document.getElementById('cfg_custo_km')     || {}).value || '2.50'),
+  };
+  localStorage.setItem('vc_motor_config', JSON.stringify(cfg));
+  toast('Defaults do motor salvos!', 'success');
+  _aplicarCfgMotor(cfg);
+}
+
+function _aplicarCfgMotor(cfg) {
+  var map = {
+    velMaquina:     'prod_vel_maquina',
+    custoHoraMaq:   'prod_custo_hora_maq',
+    custoHoraFunc:  'prod_custo_hora_func',
+    percDesperdicio:'prod_desperdicio',
+    custoPorMetro:  'met_custo_metro',
+    custoKm:        'custo_por_km',
+  };
+  Object.keys(map).forEach(function(k) {
+    var el = document.getElementById(map[k]);
+    if (el && cfg[k]) el.value = cfg[k];
+  });
+}
+
+function carregarCfgMotorNoForm() {
+  var saved = localStorage.getItem('vc_motor_config');
+  if (!saved) { toast('Nenhuma configuração salva', 'info'); return; }
+  try {
+    var cfg = JSON.parse(saved);
+    _aplicarCfgMotor(cfg);
+    // Preencher também nos campos da aba cfg-ia
+    var map2 = {
+      velMaquina:    'cfg_vel_maquina',
+      custoHoraMaq:  'cfg_hora_maq',
+      custoHoraFunc: 'cfg_hora_func',
+      percDesperdicio:'cfg_desperdicio',
+      custoPorMetro: 'cfg_custo_metalon',
+      custoKm:       'cfg_custo_km',
+    };
+    Object.keys(map2).forEach(function(k) {
+      var el = document.getElementById(map2[k]);
+      if (el && cfg[k]) el.value = cfg[k];
+    });
+    toast('Configurações carregadas!', 'success');
+  } catch(e) { toast('Erro ao carregar: ' + e.message, 'error'); }
+}
+
+function salvarCfgEscala() {
+  var tabela = [];
+  for (var i = 1; i <= 3; i++) {
+    var min   = parseInt(((document.getElementById('esc_min_'   + i) || {}).value || '0'));
+    var perc  = parseInt(((document.getElementById('esc_perc_'  + i) || {}).value || '0'));
+    var label = ((document.getElementById('esc_label_' + i) || {}).value || '');
+    if (min > 0 && perc > 0) tabela.push({ min: min, perc: perc, label: label });
+  }
+  // Adicionar faixa base
+  tabela.sort(function(a, b) { return b.min - a.min; });
+  tabela.push({ min: 1, perc: 0, label: '' });
+  window._escalaConfig = tabela;
+  localStorage.setItem('vc_escala_config', JSON.stringify(tabela));
+  toast('Tabela de escala salva! Válida para próximos cálculos.', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Checklist automático por tipo de produto
+// ─────────────────────────────────────────────────────────────────────
+var _CHECKLIST_MAP = {
+  'banner':     ['Preparar arquivo para impressão', 'Imprimir', 'Acabamento (ilhós / bastão / tecido)', 'Controle de qualidade', 'Embalar', 'Entregar'],
+  'adesivo':    ['Preparar arquivo', 'Imprimir', 'Laminação', 'Recorte', 'Controle de qualidade', 'Embalar e entregar'],
+  'acm':        ['Montar estrutura metalon', 'Cortar ACM', 'Impressão / pintura', 'Montar painel', 'Revisar acabamento', 'Instalar', 'Vistoria final'],
+  'fachada':    ['Montar estrutura metalon', 'Cortar ACM', 'Impressão / pintura', 'Montar painel', 'Revisar acabamento', 'Instalar', 'Vistoria final'],
+  'letra caixa':['Corte CNC / router', 'Solda da estrutura', 'Cabeamento LED (se iluminado)', 'Pintura / acabamento', 'Instalar', 'Testar iluminação', 'Vistoria'],
+  'totem':      ['Estrutura base', 'Painéis laterais', 'Impressão interna', 'Montagem geral', 'Iluminação', 'Instalar', 'Vistoria'],
+  'placa':      ['Impressão / gravação', 'Recorte', 'Acabamento', 'Furação (se aplicável)', 'Controle de qualidade', 'Entregar'],
 };
 
 function _gerarChecklistPadrao(pedidoId) {
-  var pedido = (state.pedidos || []).find(function(p){ return String(p._db_id||p.id) === String(pedidoId); });
-  var nomeProd = pedido ? (pedido.produto || '') : '';
-  var etapas = CHECKLIST_POR_PRODUTO_MAPA['default'];
-  var keys = Object.keys(CHECKLIST_POR_PRODUTO_MAPA);
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (key !== 'default' && nomeProd.toLowerCase().indexOf(key.toLowerCase()) >= 0) {
-      etapas = CHECKLIST_POR_PRODUTO_MAPA[key]; break;
-    }
-  }
+  var pedido = (state.pedidos || []).find(function(p) { return String(p._db_id || p.id) === String(pedidoId); });
+  var nomeProd = ((pedido && pedido.produto) || '').toLowerCase();
+  var etapas = null;
+
+  Object.keys(_CHECKLIST_MAP).forEach(function(key) {
+    if (!etapas && nomeProd.indexOf(key) >= 0) etapas = _CHECKLIST_MAP[key];
+  });
+  if (!etapas) etapas = ['Preparar material', 'Produção', 'Acabamento', 'Controle de qualidade', 'Entregar'];
+
   return etapas.map(function(etapa, idx) {
     return { id: 'local-' + pedidoId + '-' + idx, pedido_id: pedidoId,
-      etapa: etapa, ordem: idx + 1, concluido: false, empresa_id: currentEmpresaId };
+      etapa: etapa, ordem: idx + 1, concluido: false, empresa_id: typeof currentEmpresaId !== 'undefined' ? currentEmpresaId : null };
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MÓDULO 11: Auto-update de UI ao mudar dimensões
+// Inicialização: carregar configs, bindar eventos
 // ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+  // Carregar config do motor salvo
+  var savedCfg = localStorage.getItem('vc_motor_config');
+  if (savedCfg) {
+    try { _aplicarCfgMotor(JSON.parse(savedCfg)); } catch(e) {}
+  }
+
+  // Carregar escala salva
+  var savedEscala = localStorage.getItem('vc_escala_config');
+  if (savedEscala) {
+    try { window._escalaConfig = JSON.parse(savedEscala); } catch(e) {}
+  }
+
+  // Preencher campos da aba cfg-ia
+  var key = getApiKeyIA();
+  var cfgKeyEl = document.getElementById('cfg_openai_key');
+  if (cfgKeyEl && key) cfgKeyEl.value = key;
+
+  var modeloEl = document.getElementById('cfg_ia_modelo');
+  if (modeloEl) modeloEl.value = getIAModelo();
+
+  var tokensEl = document.getElementById('cfg_ia_tokens');
+  if (tokensEl) tokensEl.value = getIATokens();
+
+  // Bindar auto-update de UI
   ['orc_largura','orc_altura','orc_qtd'].forEach(function(id) {
     var el = document.getElementById(id); if (!el) return;
     el.addEventListener('input', function() {
-      if (document.getElementById('tog_metalon') && document.getElementById('tog_metalon').checked) _atualizarUIMetalon();
+      var togM = document.getElementById('tog_metalon');
+      if (togM && togM.checked) _atualizarUIMetalon();
       _atualizarUIProducao();
       _getAjustesPrecoUI();
     });
@@ -10692,8 +11529,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById(id); if (!el) return;
     el.addEventListener('change', _getAjustesPrecoUI);
   });
-});
 
+  console.log('[VisualCalc v7.0] Motor de cálculo inicializado. calculo.js:', typeof calcularCustoTotal === 'function' ? '✓' : '✗');
+});
 
 
 
