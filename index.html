@@ -1946,6 +1946,27 @@ textarea{resize:vertical;}
 /* Visualização da bobina SVG */
 #sim-visual-bobina svg{max-width:100%;height:auto;}
 
+/* ── CALCULADOR DE PRODUTOS COMPLEXOS ── */
+.pi-pane { animation: pgIn .2s ease; }
+.pi-pane-title {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800; font-size: 15px;
+  margin-bottom: 14px; padding: 10px 14px;
+  background: var(--ink3); border-radius: var(--r);
+  border-left: 3px solid var(--gold);
+}
+.pi-sub-btn {
+  padding: 6px 12px; background: var(--ink3);
+  border: 1px solid var(--line); border-radius: var(--r);
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all .15s;
+}
+.pi-sub-btn:hover { border-color: var(--gold); color: var(--text); }
+.pi-sub-btn.active {
+  background: rgba(232,184,75,.12);
+  border-color: rgba(232,184,75,.3); color: var(--gold);
+}
+
 </style>
 </head>
 <body>
@@ -3361,93 +3382,425 @@ textarea{resize:vertical;}
   </div>
 </div>
 
-<!-- MODAL: Adicionar item ao projeto -->
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL CALCULADOR DE PRODUTOS COMPLEXOS v2.0
+     ACM · Letra Caixa · Totem · Impressão · Arte · Instalação
+═══════════════════════════════════════════════════════════ -->
 <div id="modal-proj-item" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalProjItem()">
-  <div class="modal-box" style="max-width:580px">
+  <div class="modal-box" style="max-width:700px;max-height:90vh;overflow-y:auto">
     <button class="modal-close" onclick="fecharModalProjItem()">✕</button>
-    <div class="modal-title" id="proj-item-titulo">＋ Adicionar Item</div>
-    <div class="modal-sub">Defina o produto, dimensões e preço</div>
+    <div class="modal-title" id="proj-item-titulo">＋ Adicionar Item ao Projeto</div>
+    <div class="modal-sub">Selecione o tipo de produto para ver os campos de cálculo corretos</div>
     <input type="hidden" id="proj-item-idx">
 
-    <!-- Tipo do item -->
-    <div style="display:flex;gap:8px;margin-bottom:16px" id="proj-tipo-tabs">
-      <button class="proj-tipo-btn active" onclick="projSetTipo('impressao',this)">🖨️ Impressão (m²)</button>
-      <button class="proj-tipo-btn" onclick="projSetTipo('unitario',this)">📦 Item Unitário</button>
-      <button class="proj-tipo-btn" onclick="projSetTipo('arte',this)">🎨 Arte / Projeto</button>
-      <button class="proj-tipo-btn" onclick="projSetTipo('instalacao',this)">🔧 Instalação</button>
-      <button class="proj-tipo-btn" onclick="projSetTipo('servico',this)">⚙️ Serviço</button>
+    <!-- SELETOR DE TIPO -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:16px 0" id="proj-tipo-tabs">
+      <button class="proj-tipo-btn active" onclick="projSetTipo('impressao',this)">🖨️<br><small>Impressão m²</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('acm',this)">🏗️<br><small>Fachada ACM</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('letra_caixa',this)">🔡<br><small>Letra Caixa</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('totem',this)">🗼<br><small>Totem/Display</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('letreiro',this)">💡<br><small>Letreiro LED</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('wrap',this)">🚗<br><small>Wrap Veicular</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('instalacao',this)">🔧<br><small>Instalação</small></button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('arte',this)">🎨<br><small>Arte/Projeto</small></button>
     </div>
 
-    <div class="wz-grid-2">
-      <div class="form-group" style="grid-column:span 2;margin:0">
-        <label>Descrição do Item <span class="wz-req-mark">*</span></label>
-        <input type="text" id="pi-descricao" class="wz-input" placeholder="Ex: Banner Lona Frontlit, Arte logotipo, Instalação Fachada...">
+    <!-- Descrição (comum a todos) -->
+    <div class="form-group">
+      <label>Descrição do Item <span class="wz-req-mark">*</span></label>
+      <input type="text" id="pi-descricao" class="wz-input" placeholder="Descreva o item do projeto...">
+    </div>
+
+    <!-- ══ IMPRESSÃO m² ══ -->
+    <div id="pi-pane-impressao" class="pi-pane">
+      <div class="pi-pane-title">🖨️ Impressão Digital — Cálculo por m²</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0"><label>Largura (m)</label><input type="number" id="pi-largura" class="wz-input" placeholder="0.00" step="0.01" min="0" oninput="piCalcImpressao()"></div>
+        <div class="form-group" style="margin:0"><label>Altura (m)</label><input type="number" id="pi-altura" class="wz-input" placeholder="0.00" step="0.01" min="0" oninput="piCalcImpressao()"></div>
+        <div class="form-group" style="margin:0"><label>Quantidade</label><input type="number" id="pi-qtd" class="wz-input" value="1" min="1" oninput="piCalcImpressao()"></div>
+        <div class="form-group" style="margin:0">
+          <label>Material</label>
+          <select id="pi-material" class="wz-input" onchange="piCalcImpressao()">
+            <option value="">— Selecione —</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Markup (%)</label><input type="number" id="pi-markup" class="wz-input" placeholder="150" step="1" oninput="piCalcImpressao()"></div>
+        <div class="form-group" style="margin:0"><label>Custo Impressão (R$/m²)</label><input type="number" id="pi-custo-impressao" class="wz-input" placeholder="8.00" step="0.01" value="8" oninput="piCalcImpressao()"></div>
+      </div>
+    </div>
+
+    <!-- ══ FACHADA ACM ══ -->
+    <div id="pi-pane-acm" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">🏗️ Fachada ACM — Calculador Completo</div>
+
+      <!-- Subtipo ACM -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="pi-sub-btn active" onclick="acmSetSubtipo('plana',this)">📄 Plana</button>
+        <button class="pi-sub-btn" onclick="acmSetSubtipo('bandeja',this)">📦 Com Bandeja</button>
+        <button class="pi-sub-btn" onclick="acmSetSubtipo('volumetrica',this)">🔲 Volumétrica 3D</button>
+        <button class="pi-sub-btn" onclick="acmSetSubtipo('led',this)">💡 Com LED</button>
+      </div>
+      <input type="hidden" id="acm-subtipo" value="plana">
+
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0"><label>Largura total (m)</label><input type="number" id="acm-larg" class="wz-input" placeholder="4.00" step="0.01" min="0" oninput="piCalcACM()"></div>
+        <div class="form-group" style="margin:0"><label>Altura total (m)</label><input type="number" id="acm-alt" class="wz-input" placeholder="1.20" step="0.01" min="0" oninput="piCalcACM()"></div>
+        <div class="form-group" style="margin:0"><label>Custo ACM (R$/m²)</label><input type="number" id="acm-custo-m2" class="wz-input" placeholder="85.00" step="0.01" value="85" oninput="piCalcACM()"></div>
+        <div class="form-group" style="margin:0"><label>Espessura/Tipo</label>
+          <select id="acm-espessura" class="wz-input" onchange="piCalcACM()">
+            <option value="1.0">3mm (econômico)</option>
+            <option value="1.2" selected>4mm (padrão)</option>
+            <option value="1.5">6mm (premium)</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Campos de impressão (m²) -->
-      <div id="pi-campos-impressao">
+      <!-- Bandeja -->
+      <div id="acm-campos-bandeja" style="display:none;margin-top:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">📦 Configuração da Bandeja</div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0"><label>Profundidade da bandeja (cm)</label><input type="number" id="acm-bandeja-prof" class="wz-input" placeholder="8" step="0.5" value="8" oninput="piCalcACM()">
+            <div class="wz-field-hint">Dobra lateral — quanto "sai" da parede</div>
+          </div>
+          <div class="form-group" style="margin:0"><label>Fator de chapa extra</label>
+            <select id="acm-bandeja-fator" class="wz-input" onchange="piCalcACM()">
+              <option value="1.15">+15% (bandeja simples)</option>
+              <option value="1.25" selected>+25% (bandeja fechada)</option>
+              <option value="1.40">+40% (caixa completa)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Volumétrica -->
+      <div id="acm-campos-volumetrica" style="display:none;margin-top:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🔲 Configuração Volumétrica</div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0"><label>Profundidade (m)</label><input type="number" id="acm-vol-prof" class="wz-input" placeholder="0.15" step="0.01" value="0.15" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Nº de faces</label>
+            <select id="acm-vol-faces" class="wz-input" onchange="piCalcACM()">
+              <option value="3">3 faces (frente + 2 laterais)</option>
+              <option value="4" selected>4 faces (caixa aberta)</option>
+              <option value="5">5 faces (caixa fechada)</option>
+              <option value="6">6 faces (cubo fechado)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metalon (sempre presente) -->
+      <div style="margin-top:12px;padding:12px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">⚙️ Estrutura Metálica (Metalon)</div>
         <div class="wz-grid-2">
           <div class="form-group" style="margin:0">
-            <label>Largura (m)</label>
-            <input type="number" id="pi-largura" class="wz-input" placeholder="0.00" step="0.01" min="0" oninput="piCalcArea()">
+            <label>Tipo de metalon</label>
+            <select id="acm-metalon-tipo" class="wz-input" onchange="piCalcACM()">
+              <option value="0">Sem metalon</option>
+              <option value="25">Metalon 20×20 — R$ 25/m</option>
+              <option value="35" selected>Metalon 30×30 — R$ 35/m</option>
+              <option value="48">Metalon 40×40 — R$ 48/m</option>
+              <option value="65">Metalon 50×50 — R$ 65/m</option>
+            </select>
           </div>
           <div class="form-group" style="margin:0">
-            <label>Altura (m)</label>
-            <input type="number" id="pi-altura" class="wz-input" placeholder="0.00" step="0.01" min="0" oninput="piCalcArea()">
+            <label>Espaçamento montantes (cm)</label>
+            <input type="number" id="acm-metalon-esp" class="wz-input" placeholder="60" value="60" step="5" oninput="piCalcACM()">
+            <div class="wz-field-hint">Ex: 60cm entre cada montante</div>
           </div>
         </div>
-        <div style="margin-top:8px;font-size:12px;color:var(--text3)">
-          Área: <strong id="pi-area-calc" style="color:var(--cyan)">0,00 m²</strong>
+      </div>
+
+      <!-- LED -->
+      <div id="acm-campos-led" style="display:none;margin-top:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">💡 Iluminação LED</div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0"><label>Custo LED (R$/m linear)</label><input type="number" id="acm-led-custo" class="wz-input" placeholder="35.00" step="0.01" value="35" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Metros de LED estimados</label><input type="number" id="acm-led-metros" class="wz-input" placeholder="0" step="0.5" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Driver/Fonte (R$)</label><input type="number" id="acm-led-driver" class="wz-input" placeholder="150.00" step="0.01" value="150" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Perfil alumínio (R$/m)</label><input type="number" id="acm-led-perfil" class="wz-input" placeholder="18.00" step="0.01" value="18" oninput="piCalcACM()"></div>
         </div>
       </div>
 
-      <div class="form-group" style="margin:0">
-        <label>Quantidade</label>
-        <input type="number" id="pi-qtd" class="wz-input" value="1" min="1" oninput="piCalcTotal()">
-      </div>
-
-      <div class="form-group" style="margin:0">
-        <label>Material</label>
-        <select id="pi-material" class="wz-input" onchange="piAtualizarCusto()">
-          <option value="">— Selecione —</option>
-        </select>
-      </div>
-
-      <div class="form-group" style="margin:0">
-        <label>Custo Unitário (R$)</label>
-        <input type="number" id="pi-custo-unit" class="wz-input" placeholder="0,00" step="0.01" min="0" oninput="piCalcTotal()">
-      </div>
-
-      <div class="form-group" style="margin:0">
-        <label>Markup (%)</label>
-        <input type="number" id="pi-markup" class="wz-input" placeholder="150" step="1" min="0" oninput="piCalcTotal()">
-      </div>
-
-      <div class="form-group" style="margin:0">
-        <label>Valor Unitário (R$) <span style="color:var(--gold)">*</span></label>
-        <input type="number" id="pi-valor-unit" class="wz-input" placeholder="0,00" step="0.01" min="0" oninput="piCalcTotal()">
-      </div>
-
-      <div class="form-group" style="margin:0">
-        <label>Valor Total</label>
-        <div style="padding:11px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);font-family:DM Mono,monospace;font-weight:700;color:var(--gold)" id="pi-valor-total">R$ 0,00</div>
+      <!-- Mão de obra e acabamentos -->
+      <div style="margin-top:12px;padding:12px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)">
+        <div style="font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👷 Mão de Obra e Acabamentos</div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0"><label>Horas corte/dobra/montagem</label><input type="number" id="acm-mo-horas" class="wz-input" placeholder="4" step="0.5" value="4" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Valor hora (R$/h)</label><input type="number" id="acm-mo-valor-h" class="wz-input" placeholder="45.00" step="0.01" value="45" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Rebites/parafusos/consumíveis (R$)</label><input type="number" id="acm-consumiveis" class="wz-input" placeholder="30.00" step="0.01" value="30" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Adesivo/impressão na fachada (R$)</label><input type="number" id="acm-adesivo" class="wz-input" placeholder="0.00" step="0.01" value="0" oninput="piCalcACM()"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Arte / Projeto -->
-    <div id="pi-campos-arte" style="display:none;margin-top:12px">
-      <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:var(--r);padding:12px;font-size:13px;color:var(--text2)">
-        💡 <strong>Cobrança de Arte/Projeto:</strong> Informe o valor fixo pelo serviço de criação. Não é calculado por m².
+    <!-- ══ LETRA CAIXA ══ -->
+    <div id="pi-pane-letra_caixa" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">🔡 Letra Caixa — Cálculo por Unidade</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0"><label>Altura da letra (cm)</label><input type="number" id="lc-altura" class="wz-input" placeholder="30" step="1" oninput="piCalcLetraCaixa()"></div>
+        <div class="form-group" style="margin:0"><label>Nº de caracteres</label><input type="number" id="lc-chars" class="wz-input" placeholder="10" step="1" value="1" oninput="piCalcLetraCaixa()"></div>
+        <div class="form-group" style="margin:0">
+          <label>Material da face</label>
+          <select id="lc-material" class="wz-input" onchange="piCalcLetraCaixa()">
+            <option value="acrilico">Acrílico colorido</option>
+            <option value="acrilico_led">Acrílico com LED</option>
+            <option value="acm">ACM</option>
+            <option value="pvc">PVC Expandido</option>
+            <option value="inox">Inox espelhado</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Corpo/Caixa</label>
+          <select id="lc-corpo" class="wz-input" onchange="piCalcLetraCaixa()">
+            <option value="acm">ACM</option>
+            <option value="aluminio">Alumínio</option>
+            <option value="pvc">PVC</option>
+            <option value="inox">Inox</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Profundidade caixa (cm)</label><input type="number" id="lc-prof" class="wz-input" placeholder="10" step="0.5" value="10" oninput="piCalcLetraCaixa()"></div>
+        <div class="form-group" style="margin:0"><label>Custo estimado por char (R$)</label><input type="number" id="lc-custo-char" class="wz-input" placeholder="120.00" step="1" value="120" oninput="piCalcLetraCaixa()"></div>
+        <div class="form-group" style="margin:0"><label>Tem LED interno?</label>
+          <select id="lc-led" class="wz-input" onchange="piCalcLetraCaixa()">
+            <option value="0">Não</option>
+            <option value="1">Sim — adicional R$/char</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Adicional LED por char (R$)</label><input type="number" id="lc-led-adicional" class="wz-input" placeholder="80.00" step="1" value="80" oninput="piCalcLetraCaixa()"></div>
       </div>
     </div>
 
-    <div class="form-group" style="margin-top:14px;margin-bottom:0">
-      <label>Observações do item</label>
-      <input type="text" id="pi-obs" class="wz-input" placeholder="Detalhes técnicos, especificações...">
+    <!-- ══ TOTEM ══ -->
+    <div id="pi-pane-totem" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">🗼 Totem / Display — Cálculo por Estrutura</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0"><label>Largura (m)</label><input type="number" id="tot-larg" class="wz-input" placeholder="0.80" step="0.01" oninput="piCalcTotem()"></div>
+        <div class="form-group" style="margin:0"><label>Altura total (m)</label><input type="number" id="tot-alt" class="wz-input" placeholder="1.80" step="0.01" oninput="piCalcTotem()"></div>
+        <div class="form-group" style="margin:0"><label>Profundidade (m)</label><input type="number" id="tot-prof" class="wz-input" placeholder="0.20" step="0.01" value="0.20" oninput="piCalcTotem()"></div>
+        <div class="form-group" style="margin:0"><label>Nº de faces visíveis</label>
+          <select id="tot-faces" class="wz-input" onchange="piCalcTotem()">
+            <option value="1">1 face</option>
+            <option value="2" selected>2 faces</option>
+            <option value="3">3 faces</option>
+            <option value="4">4 faces</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Estrutura interna</label>
+          <select id="tot-estrutura" class="wz-input" onchange="piCalcTotem()">
+            <option value="metalon">Metalon</option>
+            <option value="aluminio">Perfil alumínio</option>
+            <option value="madeira">Madeira MDF</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Revestimento externo</label>
+          <select id="tot-revestimento" class="wz-input" onchange="piCalcTotem()">
+            <option value="acm">ACM</option>
+            <option value="adesivo">Adesivo impresso</option>
+            <option value="lona">Lona impressa</option>
+            <option value="pvc">PVC rígido</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Custo m² revestimento (R$)</label><input type="number" id="tot-custo-rev" class="wz-input" placeholder="85.00" step="0.01" value="85" oninput="piCalcTotem()"></div>
+        <div class="form-group" style="margin:0"><label>Tem iluminação LED?</label>
+          <select id="tot-led" class="wz-input" onchange="piCalcTotem()">
+            <option value="0">Não</option>
+            <option value="300">Sim — adicional R$ 300</option>
+            <option value="500">Sim (dupla face) — R$ 500</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Mão de obra montagem (R$)</label><input type="number" id="tot-mo" class="wz-input" placeholder="250.00" step="0.01" value="250" oninput="piCalcTotem()"></div>
+        <div class="form-group" style="margin:0"><label>Base/suporte (R$)</label><input type="number" id="tot-base" class="wz-input" placeholder="80.00" step="0.01" value="80" oninput="piCalcTotem()"></div>
+      </div>
     </div>
 
-    <div style="display:flex;gap:8px;margin-top:18px">
-      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="projConfirmarItem()">✅ Confirmar Item</button>
+    <!-- ══ LETREIRO LED ══ -->
+    <div id="pi-pane-letreiro" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">💡 Letreiro Iluminado — Cálculo por m linear/m²</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0"><label>Largura (m)</label><input type="number" id="let-larg" class="wz-input" placeholder="2.00" step="0.01" oninput="piCalcLetreiro()"></div>
+        <div class="form-group" style="margin:0"><label>Altura (m)</label><input type="number" id="let-alt" class="wz-input" placeholder="0.40" step="0.01" oninput="piCalcLetreiro()"></div>
+        <div class="form-group" style="margin:0">
+          <label>Tipo de letreiro</label>
+          <select id="let-tipo" class="wz-input" onchange="piCalcLetreiro()">
+            <option value="neon_flex">Neon Flex (LED)</option>
+            <option value="fita_led">Fita LED em perfil</option>
+            <option value="caixa_luz">Caixa de luz (backlit)</option>
+            <option value="placa_led">Placa LED frontal</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Custo LED (R$/m linear)</label><input type="number" id="let-custo-led" class="wz-input" placeholder="45.00" step="0.01" value="45" oninput="piCalcLetreiro()"></div>
+        <div class="form-group" style="margin:0"><label>Carcaça/gabinete (R$/m²)</label><input type="number" id="let-carcaca" class="wz-input" placeholder="120.00" step="0.01" value="120" oninput="piCalcLetreiro()"></div>
+        <div class="form-group" style="margin:0"><label>Driver/fonte (R$)</label><input type="number" id="let-driver" class="wz-input" placeholder="150.00" step="0.01" value="150" oninput="piCalcLetreiro()"></div>
+        <div class="form-group" style="margin:0"><label>Mão de obra elétrica (R$)</label><input type="number" id="let-mo-eletrica" class="wz-input" placeholder="120.00" step="0.01" value="120" oninput="piCalcLetreiro()"></div>
+        <div class="form-group" style="margin:0"><label>Fio/calha (R$)</label><input type="number" id="let-fio" class="wz-input" placeholder="40.00" step="0.01" value="40" oninput="piCalcLetreiro()"></div>
+      </div>
+    </div>
+
+    <!-- ══ WRAP VEICULAR ══ -->
+    <div id="pi-pane-wrap" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">🚗 Wrap Veicular — Cálculo por m² + tipo de veículo</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0">
+          <label>Tipo de veículo</label>
+          <select id="wr-veiculo" class="wz-input" onchange="piCalcWrap()">
+            <option value="moto:3">Moto (3 m²)</option>
+            <option value="passeio:18">Carro passeio (18 m²)</option>
+            <option value="suv:22">SUV / Crossover (22 m²)</option>
+            <option value="van:35">Van / Kombi (35 m²)</option>
+            <option value="caminhao:55">Caminhão médio (55 m²)</option>
+            <option value="caminhao_grande:80">Caminhão grande (80 m²)</option>
+            <option value="onibus:95">Ônibus (95 m²)</option>
+            <option value="custom:0">Personalizado (informar m²)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Área personalizada (m²)</label><input type="number" id="wr-area-custom" class="wz-input" placeholder="0" step="0.5" oninput="piCalcWrap()">
+          <div class="wz-field-hint">Só preencher se "Personalizado"</div>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Tipo de material</label>
+          <select id="wr-material" class="wz-input" onchange="piCalcWrap()">
+            <option value="80">Adesivo básico (R$ 80/m²)</option>
+            <option value="120" selected>Adesivo cast padrão (R$ 120/m²)</option>
+            <option value="180">Adesivo cast premium (R$ 180/m²)</option>
+            <option value="250">Wrap full color premium (R$ 250/m²)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Cobertura do veículo</label>
+          <select id="wr-cobertura" class="wz-input" onchange="piCalcWrap()">
+            <option value="0.25">Parcial (25%) — só laterais</option>
+            <option value="0.5">Meia cobertura (50%)</option>
+            <option value="0.75">¾ do veículo (75%)</option>
+            <option value="1.0" selected>Total (100%)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Custo mão de obra aplicação (R$/h)</label><input type="number" id="wr-mo-h" class="wz-input" placeholder="55.00" step="0.01" value="55" oninput="piCalcWrap()"></div>
+        <div class="form-group" style="margin:0"><label>Horas de aplicação</label><input type="number" id="wr-horas" class="wz-input" placeholder="8" step="0.5" value="8" oninput="piCalcWrap()"></div>
+        <div class="form-group" style="margin:0"><label>Laminação protetora?</label>
+          <select id="wr-laminacao" class="wz-input" onchange="piCalcWrap()">
+            <option value="0">Não</option>
+            <option value="25">Sim — adicional R$ 25/m²</option>
+            <option value="40">Sim (brilhante) — R$ 40/m²</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Arte/impressão inclusa?</label>
+          <select id="wr-arte" class="wz-input" onchange="piCalcWrap()">
+            <option value="0">Não (cliente fornece)</option>
+            <option value="300">Sim — R$ 300 (arte simples)</option>
+            <option value="600">Sim — R$ 600 (arte completa)</option>
+            <option value="1200">Sim — R$ 1.200 (projeto premium)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INSTALAÇÃO ══ -->
+    <div id="pi-pane-instalacao" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">🔧 Instalação — Cálculo por hora/tipo</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0">
+          <label>Tipo de instalação</label>
+          <select id="ins-tipo" class="wz-input" onchange="piCalcInstalacao()">
+            <option value="normal">Normal (sem altura)</option>
+            <option value="altura">Em altura (escada/andaime)</option>
+            <option value="elevador">Plataforma elevatória</option>
+            <option value="rapel">Alpinismo / Rapel</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Horas de instalação</label><input type="number" id="ins-horas" class="wz-input" placeholder="4" step="0.5" value="4" oninput="piCalcInstalacao()"></div>
+        <div class="form-group" style="margin:0"><label>Valor/hora instalador (R$)</label><input type="number" id="ins-valor-h" class="wz-input" placeholder="65.00" step="0.01" value="65" oninput="piCalcInstalacao()"></div>
+        <div class="form-group" style="margin:0"><label>Nº de instaladores</label><input type="number" id="ins-pessoas" class="wz-input" placeholder="2" step="1" value="2" oninput="piCalcInstalacao()"></div>
+        <div class="form-group" style="margin:0"><label>Aluguel andaime/plataforma (R$)</label><input type="number" id="ins-andaime" class="wz-input" placeholder="0.00" step="0.01" value="0" oninput="piCalcInstalacao()"></div>
+        <div class="form-group" style="margin:0"><label>Transporte/deslocamento (R$)</label><input type="number" id="ins-transporte" class="wz-input" placeholder="80.00" step="0.01" value="80" oninput="piCalcInstalacao()"></div>
+        <div class="form-group" style="margin:0"><label>Materiais de fixação (R$)</label><input type="number" id="ins-materiais" class="wz-input" placeholder="50.00" step="0.01" value="50" oninput="piCalcInstalacao()"></div>
+        <div class="form-group" style="margin:0"><label>Distância (km)</label><input type="number" id="ins-km" class="wz-input" placeholder="0" step="1" value="0" oninput="piCalcInstalacao()">
+          <div class="wz-field-hint">R$ 1,50/km acima de 10km</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ARTE / PROJETO ══ -->
+    <div id="pi-pane-arte" class="pi-pane" style="display:none">
+      <div class="pi-pane-title">🎨 Arte / Projeto — Cobrança por serviço criativo</div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0">
+          <label>Tipo de serviço</label>
+          <select id="art-tipo" class="wz-input" onchange="piCalcArte()">
+            <option value="logo">Logotipo</option>
+            <option value="identidade">Identidade visual</option>
+            <option value="adaptacao">Adaptação/diagramação</option>
+            <option value="mockup">Mockup / Simulação</option>
+            <option value="projeto_tecnico">Projeto técnico (ART)</option>
+            <option value="arte_fachada">Arte para fachada</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Horas de trabalho</label><input type="number" id="art-horas" class="wz-input" placeholder="4" step="0.5" value="4" oninput="piCalcArte()"></div>
+        <div class="form-group" style="margin:0"><label>Valor hora designer (R$)</label><input type="number" id="art-valor-h" class="wz-input" placeholder="80.00" step="0.01" value="80" oninput="piCalcArte()"></div>
+        <div class="form-group" style="margin:0"><label>Ou: Valor fixo (R$)</label><input type="number" id="art-valor-fixo" class="wz-input" placeholder="0.00" step="0.01" value="0" oninput="piCalcArte()">
+          <div class="wz-field-hint">Se preenchido, ignora hora × valor</div>
+        </div>
+        <div class="form-group" style="margin:0"><label>Inclui revisões?</label>
+          <select id="art-revisoes" class="wz-input" onchange="piCalcArte()">
+            <option value="0">Não</option>
+            <option value="1">Sim — 1 rodada grátis</option>
+            <option value="2">Sim — 2 rodadas grátis</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label>Urgência</label>
+          <select id="art-urgencia" class="wz-input" onchange="piCalcArte()">
+            <option value="1.0">Normal (sem adicional)</option>
+            <option value="1.3">Urgente (+30%)</option>
+            <option value="1.5">Muito urgente (+50%)</option>
+            <option value="2.0">Express 24h (+100%)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTADO DO CÁLCULO (comum a todos) -->
+    <div id="pi-resultado-box" style="margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(232,184,75,.08),rgba(46,212,122,.04));border:1px solid rgba(232,184,75,.25);border-radius:var(--r-lg)">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">Resultado do Cálculo</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3)">Custo Total</div>
+          <div style="font-family:DM Mono,monospace;font-weight:700;color:var(--red);font-size:16px" id="pi-res-custo">R$ 0,00</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3)">Markup</div>
+          <div style="font-family:DM Mono,monospace;font-weight:700;color:var(--cyan);font-size:16px" id="pi-markup">150%</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3)">VALOR SUGERIDO</div>
+          <div style="font-family:DM Mono,monospace;font-weight:700;color:var(--gold);font-size:20px" id="pi-valor-unit-display">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="wz-grid-2">
+        <div class="form-group" style="margin:0">
+          <label>Markup final (%)</label>
+          <input type="number" id="pi-markup-final" class="wz-input" placeholder="150" value="150" step="1" oninput="piAplicarMarkup()">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Valor final do item (R$) <span style="color:var(--gold)">*</span></label>
+          <input type="number" id="pi-valor-unit" class="wz-input" placeholder="0,00" step="0.01" oninput="piSincValor()">
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:6px" id="pi-res-detalhe"></div>
+    </div>
+
+    <div class="form-group" style="margin-top:12px;margin-bottom:0">
+      <label>Observações</label>
+      <input type="text" id="pi-obs" class="wz-input" placeholder="Detalhes técnicos, condições especiais...">
+    </div>
+    <!-- campos ocultos compatibilidade -->
+    <input type="hidden" id="pi-qtd" value="1">
+    <input type="hidden" id="pi-custo-unit" value="0">
+    <input type="hidden" id="pi-markup" value="150">
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="projConfirmarItem()">✅ Adicionar ao Projeto</button>
       <button class="btn btn-ghost" onclick="fecharModalProjItem()">Cancelar</button>
     </div>
   </div>
@@ -22059,14 +22412,38 @@ function projSetTipo(tipo, btn) {
   document.querySelectorAll('.proj-tipo-btn').forEach(function(b){ b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
 
-  var campos = document.getElementById('pi-campos-impressao');
-  var arte   = document.getElementById('pi-campos-arte');
-  var matRow = document.getElementById('pi-material') && document.getElementById('pi-material').closest('.form-group');
+  // Esconder todos os painéis
+  document.querySelectorAll('.pi-pane').forEach(function(p){ p.style.display = 'none'; });
 
-  if (campos) campos.style.display = tipo === 'impressao' ? 'block' : 'none';
-  if (arte)   arte.style.display   = tipo === 'arte' ? 'block' : 'none';
+  // Mostrar painel do tipo selecionado
+  var pane = document.getElementById('pi-pane-' + tipo);
+  if (pane) pane.style.display = 'block';
 
-  piCalcTotal();
+  // Limpar resultado
+  var res = document.getElementById('pi-res-custo');
+  var val = document.getElementById('pi-valor-unit-display');
+  if (res) res.textContent = 'R$ 0,00';
+  if (val) val.textContent = 'R$ 0,00';
+  var vEl = document.getElementById('pi-valor-unit');
+  if (vEl) vEl.value = '';
+}
+
+function acmSetSubtipo(subtipo, btn) {
+  document.querySelectorAll('.pi-sub-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var el = document.getElementById('acm-subtipo'); if (el) el.value = subtipo;
+
+  // Mostrar/ocultar campos específicos
+  var showBandeja = subtipo === 'bandeja';
+  var showVol     = subtipo === 'volumetrica';
+  var showLed     = subtipo === 'led' || subtipo === 'volumetrica';
+  var bd = document.getElementById('acm-campos-bandeja');
+  var vo = document.getElementById('acm-campos-volumetrica');
+  var ld = document.getElementById('acm-campos-led');
+  if (bd) bd.style.display = showBandeja ? 'block' : 'none';
+  if (vo) vo.style.display = showVol     ? 'block' : 'none';
+  if (ld) ld.style.display = showLed     ? 'block' : 'none';
+  piCalcACM();
 }
 
 function piCalcArea() {
@@ -22373,6 +22750,380 @@ function _projGerarPDFComItens(nome, itens) {
 }
 
 console.log('[VisualCalc] Simulador de Bobina + Orçamento por Projeto v1.0 ✓');
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CALCULADOR DE PRODUTOS COMPLEXOS v2.0
+   ACM · Letra Caixa · Totem · Letreiro · Wrap · Instalação · Arte
+═══════════════════════════════════════════════════════════════ */
+
+var _piCustoAtual = 0;
+
+function _fmtV(v) {
+  return typeof fmtBR === 'function' ? fmtBR(v) : (+v||0).toFixed(2).replace('.',',');
+}
+
+function _piSetResultado(custo, markupPct, detalhe) {
+  _piCustoAtual = custo;
+  var markup = markupPct || parseFloat((document.getElementById('pi-markup-final')||{}).value) || 150;
+  var valor  = custo * (1 + markup / 100);
+
+  var resC = document.getElementById('pi-res-custo');
+  var resV = document.getElementById('pi-valor-unit-display');
+  var resD = document.getElementById('pi-res-detalhe');
+  var vEl  = document.getElementById('pi-valor-unit');
+
+  if (resC) resC.textContent = 'R$ ' + _fmtV(custo);
+  if (resV) resV.textContent = 'R$ ' + _fmtV(valor);
+  if (resD && detalhe) resD.innerHTML = detalhe;
+  if (vEl  && (!vEl.value || parseFloat(vEl.value) === 0)) vEl.value = valor.toFixed(2);
+  document.getElementById('pi-custo-unit') && (document.getElementById('pi-custo-unit').value = custo.toFixed(2));
+}
+
+function piAplicarMarkup() {
+  if (_piCustoAtual > 0) {
+    var markup = parseFloat((document.getElementById('pi-markup-final')||{}).value) || 150;
+    var valor  = _piCustoAtual * (1 + markup / 100);
+    var vEl = document.getElementById('pi-valor-unit');
+    var vDi = document.getElementById('pi-valor-unit-display');
+    if (vEl) vEl.value = valor.toFixed(2);
+    if (vDi) vDi.textContent = 'R$ ' + _fmtV(valor);
+    document.getElementById('pi-markup') && (document.getElementById('pi-markup').value = markup);
+  }
+}
+
+function piSincValor() {
+  var vEl = document.getElementById('pi-valor-unit');
+  var vDi = document.getElementById('pi-valor-unit-display');
+  if (vEl && vDi) vDi.textContent = 'R$ ' + _fmtV(parseFloat(vEl.value)||0);
+}
+
+// ── IMPRESSÃO m² ───────────────────────────────────────────────
+function piCalcImpressao() {
+  var l = parseFloat((document.getElementById('pi-largura')||{}).value) || 0;
+  var a = parseFloat((document.getElementById('pi-altura') ||{}).value) || 0;
+  var q = parseInt((document.getElementById('pi-qtd')      ||{}).value) || 1;
+  var area = l * a;
+
+  // Custo do material selecionado
+  var matSel  = document.getElementById('pi-material');
+  var custoM2Mat = 0;
+  if (matSel && matSel.value) {
+    var mat = (window.state && window.state.materiais||[]).find(function(m){ return String(m._db_id||m.id)===matSel.value; });
+    if (mat) custoM2Mat = mat.custo_m2 || 0;
+  }
+  var custoImp = parseFloat((document.getElementById('pi-custo-impressao')||{}).value) || 8;
+  var custoUnit = area * (custoM2Mat + custoImp);
+
+  document.getElementById('pi-area-calc') && (document.getElementById('pi-area-calc').textContent = _fmtV(area) + ' m² × ' + q + ' = ' + _fmtV(area*q) + ' m² total');
+  document.getElementById('pi-custo-unit') && (document.getElementById('pi-custo-unit').value = custoUnit.toFixed(2));
+  _piSetResultado(custoUnit, null, 'Área: ' + _fmtV(area) + 'm² × (R$ ' + _fmtV(custoM2Mat) + ' material + R$ ' + _fmtV(custoImp) + ' impressão)');
+}
+
+// ── FACHADA ACM ────────────────────────────────────────────────
+function piCalcACM() {
+  var larg     = parseFloat((document.getElementById('acm-larg')         ||{}).value) || 0;
+  var alt      = parseFloat((document.getElementById('acm-alt')          ||{}).value) || 0;
+  var custoM2  = parseFloat((document.getElementById('acm-custo-m2')     ||{}).value) || 85;
+  var fatorEsp = parseFloat((document.getElementById('acm-espessura')    ||{}).value) || 1.2;
+  var subtipo  = (document.getElementById('acm-subtipo')                  ||{}).value || 'plana';
+
+  var areaBase = larg * alt;
+  var areaFinal = areaBase * fatorEsp;
+
+  // Bandeja: aumentar área pela profundidade das dobras
+  if (subtipo === 'bandeja') {
+    var profBandeja = parseFloat((document.getElementById('acm-bandeja-prof')||{}).value) || 8;
+    var fatorBandeja= parseFloat((document.getElementById('acm-bandeja-fator')||{}).value)|| 1.25;
+    areaFinal = areaBase * fatorBandeja;
+    var perimetro = 2 * (larg + alt);
+    areaFinal += perimetro * (profBandeja / 100); // area das dobras laterais
+  }
+
+  // Volumétrica: calcular todas as faces
+  if (subtipo === 'volumetrica') {
+    var prof  = parseFloat((document.getElementById('acm-vol-prof') ||{}).value) || 0.15;
+    var faces = parseInt((document.getElementById('acm-vol-faces')  ||{}).value) || 4;
+    var areaFrente  = larg * alt;
+    var areaLateral = alt  * prof;
+    var areaTopo    = larg * prof;
+    if (faces === 3) areaFinal = areaFrente + 2 * areaLateral;
+    else if (faces === 4) areaFinal = areaFrente + 2 * areaLateral + areaTopo;
+    else if (faces === 5) areaFinal = areaFrente + 2 * areaLateral + 2 * areaTopo;
+    else areaFinal = 2 * areaFrente + 2 * areaLateral + 2 * areaTopo;
+    areaFinal *= fatorEsp;
+  }
+
+  var custoACM = areaFinal * custoM2;
+
+  // Metalon
+  var custoMetalonM = parseFloat((document.getElementById('acm-metalon-tipo')||{}).value) || 0;
+  var espMetalon    = parseFloat((document.getElementById('acm-metalon-esp') ||{}).value) || 60;
+  var metrosMetalon = 0;
+  var custoMetalon  = 0;
+  if (custoMetalonM > 0) {
+    var nMontantes = Math.ceil(larg / (espMetalon / 100)) + 1;
+    var nTravessas = Math.ceil(alt  / (espMetalon / 100)) + 1;
+    metrosMetalon  = (nMontantes * alt) + (nTravessas * larg) + (2 * (larg + alt)); // perímetro externo
+    custoMetalon   = metrosMetalon * custoMetalonM;
+  }
+
+  // LED
+  var custoLed = 0;
+  if (subtipo === 'led' || subtipo === 'volumetrica') {
+    var ledM    = parseFloat((document.getElementById('acm-led-metros') ||{}).value) || larg * 2;
+    var ledCM   = parseFloat((document.getElementById('acm-led-custo')  ||{}).value) || 35;
+    var driver  = parseFloat((document.getElementById('acm-led-driver') ||{}).value) || 150;
+    var perfil  = parseFloat((document.getElementById('acm-led-perfil') ||{}).value) || 18;
+    custoLed = ledM * ledCM + driver + ledM * perfil;
+  }
+
+  // Mão de obra
+  var horas     = parseFloat((document.getElementById('acm-mo-horas')    ||{}).value) || 4;
+  var valorH    = parseFloat((document.getElementById('acm-mo-valor-h')  ||{}).value) || 45;
+  var consumiv  = parseFloat((document.getElementById('acm-consumiveis') ||{}).value) || 30;
+  var adesivo   = parseFloat((document.getElementById('acm-adesivo')     ||{}).value) || 0;
+  var custoMO   = horas * valorH + consumiv + adesivo;
+
+  var custoTotal = custoACM + custoMetalon + custoLed + custoMO;
+
+  var detalhe = 'ACM (' + _fmtV(areaFinal) + 'm²×R$' + _fmtV(custoM2) + ')=R$' + _fmtV(custoACM)
+    + (custoMetalon > 0 ? ' + Metalon(' + _fmtV(metrosMetalon) + 'm)=R$' + _fmtV(custoMetalon) : '')
+    + (custoLed > 0 ? ' + LED=R$' + _fmtV(custoLed) : '')
+    + ' + MO=R$' + _fmtV(custoMO);
+
+  _piSetResultado(custoTotal, null, detalhe);
+}
+
+// ── LETRA CAIXA ────────────────────────────────────────────────
+function piCalcLetraCaixa() {
+  var alt     = parseFloat((document.getElementById('lc-altura')      ||{}).value) || 0;
+  var chars   = parseInt((document.getElementById('lc-chars')         ||{}).value) || 1;
+  var custoC  = parseFloat((document.getElementById('lc-custo-char')  ||{}).value) || 120;
+  var temLed  = parseInt((document.getElementById('lc-led')           ||{}).value) || 0;
+  var ledAdc  = parseFloat((document.getElementById('lc-led-adicional')||{}).value) || 80;
+
+  // Fator por altura da letra (escala)
+  var fatorAltura = 1.0;
+  if (alt <= 20)      fatorAltura = 0.7;
+  else if (alt <= 40) fatorAltura = 1.0;
+  else if (alt <= 60) fatorAltura = 1.4;
+  else if (alt <= 100)fatorAltura = 1.8;
+  else                fatorAltura = 2.5;
+
+  var custoUnit = chars * custoC * fatorAltura;
+  if (temLed) custoUnit += chars * ledAdc * fatorAltura;
+
+  _piSetResultado(custoUnit, null,
+    chars + ' chars × R$' + _fmtV(custoC) + ' × fator' + fatorAltura + (temLed ? ' + LED' : ''));
+}
+
+// ── TOTEM ──────────────────────────────────────────────────────
+function piCalcTotem() {
+  var larg  = parseFloat((document.getElementById('tot-larg')   ||{}).value) || 0;
+  var alt   = parseFloat((document.getElementById('tot-alt')    ||{}).value) || 0;
+  var prof  = parseFloat((document.getElementById('tot-prof')   ||{}).value) || 0.20;
+  var faces = parseInt((document.getElementById('tot-faces')    ||{}).value) || 2;
+  var revM2 = parseFloat((document.getElementById('tot-custo-rev')||{}).value) || 85;
+  var mo    = parseFloat((document.getElementById('tot-mo')     ||{}).value) || 250;
+  var base  = parseFloat((document.getElementById('tot-base')   ||{}).value) || 80;
+  var led   = parseFloat((document.getElementById('tot-led')    ||{}).value) || 0;
+
+  // Área de revestimento (frentes + laterais)
+  var areaFaces   = larg * alt * 2;            // 2 faces maiores
+  var areaLaterais= prof * alt * 2;             // 2 laterais
+  var areaTopo    = larg * prof;                // topo
+  var areaTotal   = areaFaces + areaLaterais + areaTopo;
+
+  // Ajustar pelo nº de faces desejadas
+  var areaCalc = faces >= 4 ? areaTotal : (faces === 1 ? larg * alt : areaFaces);
+
+  var custoRev    = areaCalc * revM2;
+  var custoTotal  = custoRev + mo + base + led;
+
+  _piSetResultado(custoTotal, null,
+    'Rev (' + _fmtV(areaCalc) + 'm²)=R$' + _fmtV(custoRev)
+    + ' + MO=R$' + _fmtV(mo) + ' + Base=R$' + _fmtV(base)
+    + (led > 0 ? ' + LED=R$' + _fmtV(led) : ''));
+}
+
+// ── LETREIRO LED ───────────────────────────────────────────────
+function piCalcLetreiro() {
+  var larg    = parseFloat((document.getElementById('let-larg')       ||{}).value) || 0;
+  var alt     = parseFloat((document.getElementById('let-alt')        ||{}).value) || 0;
+  var ledM    = parseFloat((document.getElementById('let-custo-led')  ||{}).value) || 45;
+  var carcaca = parseFloat((document.getElementById('let-carcaca')    ||{}).value) || 120;
+  var driver  = parseFloat((document.getElementById('let-driver')     ||{}).value) || 150;
+  var moElet  = parseFloat((document.getElementById('let-mo-eletrica')||{}).value) || 120;
+  var fio     = parseFloat((document.getElementById('let-fio')        ||{}).value) || 40;
+
+  var perimetro = 2 * (larg + alt);
+  var area      = larg * alt;
+
+  var custoLed     = perimetro * ledM;
+  var custoCarcaca = area * carcaca;
+  var custoTotal   = custoLed + custoCarcaca + driver + moElet + fio;
+
+  _piSetResultado(custoTotal, null,
+    'LED(' + _fmtV(perimetro) + 'm)=R$' + _fmtV(custoLed)
+    + ' + Carcaça=R$' + _fmtV(custoCarcaca)
+    + ' + Elétrica=R$' + _fmtV(moElet + driver + fio));
+}
+
+// ── WRAP VEICULAR ──────────────────────────────────────────────
+function piCalcWrap() {
+  var veicSel  = (document.getElementById('wr-veiculo')||{}).value || 'passeio:18';
+  var partes   = veicSel.split(':');
+  var areaVeic = parseFloat(partes[1]) || 18;
+  var areaCustom = parseFloat((document.getElementById('wr-area-custom')||{}).value) || 0;
+  if (areaCustom > 0) areaVeic = areaCustom;
+
+  var cobertura = parseFloat((document.getElementById('wr-cobertura')||{}).value) || 1.0;
+  var matM2     = parseFloat((document.getElementById('wr-material') ||{}).value) || 120;
+  var moH       = parseFloat((document.getElementById('wr-mo-h')     ||{}).value) || 55;
+  var horas     = parseFloat((document.getElementById('wr-horas')    ||{}).value) || 8;
+  var lamM2     = parseFloat((document.getElementById('wr-laminacao')||{}).value) || 0;
+  var arte      = parseFloat((document.getElementById('wr-arte')     ||{}).value) || 0;
+
+  var areaFinal = areaVeic * cobertura;
+  var custoMat  = areaFinal * matM2;
+  var custoLam  = areaFinal * lamM2;
+  var custoMO   = moH * horas;
+  var custoTotal = custoMat + custoLam + custoMO + arte;
+
+  _piSetResultado(custoTotal, null,
+    'Área ' + _fmtV(areaFinal) + 'm² × R$' + _fmtV(matM2)
+    + ' = R$' + _fmtV(custoMat)
+    + (custoLam > 0 ? ' + Lamin=R$' + _fmtV(custoLam) : '')
+    + ' + MO=R$' + _fmtV(custoMO)
+    + (arte > 0 ? ' + Arte=R$' + _fmtV(arte) : ''));
+}
+
+// ── INSTALAÇÃO ─────────────────────────────────────────────────
+function piCalcInstalacao() {
+  var tipo     = (document.getElementById('ins-tipo')      ||{}).value || 'normal';
+  var horas    = parseFloat((document.getElementById('ins-horas')    ||{}).value) || 4;
+  var valorH   = parseFloat((document.getElementById('ins-valor-h')  ||{}).value) || 65;
+  var pessoas  = parseInt((document.getElementById('ins-pessoas')    ||{}).value) || 2;
+  var andaime  = parseFloat((document.getElementById('ins-andaime')  ||{}).value) || 0;
+  var transp   = parseFloat((document.getElementById('ins-transporte')||{}).value) || 80;
+  var materiais= parseFloat((document.getElementById('ins-materiais') ||{}).value) || 50;
+  var km       = parseFloat((document.getElementById('ins-km')        ||{}).value) || 0;
+
+  // Adicional por tipo de altura
+  var adicionalAltura = { normal: 1.0, altura: 1.3, elevador: 1.5, rapel: 2.0 };
+  var fator = adicionalAltura[tipo] || 1.0;
+
+  var custoMO    = horas * valorH * pessoas * fator;
+  var custoKm    = km > 10 ? (km - 10) * 1.5 * 2 : 0; // ida e volta
+  var custoTotal = custoMO + andaime + transp + materiais + custoKm;
+
+  _piSetResultado(custoTotal, 50, // instalação tem markup menor
+    'MO (' + horas + 'h × ' + pessoas + ' pes. × R$' + _fmtV(valorH) + ' × fator ' + fator + ')=R$' + _fmtV(custoMO)
+    + (andaime > 0 ? ' + Andaime=R$' + _fmtV(andaime) : '')
+    + ' + Transp=R$' + _fmtV(transp));
+}
+
+// ── ARTE / PROJETO ─────────────────────────────────────────────
+function piCalcArte() {
+  var horas     = parseFloat((document.getElementById('art-horas')    ||{}).value) || 4;
+  var valorH    = parseFloat((document.getElementById('art-valor-h')  ||{}).value) || 80;
+  var fixo      = parseFloat((document.getElementById('art-valor-fixo')||{}).value) || 0;
+  var urgencia  = parseFloat((document.getElementById('art-urgencia') ||{}).value) || 1.0;
+
+  var custo = fixo > 0 ? fixo : horas * valorH;
+  custo *= urgencia;
+
+  _piSetResultado(custo, 30,
+    fixo > 0
+      ? 'Valor fixo R$' + _fmtV(fixo) + ' × urgência ' + urgencia
+      : horas + 'h × R$' + _fmtV(valorH) + ' × urgência ' + urgencia);
+}
+
+// ── CONFIRMAR ITEM (reescrito para novo sistema) ───────────────
+var _projConfirmarItemOrig = window.projConfirmarItem;
+window.projConfirmarItem = function() {
+  var desc   = ((document.getElementById('pi-descricao')||{}).value||'').trim();
+  var valorU = parseFloat((document.getElementById('pi-valor-unit')||{}).value) || 0;
+  var custo  = parseFloat((document.getElementById('pi-custo-unit')||{}).value) || 0;
+  var qtd    = parseInt((document.getElementById('pi-qtd')         ||{}).value) || 1;
+  var obs    = ((document.getElementById('pi-obs')                 ||{}).value||'').trim();
+  var markup = parseFloat((document.getElementById('pi-markup-final')||{}).value) || 150;
+
+  if (!desc)   { typeof toast==='function' && toast('Informe a descrição do item', 'warn'); return; }
+  if (valorU<=0){ typeof toast==='function' && toast('Informe o valor do item', 'warn'); return; }
+
+  // Dimensões (impressão)
+  var larg = parseFloat((document.getElementById('pi-largura')||{}).value) || 0;
+  var alt  = parseFloat((document.getElementById('pi-altura') ||{}).value) || 0;
+
+  var item = {
+    tipo:        _projTipoAtual,
+    descricao:   desc,
+    largura:     larg,
+    altura:      alt,
+    area:        _projTipoAtual === 'impressao' ? larg * alt : 0,
+    qtd:         qtd,
+    material:    '',
+    custo_unit:  custo,
+    markup:      markup,
+    valor_unit:  valorU,
+    valor_total: valorU * qtd,
+    custo_total: custo  * qtd,
+    lucro:       (valorU - custo) * qtd,
+    obs:         obs,
+  };
+
+  if (_projEditIdx >= 0 && _projEditIdx < _projItens.length) {
+    _projItens[_projEditIdx] = item;
+  } else {
+    _projItens.push(item);
+  }
+
+  fecharModalProjItem();
+  projRenderItens();
+  projCalcTotais();
+  typeof toast==='function' && toast('Item adicionado!', 'success');
+};
+
+// Popular seletor de materiais ao abrir modal
+var _projAdicionarItemOrig = window.projAdicionarItem;
+window.projAdicionarItem = function() {
+  _projEditIdx = -1;
+  var modal = document.getElementById('modal-proj-item');
+  if (!modal) return;
+
+  // Limpar campos de todas as seções
+  var ids = ['pi-descricao','pi-largura','pi-altura','pi-obs','acm-larg','acm-alt',
+    'lc-altura','lc-chars','tot-larg','tot-alt','let-larg','let-alt',
+    'art-valor-fixo','pi-valor-unit'];
+  ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+
+  // Resetar resultado
+  ['pi-res-custo','pi-valor-unit-display','pi-res-detalhe'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.textContent='';
+  });
+  _piCustoAtual = 0;
+
+  // Popular material
+  var matSel = document.getElementById('pi-material');
+  if (matSel && window.state && window.state.materiais) {
+    var opts = '<option value="">— Selecione —</option>';
+    window.state.materiais.forEach(function(m) {
+      opts += '<option value="' + (m._db_id||m.id) + '" data-custo="' + (m.custo_m2||0) + '">' + m.nome + ' (R$ ' + (m.custo_m2||0).toFixed(2).replace('.',',') + '/m²)</option>';
+    });
+    matSel.innerHTML = opts;
+  }
+
+  // Tipo padrão impressão
+  projSetTipo('impressao', document.querySelector('.proj-tipo-btn'));
+  document.getElementById('proj-item-titulo').textContent = '＋ Adicionar Item ao Projeto';
+  modal.style.display = 'flex';
+  setTimeout(function(){ var d=document.getElementById('pi-descricao'); if(d) d.focus(); }, 100);
+};
+
+console.log('[VisualCalc] Calculador de Produtos Complexos v2.0 ✓');
 </script>
 
 </body>
