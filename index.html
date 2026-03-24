@@ -18898,6 +18898,1378 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('[VisualCalc] ERP Módulos v2.0 ✓ — Dashboard · Financeiro · Produção · Multiusuários');
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════════
+     VisualCalc ERP Pro — Backend Integration Layer v3.0
+     Módulo completo: API Client · NF-e · Dashboard · Automação
+     ═══════════════════════════════════════════════════════════════════ -->
+<script id="vc-backend-layer">
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════
+// 1. CONFIGURAÇÃO CENTRAL DO BACKEND
+// ═══════════════════════════════════════════════════════════════════════
+
+var VCBackend = (function() {
+
+  // ── Helpers de config ───────────────────────────────────────────────
+  function getUrl()    { return (localStorage.getItem('vc_backend_url')     || '').replace(/\/$/,''); }
+  function getToken()  { return localStorage.getItem('vc_backend_jwt')      || ''; }
+  function getApiKey() { return localStorage.getItem('vc_backend_api_key')  || ''; }
+  function getEmpId()  { return window.currentEmpresaId || localStorage.getItem('vc_empresa_id') || ''; }
+
+  // ── Request base autenticada ────────────────────────────────────────
+  async function req(method, path, body, opts) {
+    var url = getUrl();
+    if (!url) throw new Error('Backend não configurado. Vá em Configurações → Backend.');
+    var token  = getToken();
+    var apiKey = getApiKey();
+    var headers = { 'Content-Type': 'application/json' };
+    if (token)  headers['Authorization'] = 'Bearer ' + token;
+    if (apiKey) headers['X-API-Key'] = apiKey;
+    if (getEmpId()) headers['X-Empresa-ID'] = getEmpId();
+    var fetchOpts = { method: method, headers: headers };
+    if (body) fetchOpts.body = JSON.stringify(body);
+    var resp = await fetch(url + path, fetchOpts);
+    if (!resp.ok) {
+      var err = {}; try { err = await resp.json(); } catch(e) {}
+      throw new Error(err.error || err.message || 'HTTP ' + resp.status);
+    }
+    return resp.json();
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 2. AUTH
+  // ══════════════════════════════════════════════════════════════════════
+  async function login(email, senha) {
+    var data = await req('POST', '/api/auth/login', { email: email, senha: senha });
+    if (data.token) {
+      localStorage.setItem('vc_backend_jwt', data.token);
+      if (data.empresa_id) localStorage.setItem('vc_empresa_id', data.empresa_id);
+    }
+    return data;
+  }
+
+  async function register(nome, email, senha) {
+    var data = await req('POST', '/api/auth/register', { nome: nome, email: email, senha: senha });
+    if (data.token) {
+      localStorage.setItem('vc_backend_jwt', data.token);
+      if (data.empresa_id) localStorage.setItem('vc_empresa_id', data.empresa_id);
+    }
+    return data;
+  }
+
+  function logout() {
+    ['vc_backend_jwt','vc_empresa_id'].forEach(function(k){ localStorage.removeItem(k); });
+    if (typeof authLogout === 'function') authLogout();
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 3. DASHBOARD
+  // ══════════════════════════════════════════════════════════════════════
+  async function getDashboard() {
+    return req('GET', '/api/dashboard');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 4. PRODUTOS
+  // ══════════════════════════════════════════════════════════════════════
+  async function listarProdutos()       { return req('GET',  '/api/produtos'); }
+  async function criarProduto(p)        { return req('POST', '/api/produtos', p); }
+  async function atualizarProduto(id,p) { return req('PUT',  '/api/produtos/' + id, p); }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 5. CLIENTES
+  // ══════════════════════════════════════════════════════════════════════
+  async function listarClientes()  { return req('GET',  '/api/clientes'); }
+  async function criarCliente(c)   { return req('POST', '/api/clientes', c); }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 6. PEDIDOS
+  // ══════════════════════════════════════════════════════════════════════
+  /**
+   * salvarPedido — salva pedido no backend e atualiza state local
+   * Automaticamente: cria financeiro (entrada) + ordem de produção
+   */
+  async function salvarPedido(pedido) {
+    if (typeof showLoading === 'function') showLoading('Salvando pedido...');
+    try {
+      var data = await req('POST', '/api/pedidos', pedido);
+      // Atualizar state local
+      if (window.state) {
+        if (!window.state.pedidos) window.state.pedidos = [];
+        window.state.pedidos.unshift(data.pedido || data);
+        if (data.financeiro && window.state.financeiro) {
+          window.state.financeiro.unshift(data.financeiro);
+        }
+        if (typeof saveState === 'function') saveState();
+        if (typeof renderPedidos   === 'function') renderPedidos();
+        if (typeof renderFinanceiro=== 'function') renderFinanceiro();
+        if (typeof renderDashboard === 'function') setTimeout(renderDashboard, 400);
+      }
+      if (typeof hideLoading === 'function') hideLoading();
+      if (typeof toast === 'function') toast('✅ Pedido salvo! Produção e financeiro criados automaticamente.', 'success');
+      return data;
+    } catch(e) {
+      if (typeof hideLoading === 'function') hideLoading();
+      if (typeof toast === 'function') toast('❌ ' + e.message, 'error');
+      throw e;
+    }
+  }
+
+  async function listarPedidos(filtros) {
+    var qs = '';
+    if (filtros) {
+      var params = [];
+      Object.keys(filtros).forEach(function(k){ if(filtros[k]) params.push(k+'='+encodeURIComponent(filtros[k])); });
+      if (params.length) qs = '?' + params.join('&');
+    }
+    var data = await req('GET', '/api/pedidos' + qs);
+    // Sincronizar com state local
+    if (window.state && Array.isArray(data)) {
+      window.state.pedidos = data;
+      if (typeof renderPedidos === 'function') renderPedidos();
+    }
+    return data;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 7. PRODUÇÃO
+  // ══════════════════════════════════════════════════════════════════════
+  async function listarProducao()           { return req('GET', '/api/producao'); }
+  async function atualizarProducao(id, obj) { return req('PUT', '/api/producao/' + id, obj); }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 8. FINANCEIRO
+  // ══════════════════════════════════════════════════════════════════════
+  async function listarFinanceiro(filtros) {
+    var qs = '';
+    if (filtros) {
+      var params = [];
+      Object.keys(filtros).forEach(function(k){ if(filtros[k]) params.push(k+'='+encodeURIComponent(filtros[k])); });
+      if (params.length) qs = '?' + params.join('&');
+    }
+    return req('GET', '/api/financeiro' + qs);
+  }
+  async function criarLancamento(obj) { return req('POST', '/api/financeiro', obj); }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 9. NOTA FISCAL — Nuvem Fiscal (sandbox ready)
+  // ══════════════════════════════════════════════════════════════════════
+  /**
+   * emitirNota — emite NF-e via backend (sem CORS)
+   * Retorna: { numero, chave, pdf_url, xml_url, status }
+   */
+  async function emitirNota(orcamento) {
+    if (!orcamento) throw new Error('Dados do orçamento obrigatórios');
+    if (typeof showLoading === 'function') showLoading('Emitindo Nota Fiscal...');
+    try {
+      var cfgFiscal = {};
+      try { cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}'); } catch(e) {}
+      var payload = {
+        orcamento_id:  orcamento._db_id || orcamento.id,
+        ref:           orcamento.ref || ('ORC-' + String(orcamento.id).slice(-5)),
+        ambiente:      cfgFiscal.ambiente || 'homologacao',
+        emitente: {
+          cnpj:    (cfgFiscal.cnpj    || '').replace(/\D/g,''),
+          ie:      cfgFiscal.ie       || '',
+          regime:  cfgFiscal.regime   || '1',
+          nome:    window.empresa ? (window.empresa.nome || '') : '',
+          logradouro:  cfgFiscal.logradouro  || '',
+          numero:      cfgFiscal.numero_end  || 'S/N',
+          bairro:      cfgFiscal.bairro      || '',
+          municipio:   cfgFiscal.municipio   || '',
+          uf:          cfgFiscal.uf          || 'SP',
+          cep:         (cfgFiscal.cep        || '').replace(/\D/g,''),
+          telefone:    (cfgFiscal.telefone   || '').replace(/\D/g,''),
+          email:       cfgFiscal.email_fiscal || '',
+        },
+        destinatario: {
+          nome:    orcamento.cliente    || 'Consumidor Final',
+          cpf:     (orcamento.clienteCpf   || '').replace(/\D/g,''),
+          cnpj:    (orcamento.clienteCnpj  || '').replace(/\D/g,''),
+          email:   orcamento.clienteEmail  || '',
+          logradouro: orcamento.clienteEnd || '',
+          numero:     orcamento.clienteNum || 'S/N',
+          bairro:     orcamento.clienteBairro || '',
+          municipio:  orcamento.clienteCidade || '',
+          uf:         orcamento.clienteUf     || 'SP',
+          cep:        (orcamento.clienteCep   || '').replace(/\D/g,''),
+          telefone:   (orcamento.telefone     || '').replace(/\D/g,''),
+        },
+        itens: _montarItensNF(orcamento),
+        valor_total:   parseFloat(orcamento.precoFinal) || 0,
+        observacoes:   'VisualCalc ERP | ' + (orcamento.produto || '') + ' | ' + (orcamento.ref || ''),
+      };
+      var result = await req('POST', '/api/nf/emitir-nfe', payload);
+      // Salvar resultado no state
+      if (window.state) {
+        if (!window.state.notas_fiscais) window.state.notas_fiscais = [];
+        window.state.notas_fiscais.unshift(result);
+        if (typeof saveState === 'function') saveState();
+        if (typeof renderNF  === 'function') renderNF();
+      }
+      if (typeof hideLoading === 'function') hideLoading();
+      if (typeof toast === 'function') {
+        toast('🧾 NF-e emitida! Chave: ' + (result.chave_acesso || result.numero || '—'), 'success', 'Nota Fiscal');
+      }
+      // Abrir PDF se disponível
+      if (result.pdf_url) setTimeout(function(){ window.open(result.pdf_url, '_blank'); }, 800);
+      return result;
+    } catch(e) {
+      if (typeof hideLoading === 'function') hideLoading();
+      if (typeof toast === 'function') toast('❌ NF-e: ' + e.message, 'error');
+      throw e;
+    }
+  }
+
+  function _montarItensNF(orc) {
+    var itens_fiscais = (window.state && window.state.itens_fiscais) || [];
+    var itemFiscal = itens_fiscais.find(function(i) {
+      return orc.produto && (orc.produto.toLowerCase().indexOf((i.nome||'').toLowerCase()) >= 0 || (i.codigo && orc.produto.toLowerCase().indexOf(i.codigo.toLowerCase()) >= 0));
+    }) || {};
+    return [{
+      codigo:      itemFiscal.codigo     || '001',
+      descricao:   orc.produto           || 'Serviço/Produto de Comunicação Visual',
+      ncm:         (itemFiscal.ncm       || '49111090').replace(/\D/g,''),
+      cfop:        itemFiscal.cfop       || '5102',
+      unidade:     itemFiscal.unidade    || 'UN',
+      quantidade:  parseFloat(orc.qtd)   || 1,
+      valor_unitario: (parseFloat(orc.precoFinal) || 0) / (parseFloat(orc.qtd) || 1),
+      valor_total:    parseFloat(orc.precoFinal) || 0,
+      icms_cst:    itemFiscal.cst        || '400',
+      pis_cst:     '07',
+      cofins_cst:  '07',
+    }];
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 10. HEALTH CHECK
+  // ══════════════════════════════════════════════════════════════════════
+  async function healthCheck() {
+    var url = getUrl();
+    if (!url) return { ok: false, erro: 'URL não configurada' };
+    try {
+      var r = await fetch(url + '/health', { signal: AbortSignal.timeout(6000) });
+      var d = {}; try { d = await r.json(); } catch(e) {}
+      return { ok: r.ok, status: r.status, data: d };
+    } catch(e) {
+      return { ok: false, erro: e.message };
+    }
+  }
+
+  // ── API pública ──────────────────────────────────────────────────────
+  return {
+    // config
+    getUrl: getUrl, getToken: getToken,
+    setUrl: function(u){ localStorage.setItem('vc_backend_url', u.replace(/\/$/,'')); },
+    setApiKey: function(k){ localStorage.setItem('vc_backend_api_key', k); },
+    // auth
+    login: login, register: register, logout: logout,
+    // recursos
+    getDashboard:       getDashboard,
+    listarProdutos:     listarProdutos,
+    criarProduto:       criarProduto,
+    atualizarProduto:   atualizarProduto,
+    listarClientes:     listarClientes,
+    criarCliente:       criarCliente,
+    salvarPedido:       salvarPedido,
+    listarPedidos:      listarPedidos,
+    listarProducao:     listarProducao,
+    atualizarProducao:  atualizarProducao,
+    listarFinanceiro:   listarFinanceiro,
+    criarLancamento:    criarLancamento,
+    emitirNota:         emitirNota,
+    healthCheck:        healthCheck,
+  };
+})();
+
+// ── Aliases globais pedidos no prompt ───────────────────────────────────
+window.salvarPedido   = function(p)   { return VCBackend.salvarPedido(p);   };
+window.listarPedidos  = function(f)   { return VCBackend.listarPedidos(f);  };
+window.emitirNota     = function(orc) { return VCBackend.emitirNota(orc);   };
+
+// ── Integração com botão "Salvar como Venda / Pedido" ──────────────────
+// Intercepta o salvarOrcamentoComoPedido existente e espelha no backend
+(function() {
+  var _orig = typeof window.salvarOrcamentoComoPedido === 'function'
+    ? window.salvarOrcamentoComoPedido : null;
+
+  window.salvarOrcamentoComoPedido = async function(orcId) {
+    // 1. Salvar localmente (lógica original)
+    if (_orig) await _orig.call(this, orcId);
+
+    // 2. Se backend configurado, espelhar pedido
+    var url = VCBackend.getUrl();
+    if (!url) return; // sem backend, apenas local
+    var orc = (window.state && window.state.orcamentos || [])
+      .find(function(o){ return String(o._db_id||o.id) === String(orcId); });
+    if (!orc) return;
+    try {
+      await VCBackend.salvarPedido({
+        cliente_nome:  orc.cliente     || 'Consumidor Final',
+        produto:       orc.produto     || '',
+        largura:       parseFloat(orc.largura)  || 0,
+        altura:        parseFloat(orc.altura)   || 0,
+        qtd:           parseInt(orc.qtd)         || 1,
+        valor:         parseFloat(orc.precoFinal)|| 0,
+        lucro:         parseFloat(orc.lucro)     || 0,
+        material:      orc.material    || '',
+        observacoes:   orc.obs         || '',
+        orcamento_ref: orc.ref         || '',
+        status:        'producao',
+        prioridade:    'normal',
+      });
+    } catch(e) { console.warn('[VCBackend] salvarPedido:', e.message); }
+  };
+})();
+
+// ── Sync inicial: carregar pedidos/financeiro do backend ao logar ──────
+(function() {
+  function _syncBackend() {
+    var url = VCBackend.getUrl();
+    if (!url || !window.currentEmpresaId) return;
+    // Sincronizar em background sem bloquear UI
+    VCBackend.listarPedidos()
+      .then(function(d){ if (d && window.state) { window.state.pedidos = d; if (typeof renderPedidos==='function') renderPedidos(); } })
+      .catch(function(){});
+    VCBackend.listarFinanceiro()
+      .then(function(d){ if (d && window.state) { window.state.financeiro = d; if (typeof renderFinanceiro==='function') renderFinanceiro(); } })
+      .catch(function(){});
+  }
+  // Hook em onLoginSuccess se existir, senão escutar evento customizado
+  var _origOnLogin = window.onLoginSuccess;
+  window.onLoginSuccess = function() {
+    if (_origOnLogin) _origOnLogin.apply(this, arguments);
+    setTimeout(_syncBackend, 1500);
+  };
+  document.addEventListener('vc-login-success', function(){ setTimeout(_syncBackend, 1500); });
+})();
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// 11. PAINEL DE CONFIGURAÇÃO DO BACKEND (injeta aba na Config)
+// ═══════════════════════════════════════════════════════════════════════
+(function injectBackendConfigPanel() {
+  function inject() {
+    // Verificar se já existe
+    if (document.getElementById('cfg-backend-panel')) return;
+
+    // Encontrar a página de configurações para injetar a aba
+    var cfgPage = document.getElementById('page-config') || document.querySelector('[id*="config"]');
+
+    // Criar painel flutuante de configuração do backend
+    var panel = document.createElement('div');
+    panel.id = 'cfg-backend-panel';
+    panel.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px';
+    panel.innerHTML = [
+      '<div style="background:var(--ink2);border:1px solid var(--line);border-radius:18px;padding:28px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;position:relative">',
+        '<button onclick="document.getElementById(\'cfg-backend-panel\').style.display=\'none\'" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:none;background:var(--ink3);color:var(--text2);cursor:pointer;font-size:14px">✕</button>',
+        '<div style="font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:18px;margin-bottom:4px">⚙️ Backend Node.js</div>',
+        '<div style="font-size:12px;color:var(--text3);margin-bottom:20px">Conecte ao servidor para NF-e, multiempresa e automações</div>',
+
+        '<div class="form-group"><label>URL do Backend</label>',
+        '<input type="url" id="be-url" placeholder="https://meu-erp.railway.app" style="width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none">',
+        '<div style="font-size:11px;color:var(--text3);margin-top:4px">Railway, Render, Heroku ou VPS</div></div>',
+
+        '<div class="form-group"><label>API Key (X-API-Key)</label>',
+        '<input type="password" id="be-apikey" placeholder="sk-xxxxxxxxxxxxxxxx" style="width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none">',
+        '<div style="font-size:11px;color:var(--text3);margin-top:4px">Defina no .env do backend: API_SECRET_KEY=</div></div>',
+
+        '<div style="display:flex;gap:8px;margin-bottom:16px">',
+          '<button onclick="vcSalvarConfigBackend()" class="btn btn-primary" style="flex:1;justify-content:center">💾 Salvar</button>',
+          '<button onclick="vcTestarBackend()" class="btn btn-secondary" id="btn-testar-be" style="flex:1;justify-content:center">🧪 Testar conexão</button>',
+        '</div>',
+
+        '<div id="be-status" style="font-size:12px;color:var(--text3);padding:10px;background:var(--ink3);border-radius:8px;display:none"></div>',
+
+        '<div style="border-top:1px solid var(--line);margin:16px 0;padding-top:16px">',
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px">📋 SQL Supabase — Copiar e executar no SQL Editor</div>',
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">',
+            '<button onclick="vcCopiarSQL(\'completo\')" class="btn btn-secondary btn-sm">📋 SQL Completo</button>',
+            '<button onclick="vcCopiarSQL(\'empresas\')" class="btn btn-ghost btn-sm">empresas</button>',
+            '<button onclick="vcCopiarSQL(\'pedidos\')"  class="btn btn-ghost btn-sm">pedidos</button>',
+            '<button onclick="vcCopiarSQL(\'nf\')"       class="btn btn-ghost btn-sm">notas_fiscais</button>',
+          '</div>',
+          '<textarea id="be-sql-preview" readonly style="width:100%;height:180px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--text2);font-family:\'DM Mono\',monospace;font-size:10px;resize:vertical;outline:none">' + VCBackend_SQL.completo + '</textarea>',
+        '</div>',
+
+        '<div style="border-top:1px solid var(--line);margin:16px 0;padding-top:16px">',
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px">🚀 Guia de Deploy</div>',
+          '<div style="font-size:12px;color:var(--text2);line-height:1.8">',
+            '<strong style="color:var(--gold)">1. Railway (recomendado):</strong><br>',
+            '→ railway.app → New Project → Deploy from GitHub<br>',
+            '→ Add variables: SUPABASE_URL, SUPABASE_KEY, API_SECRET_KEY, NUVEMFISCAL_CLIENT_ID, NUVEMFISCAL_CLIENT_SECRET<br><br>',
+            '<strong style="color:var(--cyan)">2. Render.com:</strong><br>',
+            '→ render.com → New Web Service → Connect repo<br>',
+            '→ Build: <code style="background:var(--ink3);padding:1px 5px;border-radius:4px">npm install</code> | Start: <code style="background:var(--ink3);padding:1px 5px;border-radius:4px">node src/server.js</code><br><br>',
+            '<strong style="color:var(--purple)">3. Variáveis de ambiente obrigatórias:</strong><br>',
+            '<code style="background:var(--ink3);padding:4px 8px;border-radius:4px;font-size:11px;display:block;margin-top:4px">SUPABASE_URL=https://xxx.supabase.co<br>SUPABASE_KEY=eyJhbGciOi...<br>JWT_SECRET=sua_chave_secreta<br>API_SECRET_KEY=sk-sua_api_key<br>NUVEMFISCAL_CLIENT_ID=seu_client_id<br>NUVEMFISCAL_CLIENT_SECRET=seu_secret<br>PORT=3001</code>',
+          '</div>',
+        '</div>',
+
+        '<div style="border-top:1px solid var(--line);margin:16px 0;padding-top:16px">',
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px">📦 Código do Backend (server.js)</div>',
+          '<button onclick="vcBaixarBackend()" class="btn btn-primary" style="width:100%;justify-content:center">⬇️ Baixar backend completo (server.js)</button>',
+        '</div>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(panel);
+
+    // Preencher valores salvos
+    var urlEl = document.getElementById('be-url');
+    var keyEl = document.getElementById('be-apikey');
+    if (urlEl) urlEl.value = VCBackend.getUrl();
+    if (keyEl) keyEl.value = localStorage.getItem('vc_backend_api_key') || '';
+  }
+
+  window.abrirConfigBackend = function() {
+    inject();
+    document.getElementById('cfg-backend-panel').style.display = 'flex';
+  };
+
+  // Injetar botão na sidebar footer ao carregar
+  setTimeout(function() {
+    var sbFooter = document.querySelector('.sb-footer');
+    if (sbFooter && !document.getElementById('btn-backend-cfg')) {
+      var btn = document.createElement('button');
+      btn.id = 'btn-backend-cfg';
+      btn.className = 'btn btn-ghost btn-sm';
+      btn.style.cssText = 'width:100%;justify-content:center;margin-top:6px;font-size:11px;opacity:.7';
+      btn.innerHTML = '🔌 Backend API';
+      btn.onclick = function(){ window.abrirConfigBackend(); };
+      sbFooter.appendChild(btn);
+    }
+    // Também injetar na página de configurações
+    var cfgNfTab = document.getElementById('cfg-nf-tab') || document.querySelector('[data-tab="nf"]');
+    if (cfgNfTab && !document.getElementById('btn-backend-cfg2')) {
+      var btn2 = document.createElement('button');
+      btn2.id = 'btn-backend-cfg2';
+      btn2.className = 'btn btn-secondary btn-sm';
+      btn2.style.cssText = 'margin-left:8px';
+      btn2.innerHTML = '🔌 Backend API';
+      btn2.onclick = function(){ window.abrirConfigBackend(); };
+      cfgNfTab.parentNode && cfgNfTab.parentNode.insertBefore(btn2, cfgNfTab.nextSibling);
+    }
+  }, 1200);
+})();
+
+window.vcSalvarConfigBackend = function() {
+  var url = (document.getElementById('be-url')    || {}).value || '';
+  var key = (document.getElementById('be-apikey') || {}).value || '';
+  if (!url) { if(typeof toast==='function') toast('Informe a URL do backend', 'warn'); return; }
+  VCBackend.setUrl(url);
+  VCBackend.setApiKey(key);
+  if (typeof toast === 'function') toast('✅ Backend configurado!', 'success');
+};
+
+window.vcTestarBackend = async function() {
+  var btn = document.getElementById('btn-testar-be');
+  var statusEl = document.getElementById('be-status');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Testando...'; }
+  // Salvar temporariamente
+  var url = (document.getElementById('be-url') || {}).value || '';
+  if (url) VCBackend.setUrl(url);
+  var r = await VCBackend.healthCheck();
+  if (btn) { btn.disabled = false; btn.textContent = '🧪 Testar conexão'; }
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    if (r.ok) {
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = '✅ Backend online! Versão: ' + (r.data && r.data.version || '—');
+    } else {
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = '❌ Falha: ' + (r.erro || 'Verifique a URL e a API Key.');
+    }
+  }
+};
+
+window.vcCopiarSQL = function(tipo) {
+  var sql = VCBackend_SQL[tipo] || VCBackend_SQL.completo;
+  var el = document.getElementById('be-sql-preview');
+  if (el) el.value = sql;
+  navigator.clipboard.writeText(sql)
+    .then(function(){ if(typeof toast==='function') toast('SQL copiado!', 'success'); })
+    .catch(function(){ if(typeof toast==='function') toast('Selecione o texto manualmente', 'info'); });
+};
+
+window.vcBaixarBackend = function() {
+  var blob = new Blob([VCBackend_ServerCode], { type: 'text/javascript' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = 'server.js';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  if (typeof toast === 'function') toast('⬇️ server.js baixado!', 'success');
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// 12. SQL COMPLETO DO SUPABASE
+// ═══════════════════════════════════════════════════════════════════════
+var VCBackend_SQL = {
+  completo: `-- VisualCalc ERP Pro — SQL Supabase Completo v3.0
+-- Execute no SQL Editor do Supabase (Settings → SQL Editor)
+
+-- ──────────────────────────────────────────
+-- EXTENSÕES
+-- ──────────────────────────────────────────
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- ──────────────────────────────────────────
+-- EMPRESAS
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS empresas (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  nome        TEXT NOT NULL,
+  cnpj        TEXT,
+  email       TEXT,
+  telefone    TEXT,
+  plano       TEXT NOT NULL DEFAULT 'free',  -- free | pro | premium
+  ativo       BOOLEAN DEFAULT TRUE,
+  logo_url    TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ──────────────────────────────────────────
+-- USUÁRIOS
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS usuarios (
+  id           UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id   UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  nome         TEXT NOT NULL,
+  email        TEXT NOT NULL UNIQUE,
+  senha_hash   TEXT NOT NULL,
+  tipo         TEXT NOT NULL DEFAULT 'vendas', -- admin | vendas | producao | financeiro
+  ativo        BOOLEAN DEFAULT TRUE,
+  last_login   TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_usuarios_empresa ON usuarios(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_email   ON usuarios(email);
+
+-- ──────────────────────────────────────────
+-- PRODUTOS (catálogo fiscal)
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS produtos (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id  UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  codigo      TEXT,
+  nome        TEXT NOT NULL,
+  tipo        TEXT NOT NULL DEFAULT 'produto', -- produto | servico
+  ncm         TEXT,
+  cfop        TEXT DEFAULT '5102',
+  cst         TEXT DEFAULT '400',
+  unidade     TEXT DEFAULT 'UN',
+  preco_base  NUMERIC(12,2) DEFAULT 0,
+  ativo       BOOLEAN DEFAULT TRUE,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_produtos_empresa ON produtos(empresa_id);
+
+-- ──────────────────────────────────────────
+-- CLIENTES
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS clientes (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id  UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  nome        TEXT NOT NULL,
+  cpf_cnpj    TEXT,
+  email       TEXT,
+  telefone    TEXT,
+  endereco    TEXT,
+  cidade      TEXT,
+  uf          TEXT,
+  cep         TEXT,
+  ativo       BOOLEAN DEFAULT TRUE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_clientes_empresa ON clientes(empresa_id);
+
+-- ──────────────────────────────────────────
+-- PEDIDOS
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS pedidos (
+  id              UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id      UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  cliente_id      UUID REFERENCES clientes(id) ON DELETE SET NULL,
+  cliente_nome    TEXT,
+  numero          TEXT,
+  status          TEXT NOT NULL DEFAULT 'producao',
+  prioridade      TEXT DEFAULT 'normal',
+  produto         TEXT,
+  material        TEXT,
+  largura         NUMERIC(8,2),
+  altura          NUMERIC(8,2),
+  qtd             INTEGER DEFAULT 1,
+  valor           NUMERIC(12,2) DEFAULT 0,
+  lucro           NUMERIC(12,2) DEFAULT 0,
+  observacoes     TEXT,
+  orcamento_ref   TEXT,
+  responsavel     TEXT,
+  prazo           DATE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_pedidos_empresa ON pedidos(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_pedidos_status  ON pedidos(status);
+
+-- Sequência de número de pedido por empresa
+CREATE SEQUENCE IF NOT EXISTS pedido_numero_seq START 1000;
+
+-- ──────────────────────────────────────────
+-- PEDIDO ITENS
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS pedido_itens (
+  id              UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  pedido_id       UUID NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
+  produto_id      UUID REFERENCES produtos(id) ON DELETE SET NULL,
+  descricao       TEXT NOT NULL,
+  quantidade      NUMERIC(10,3) DEFAULT 1,
+  valor_unitario  NUMERIC(12,2) DEFAULT 0,
+  valor_total     NUMERIC(12,2) DEFAULT 0
+);
+
+-- ──────────────────────────────────────────
+-- PRODUÇÃO (ordens de produção)
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS producao (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  pedido_id   UUID NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
+  empresa_id  UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  status      TEXT NOT NULL DEFAULT 'aguardando', -- aguardando | producao | finalizado
+  responsavel TEXT,
+  prazo       DATE,
+  observacoes TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_producao_empresa ON producao(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_producao_status  ON producao(status);
+
+-- ──────────────────────────────────────────
+-- FINANCEIRO
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS financeiro (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id  UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  tipo        TEXT NOT NULL DEFAULT 'entrada', -- entrada | saida
+  valor       NUMERIC(12,2) NOT NULL DEFAULT 0,
+  descricao   TEXT,
+  categoria   TEXT,
+  origem      TEXT DEFAULT 'manual',           -- pedido | manual | compra
+  origem_id   UUID,
+  status      TEXT NOT NULL DEFAULT 'pendente',-- pendente | pago | cancelado
+  vencimento  DATE,
+  data        DATE DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_financeiro_empresa ON financeiro(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_financeiro_tipo    ON financeiro(tipo);
+CREATE INDEX IF NOT EXISTS idx_financeiro_status  ON financeiro(status);
+
+-- ──────────────────────────────────────────
+-- NOTAS FISCAIS
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notas_fiscais (
+  id            UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id    UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  pedido_id     UUID REFERENCES pedidos(id) ON DELETE SET NULL,
+  tipo          TEXT NOT NULL DEFAULT 'nfe',   -- nfe | nfse | nfce
+  numero        TEXT,
+  serie         TEXT DEFAULT '1',
+  status        TEXT NOT NULL DEFAULT 'pendente',
+  chave_acesso  TEXT,
+  pdf_url       TEXT,
+  xml_url       TEXT,
+  ambiente      TEXT DEFAULT 'homologacao',
+  valor_total   NUMERIC(12,2) DEFAULT 0,
+  destinatario  TEXT,
+  destinatario_doc TEXT,
+  payload_json  JSONB,
+  retorno_json  JSONB,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_nf_empresa ON notas_fiscais(empresa_id);
+
+-- ──────────────────────────────────────────
+-- ASSINATURAS (SaaS)
+-- ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS assinaturas (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id  UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  plano       TEXT NOT NULL DEFAULT 'free',
+  status      TEXT NOT NULL DEFAULT 'ativa',   -- ativa | suspensa | cancelada
+  valor       NUMERIC(10,2) DEFAULT 0,
+  inicio      DATE DEFAULT CURRENT_DATE,
+  expiracao   DATE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ──────────────────────────────────────────
+-- ROW LEVEL SECURITY (RLS)
+-- ──────────────────────────────────────────
+ALTER TABLE empresas     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE usuarios     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE produtos     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clientes     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pedidos      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pedido_itens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE producao     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE financeiro   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notas_fiscais ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assinaturas  ENABLE ROW LEVEL SECURITY;
+
+-- Políticas básicas (service_role ignora RLS — use no backend)
+-- Frontend usa supabase-js com JWT do usuário autenticado
+
+-- ──────────────────────────────────────────
+-- FUNÇÃO: gerar número de pedido
+-- ──────────────────────────────────────────
+CREATE OR REPLACE FUNCTION gerar_numero_pedido(p_empresa_id UUID)
+RETURNS TEXT AS $$
+DECLARE
+  v_count INTEGER;
+  v_ano   TEXT;
+BEGIN
+  SELECT COUNT(*) INTO v_count FROM pedidos WHERE empresa_id = p_empresa_id;
+  v_ano := TO_CHAR(NOW(), 'YY');
+  RETURN 'PED-' || v_ano || '-' || LPAD((v_count + 1)::TEXT, 4, '0');
+END;
+$$ LANGUAGE plpgsql;
+
+-- ──────────────────────────────────────────
+-- TRIGGER: updated_at automático
+-- ──────────────────────────────────────────
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_pedidos_updated_at
+  BEFORE UPDATE ON pedidos
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE OR REPLACE TRIGGER trg_producao_updated_at
+  BEFORE UPDATE ON producao
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- ──────────────────────────────────────────
+-- VIEW: dashboard resumo
+-- ──────────────────────────────────────────
+CREATE OR REPLACE VIEW vw_dashboard AS
+SELECT
+  p.empresa_id,
+  COUNT(DISTINCT p.id)                                          AS total_pedidos,
+  COUNT(DISTINCT CASE WHEN p.status NOT IN ('entregue','cancelado') THEN p.id END) AS pedidos_ativos,
+  COALESCE(SUM(CASE WHEN f.tipo='entrada' AND f.status='pago' THEN f.valor END), 0) AS faturamento_total,
+  COALESCE(SUM(CASE WHEN f.tipo='entrada' AND f.status='pago'
+    AND DATE_TRUNC('month', f.data) = DATE_TRUNC('month', CURRENT_DATE)
+    THEN f.valor END), 0) AS faturamento_mes,
+  COALESCE(SUM(p.lucro), 0) AS lucro_total
+FROM pedidos p
+LEFT JOIN financeiro f ON f.empresa_id = p.empresa_id
+GROUP BY p.empresa_id;
+`,
+
+  empresas: `-- Tabela empresas
+CREATE TABLE IF NOT EXISTS empresas (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  nome TEXT NOT NULL, cnpj TEXT, email TEXT, telefone TEXT,
+  plano TEXT NOT NULL DEFAULT 'free', ativo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+);`,
+
+  pedidos: `-- Tabela pedidos
+CREATE TABLE IF NOT EXISTS pedidos (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  cliente_id UUID, cliente_nome TEXT, numero TEXT, status TEXT DEFAULT 'producao',
+  prioridade TEXT DEFAULT 'normal', produto TEXT, material TEXT,
+  largura NUMERIC(8,2), altura NUMERIC(8,2), qtd INTEGER DEFAULT 1,
+  valor NUMERIC(12,2) DEFAULT 0, lucro NUMERIC(12,2) DEFAULT 0,
+  observacoes TEXT, orcamento_ref TEXT, responsavel TEXT, prazo DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+);`,
+
+  nf: `-- Tabela notas_fiscais
+CREATE TABLE IF NOT EXISTS notas_fiscais (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  empresa_id UUID NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+  pedido_id UUID, tipo TEXT DEFAULT 'nfe', numero TEXT, serie TEXT DEFAULT '1',
+  status TEXT DEFAULT 'pendente', chave_acesso TEXT, pdf_url TEXT, xml_url TEXT,
+  ambiente TEXT DEFAULT 'homologacao', valor_total NUMERIC(12,2) DEFAULT 0,
+  destinatario TEXT, destinatario_doc TEXT, payload_json JSONB, retorno_json JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);`
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// 13. CÓDIGO DO BACKEND (server.js completo para download)
+// ═══════════════════════════════════════════════════════════════════════
+var VCBackend_ServerCode = `// VisualCalc ERP Pro — Backend Node.js v3.0
+// Deploy: Railway | Render | Heroku | VPS
+// ============================================================
+'use strict';
+
+const express    = require('express');
+const cors       = require('cors');
+const bcrypt     = require('bcryptjs');
+const jwt        = require('jsonwebtoken');
+const { createClient } = require('@supabase/supabase-js');
+const fetch      = (...args) => import('node-fetch').then(({default:f})=>f(...args));
+require('dotenv').config();
+
+const app  = express();
+const PORT = process.env.PORT || 3001;
+
+// ── Supabase ──────────────────────────────────────────────
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY  // service_role key (bypassa RLS)
+);
+
+const JWT_SECRET    = process.env.JWT_SECRET    || 'visualcalc_secret_change_me';
+const API_SECRET    = process.env.API_SECRET_KEY || '';
+
+// ── Middlewares ──────────────────────────────────────────
+app.use(cors({ origin: '*', credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// ── Auth middleware ───────────────────────────────────────
+function authMiddleware(req, res, next) {
+  // Aceitar JWT ou X-API-Key
+  const authHeader = req.headers['authorization'];
+  const apiKey     = req.headers['x-api-key'];
+
+  if (API_SECRET && apiKey === API_SECRET) {
+    req.empresaId = req.headers['x-empresa-id'] || null;
+    return next();
+  }
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const payload  = jwt.verify(token, JWT_SECRET);
+      req.user       = payload;
+      req.empresaId  = payload.empresa_id;
+      return next();
+    } catch (e) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+  }
+
+  return res.status(401).json({ error: 'Autenticação obrigatória' });
+}
+
+// ── Health ────────────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ ok: true, version: '3.0.0', ts: new Date().toISOString() });
+});
+
+// ══════════════════════════════════════════════════════════
+// AUTH ROUTES
+// ══════════════════════════════════════════════════════════
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { nome, email, senha } = req.body;
+    if (!nome || !email || !senha) return res.status(400).json({ error: 'Campos obrigatórios: nome, email, senha' });
+    if (senha.length < 6) return res.status(400).json({ error: 'Senha mínimo 6 caracteres' });
+
+    // Verificar duplicata
+    const { data: exists } = await supabase.from('usuarios').select('id').eq('email', email).single();
+    if (exists) return res.status(409).json({ error: 'E-mail já cadastrado' });
+
+    // Criar empresa
+    const { data: emp, error: empErr } = await supabase
+      .from('empresas').insert({ nome, email, plano: 'free' }).select().single();
+    if (empErr) throw empErr;
+
+    // Criar assinatura free
+    await supabase.from('assinaturas').insert({
+      empresa_id: emp.id, plano: 'free', status: 'ativa'
+    });
+
+    // Criar usuário
+    const hash = await bcrypt.hash(senha, 10);
+    const { data: user, error: userErr } = await supabase
+      .from('usuarios')
+      .insert({ empresa_id: emp.id, nome, email, senha_hash: hash, tipo: 'admin' })
+      .select().single();
+    if (userErr) throw userErr;
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, empresa_id: emp.id, tipo: 'admin', role: 'owner' },
+      JWT_SECRET, { expiresIn: '30d' }
+    );
+    res.json({ token, empresa_id: emp.id, user: { id: user.id, nome, email, tipo: 'admin' } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+    if (!email || !senha) return res.status(400).json({ error: 'E-mail e senha obrigatórios' });
+
+    const { data: user, error } = await supabase
+      .from('usuarios').select('*').eq('email', email).single();
+    if (error || !user) return res.status(401).json({ error: 'Credenciais inválidas' });
+    if (!user.ativo)    return res.status(403).json({ error: 'Usuário inativo' });
+
+    const ok = await bcrypt.compare(senha, user.senha_hash);
+    if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
+
+    // Atualizar last_login
+    await supabase.from('usuarios').update({ last_login: new Date().toISOString() }).eq('id', user.id);
+
+    // Buscar empresa e assinatura
+    const { data: emp } = await supabase.from('empresas').select('*').eq('id', user.empresa_id).single();
+    const { data: ass } = await supabase.from('assinaturas').select('*')
+      .eq('empresa_id', user.empresa_id).order('created_at', { ascending: false }).limit(1).single();
+
+    const role = user.tipo === 'admin' ? 'owner' : user.tipo;
+    const token = jwt.sign(
+      { id: user.id, email: user.email, empresa_id: user.empresa_id, tipo: user.tipo, role },
+      JWT_SECRET, { expiresIn: '30d' }
+    );
+    res.json({ token, empresa_id: user.empresa_id, role, plano: emp?.plano || 'free',
+      assinatura: ass || null, user: { id: user.id, nome: user.nome, email: user.email, tipo: user.tipo } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════
+app.get('/api/dashboard', authMiddleware, async (req, res) => {
+  try {
+    const eid = req.empresaId;
+    const [pedR, finR] = await Promise.all([
+      supabase.from('pedidos').select('id,status,valor,lucro,created_at').eq('empresa_id', eid),
+      supabase.from('financeiro').select('tipo,valor,status,data').eq('empresa_id', eid),
+    ]);
+    const peds = pedR.data || [];
+    const fins = finR.data || [];
+    const mes = new Date().toISOString().slice(0, 7);
+
+    res.json({
+      pedidos_ativos:    peds.filter(p => !['entregue','cancelado'].includes(p.status)).length,
+      total_pedidos:     peds.length,
+      faturamento_total: fins.filter(f=>f.tipo==='entrada'&&f.status==='pago').reduce((s,f)=>s+Number(f.valor),0),
+      faturamento_mes:   fins.filter(f=>f.tipo==='entrada'&&f.status==='pago'&&(f.data||'').startsWith(mes)).reduce((s,f)=>s+Number(f.valor),0),
+      lucro_total:       peds.reduce((s,p)=>s+Number(p.lucro||0),0),
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// PRODUTOS
+// ══════════════════════════════════════════════════════════
+app.get('/api/produtos', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('produtos')
+    .select('*').eq('empresa_id', req.empresaId).eq('ativo', true).order('nome');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+app.post('/api/produtos', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('produtos')
+    .insert({ ...req.body, empresa_id: req.empresaId }).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+app.put('/api/produtos/:id', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('produtos')
+    .update(req.body).eq('id', req.params.id).eq('empresa_id', req.empresaId).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ══════════════════════════════════════════════════════════
+// CLIENTES
+// ══════════════════════════════════════════════════════════
+app.get('/api/clientes', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('clientes')
+    .select('*').eq('empresa_id', req.empresaId).order('nome');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+app.post('/api/clientes', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('clientes')
+    .insert({ ...req.body, empresa_id: req.empresaId }).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ══════════════════════════════════════════════════════════
+// PEDIDOS — com automação financeiro + produção
+// ══════════════════════════════════════════════════════════
+app.get('/api/pedidos', authMiddleware, async (req, res) => {
+  let q = supabase.from('pedidos').select('*').eq('empresa_id', req.empresaId).order('created_at', { ascending: false });
+  if (req.query.status) q = q.eq('status', req.query.status);
+  const { data, error } = await q;
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/pedidos', authMiddleware, async (req, res) => {
+  try {
+    const eid = req.empresaId;
+    // Gerar número do pedido
+    const { data: cnt } = await supabase.from('pedidos').select('id', { count: 'exact' }).eq('empresa_id', eid);
+    const ano = new Date().getFullYear().toString().slice(-2);
+    const numero = 'PED-' + ano + '-' + String((cnt ? cnt.length : 0) + 1).padStart(4, '0');
+
+    // 1. Criar pedido
+    const { data: pedido, error: pedErr } = await supabase
+      .from('pedidos').insert({ ...req.body, empresa_id: eid, numero }).select().single();
+    if (pedErr) throw pedErr;
+
+    // 2. AUTOMAÇÃO: criar lançamento financeiro (entrada pendente)
+    const { data: fin } = await supabase.from('financeiro').insert({
+      empresa_id: eid,
+      tipo:       'entrada',
+      valor:      pedido.valor || 0,
+      descricao:  'Pedido ' + numero + ' — ' + (pedido.cliente_nome || ''),
+      categoria:  'venda',
+      origem:     'pedido',
+      origem_id:  pedido.id,
+      status:     'pendente',
+      data:       new Date().toISOString().split('T')[0],
+    }).select().single();
+
+    // 3. AUTOMAÇÃO: criar ordem de produção
+    const { data: prod } = await supabase.from('producao').insert({
+      pedido_id:  pedido.id,
+      empresa_id: eid,
+      status:     'aguardando',
+      responsavel: req.body.responsavel || null,
+      prazo:       req.body.prazo       || null,
+    }).select().single();
+
+    res.json({ pedido, financeiro: fin, producao: prod, numero });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// PRODUÇÃO
+// ══════════════════════════════════════════════════════════
+app.get('/api/producao', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('producao')
+    .select('*, pedidos(numero,cliente_nome,produto,valor)')
+    .eq('empresa_id', req.empresaId).order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+app.put('/api/producao/:id', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('producao')
+    .update({ ...req.body, updated_at: new Date().toISOString() })
+    .eq('id', req.params.id).eq('empresa_id', req.empresaId).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ══════════════════════════════════════════════════════════
+// FINANCEIRO
+// ══════════════════════════════════════════════════════════
+app.get('/api/financeiro', authMiddleware, async (req, res) => {
+  let q = supabase.from('financeiro').select('*').eq('empresa_id', req.empresaId).order('created_at', { ascending: false });
+  if (req.query.tipo)   q = q.eq('tipo',   req.query.tipo);
+  if (req.query.status) q = q.eq('status', req.query.status);
+  const { data, error } = await q;
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+app.post('/api/financeiro', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase.from('financeiro')
+    .insert({ ...req.body, empresa_id: req.empresaId }).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ══════════════════════════════════════════════════════════
+// NOTA FISCAL — Nuvem Fiscal (sandbox/produção)
+// ══════════════════════════════════════════════════════════
+app.post('/api/nf/emitir-nfe', authMiddleware, async (req, res) => {
+  try {
+    const cfg = {
+      clientId:     process.env.NUVEMFISCAL_CLIENT_ID     || '',
+      clientSecret: process.env.NUVEMFISCAL_CLIENT_SECRET || '',
+      ambiente:     req.body.ambiente || 'homologacao',
+    };
+
+    if (!cfg.clientId) {
+      return res.status(400).json({ error: 'Configure NUVEMFISCAL_CLIENT_ID no .env do backend' });
+    }
+
+    const baseUrl = cfg.ambiente === 'producao'
+      ? 'https://api.nuvemfiscal.com.br'
+      : 'https://api.sandbox.nuvemfiscal.com.br';
+
+    // 1. Obter token OAuth da Nuvem Fiscal
+    const tokenResp = await fetch('https://auth.nuvemfiscal.com.br/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type:    'client_credentials',
+        client_id:     cfg.clientId,
+        client_secret: cfg.clientSecret,
+        scope:         'nfe',
+      }).toString(),
+    });
+    const tokenData = await tokenResp.json();
+    if (!tokenData.access_token) {
+      return res.status(401).json({ error: 'Falha ao autenticar na Nuvem Fiscal: ' + JSON.stringify(tokenData) });
+    }
+
+    const authHeader = 'Bearer ' + tokenData.access_token;
+    const emit = req.body.emitente || {};
+    const dest = req.body.destinatario || {};
+    const itens = req.body.itens || [];
+
+    // 2. Montar payload NF-e
+    const nfePayload = {
+      ambiente:         cfg.ambiente,
+      referencia:       req.body.ref || ('VC-' + Date.now()),
+      emitente: {
+        cnpj:           emit.cnpj,
+        nome_razao:     emit.nome,
+        inscricao_estadual: emit.ie || '',
+        regime_tributario:  parseInt(emit.regime) || 1,
+        endereco: {
+          logradouro:   emit.logradouro || 'Rua não informada',
+          numero:       emit.numero     || 'S/N',
+          bairro:       emit.bairro     || 'Centro',
+          codigo_municipio: emit.ibge   || '3550308',
+          nome_municipio:   emit.municipio || 'São Paulo',
+          uf:           emit.uf         || 'SP',
+          cep:          emit.cep        || '01310100',
+        },
+      },
+      destinatario: {
+        nome_razao:     dest.nome       || 'Consumidor Final',
+        cpf:            dest.cpf        || undefined,
+        cnpj:           dest.cnpj       || undefined,
+        email:          dest.email      || '',
+        endereco: {
+          logradouro:   dest.logradouro || 'Rua não informada',
+          numero:       dest.numero     || 'S/N',
+          bairro:       dest.bairro     || 'Centro',
+          nome_municipio: dest.municipio|| emit.municipio || 'São Paulo',
+          uf:           dest.uf         || emit.uf || 'SP',
+          cep:          dest.cep        || emit.cep || '01310100',
+        },
+      },
+      itens: itens.map((it, idx) => ({
+        numero:               String(idx + 1),
+        codigo:               it.codigo      || String(idx + 1).padStart(3, '0'),
+        descricao:            it.descricao   || 'Produto',
+        ncm:                  it.ncm         || '49111090',
+        cfop:                 it.cfop        || '5102',
+        unidade_comercial:    it.unidade     || 'UN',
+        quantidade_comercial: it.quantidade  || 1,
+        valor_unitario_comercial: it.valor_unitario || it.valor_total,
+        valor_bruto:          it.valor_total || 0,
+        icms: {
+          origem:    '0',
+          cst:       it.icms_cst || '400',
+        },
+        pis:    { cst: it.pis_cst    || '07' },
+        cofins: { cst: it.cofins_cst || '07' },
+      })),
+      valor_total: req.body.valor_total || 0,
+      natureza_operacao: 'VENDA DE PRODUTO/SERVICO',
+      tipo_operacao:     '1',
+      finalidade:        '1',
+      informacoes_adicionais: req.body.observacoes || 'VisualCalc ERP',
+    };
+
+    // 3. Emitir NF-e
+    const emitResp = await fetch(baseUrl + '/v1/nfe', {
+      method:  'POST',
+      headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
+      body:    JSON.stringify(nfePayload),
+    });
+    const nfeData = await emitResp.json();
+
+    if (!emitResp.ok) {
+      return res.status(emitResp.status).json({ error: nfeData.message || JSON.stringify(nfeData) });
+    }
+
+    // 4. Aguardar autorização (polling simples)
+    let nfeId = nfeData.id;
+    let nfeFinal = nfeData;
+    for (let i = 0; i < 5; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const pollResp = await fetch(baseUrl + '/v1/nfe/' + nfeId, {
+        headers: { 'Authorization': authHeader }
+      });
+      nfeFinal = await pollResp.json();
+      if (nfeFinal.status === 'autorizado' || nfeFinal.status === 'cancelado') break;
+    }
+
+    // 5. Salvar no Supabase
+    const { data: nfRow } = await supabase.from('notas_fiscais').insert({
+      empresa_id:      req.empresaId,
+      pedido_id:       req.body.orcamento_id || null,
+      tipo:            'nfe',
+      numero:          nfeFinal.numero         || nfeFinal.id,
+      serie:           nfeFinal.serie          || '1',
+      status:          nfeFinal.status         || 'emitida',
+      chave_acesso:    nfeFinal.chave_acesso   || '',
+      pdf_url:         nfeFinal.link_pdf       || '',
+      xml_url:         nfeFinal.link_xml       || '',
+      ambiente:        cfg.ambiente,
+      valor_total:     req.body.valor_total     || 0,
+      destinatario:    dest.nome               || '',
+      destinatario_doc: dest.cpf || dest.cnpj  || '',
+      payload_json:    nfePayload,
+      retorno_json:    nfeFinal,
+    }).select().single();
+
+    res.json({
+      id:           nfRow?.id,
+      numero:       nfeFinal.numero      || nfeFinal.id,
+      chave_acesso: nfeFinal.chave_acesso|| '',
+      pdf_url:      nfeFinal.link_pdf    || '',
+      xml_url:      nfeFinal.link_xml    || '',
+      status:       nfeFinal.status      || 'emitida',
+      ambiente:     cfg.ambiente,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// CERTIFICADO DIGITAL (upload seguro)
+// ══════════════════════════════════════════════════════════
+app.post('/api/certificado/upload', authMiddleware, async (req, res) => {
+  try {
+    const { base64, senha, cnpj } = req.body;
+    if (!base64 || !senha) return res.status(400).json({ error: 'base64 e senha obrigatórios' });
+
+    const baseUrl = 'https://api.sandbox.nuvemfiscal.com.br';
+    const tokenResp = await fetch('https://auth.nuvemfiscal.com.br/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id:  process.env.NUVEMFISCAL_CLIENT_ID     || '',
+        client_secret: process.env.NUVEMFISCAL_CLIENT_SECRET || '',
+        scope: 'nfe',
+      }).toString(),
+    });
+    const td = await tokenResp.json();
+    if (!td.access_token) return res.status(401).json({ error: 'Falha auth Nuvem Fiscal' });
+
+    const certResp = await fetch(baseUrl + '/v1/empresas/' + (cnpj||'').replace(/\\D/g,'') + '/certificado', {
+      method:  'PUT',
+      headers: { 'Authorization': 'Bearer ' + td.access_token, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ certificado: base64, senha }),
+    });
+    const certData = await certResp.json();
+    if (!certResp.ok) return res.status(certResp.status).json({ error: certData.message || 'Falha upload cert' });
+    res.json({ ok: true, ...certData });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Start ────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log('VisualCalc ERP Backend v3.0 rodando na porta ' + PORT);
+  console.log('Supabase URL:', process.env.SUPABASE_URL ? '✅ OK' : '❌ NÃO CONFIGURADO');
+  console.log('Nuvem Fiscal:', process.env.NUVEMFISCAL_CLIENT_ID ? '✅ OK' : '⚠️ Sandbox sem config');
+});
+
+module.exports = app;
+`;
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// 14. package.json DO BACKEND (para download)
+// ═══════════════════════════════════════════════════════════════════════
+var VCBackend_PackageJson = JSON.stringify({
+  name: "visualcalc-erp-backend",
+  version: "3.0.0",
+  description: "VisualCalc ERP Pro — Backend Node.js",
+  main: "src/server.js",
+  scripts: {
+    start: "node src/server.js",
+    dev:   "nodemon src/server.js"
+  },
+  dependencies: {
+    "express":         "^4.18.2",
+    "cors":            "^2.8.5",
+    "bcryptjs":        "^2.4.3",
+    "jsonwebtoken":    "^9.0.2",
+    "@supabase/supabase-js": "^2.39.0",
+    "node-fetch":      "^3.3.2",
+    "dotenv":          "^16.3.1"
+  },
+  devDependencies: {
+    "nodemon": "^3.0.2"
+  },
+  engines: { node: ">=18.0.0" }
+}, null, 2);
+
+// Botão para baixar package.json também
+window.vcBaixarPackageJson = function() {
+  var blob = new Blob([VCBackend_PackageJson], { type: 'application/json' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'package.json'; document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  if (typeof toast === 'function') toast('⬇️ package.json baixado!', 'success');
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// 15. LOADING / UX helpers (se não existirem)
+// ═══════════════════════════════════════════════════════════════════════
+if (typeof window.showLoading !== 'function') {
+  window.showLoading = function(msg) {
+    var el = document.getElementById('vc-global-loading');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'vc-global-loading';
+      el.style.cssText = 'display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink2,#141824);border:1px solid rgba(232,184,75,.3);border-radius:12px;padding:12px 22px;font-size:13px;color:#e8b84b;z-index:99998;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5)';
+      el.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(232,184,75,.2);border-top-color:#e8b84b;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div><span id="vc-loading-msg">Aguarde...</span>';
+      document.body.appendChild(el);
+    }
+    el.style.display = 'flex';
+    var msgEl = document.getElementById('vc-loading-msg');
+    if (msgEl) msgEl.textContent = msg || 'Aguarde...';
+  };
+}
+
+if (typeof window.hideLoading !== 'function') {
+  window.hideLoading = function() {
+    var el = document.getElementById('vc-global-loading');
+    if (el) el.style.display = 'none';
+  };
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════
+console.log('[VisualCalc] Backend Layer v3.0 ✓ — API Client · NF-e · SQL · Deploy Guide');
+console.log('[VisualCalc] Backend URL:', VCBackend.getUrl() || '(não configurado — use 🔌 Backend API)');
+</script>
+
 </body>
 
 </html>
