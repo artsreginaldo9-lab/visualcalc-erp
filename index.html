@@ -686,6 +686,14 @@ body::after{
 @keyframes pulse-g{0%{box-shadow:0 0 0 0 rgba(46,212,122,.4)}70%{box-shadow:0 0 0 5px rgba(46,212,122,0)}100%{box-shadow:0 0 0 0 rgba(46,212,122,0)}}
 .online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse-g 2.5s infinite;flex-shrink:0;}
 .online-dot.offline{background:var(--red);animation:none;}
+/* ── STATUS BADGES NO TOPBAR ─── */
+.tb-status-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;padding:5px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);transition:all .15s;white-space:nowrap;}
+.tb-status-badge:hover{border-color:var(--line2);color:var(--text);}
+.tb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .3s;}
+.tb-dot.ok{background:var(--green);animation:pulse-g 2.5s infinite;}
+.tb-dot.warn{background:var(--warn);}
+.tb-dot.error{background:var(--red);}
+.tb-dot.idle{background:var(--text3);}
 .sb-toggle{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r);border:1px solid var(--line);background:var(--ink3);cursor:pointer;font-size:17px;}
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:199;backdrop-filter:blur(4px);}
 
@@ -2264,15 +2272,36 @@ textarea{resize:vertical;}
     <div><div class="tb-title" id="topbar-title">Dashboard</div><div class="tb-sub" id="topbar-sub">Visão geral</div></div>
   </div>
   <div class="tb-right">
-    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);cursor:pointer;padding:5px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)" onclick="abrirConfigSb()">
-      <div class="sb-dot" id="sb-status-dot"></div><span id="sb-status-lbl">Modo local</span>
+
+    <!-- Badge: Banco (Supabase) -->
+    <div class="tb-status-badge" onclick="abrirConfigSb()" title="Status do banco de dados">
+      <div class="sb-dot" id="sb-status-dot"></div>
+      <span id="sb-status-lbl">Banco</span>
     </div>
-    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
-      <div class="online-dot" id="online-dot"></div><span id="online-lbl">Online</span>
+
+    <!-- Badge: Online/Offline -->
+    <div class="tb-status-badge" title="Conexão com internet">
+      <div class="online-dot" id="online-dot"></div>
+      <span id="online-lbl">Online</span>
     </div>
-    <button class="btn btn-icon btn-ghost" onclick="exportarBackup()" title="Backup">💾</button>
+
+    <!-- Badge: Backend Node.js -->
+    <div class="tb-status-badge" id="tb-backend-badge" onclick="testarBackend()" title="Backend Node.js (Railway)" style="display:none">
+      <div class="tb-dot" id="tb-backend-dot" style="background:var(--text3)"></div>
+      <span id="tb-backend-lbl">Backend</span>
+    </div>
+
+    <!-- Badge: ERP Flow -->
+    <div class="tb-status-badge" id="tb-erpflow-badge" title="Fluxo ERP: Orçamento → Pedido → Financeiro">
+      <div class="tb-dot" id="tb-erpflow-dot" style="background:var(--text3)"></div>
+      <span id="tb-erpflow-lbl">ERP Flow</span>
+    </div>
+
+    <div style="width:1px;height:18px;background:var(--line);margin:0 2px"></div>
+
+    <button class="btn btn-icon btn-ghost" onclick="exportarBackup()" title="Backup local">💾</button>
     <button class="btn btn-secondary btn-sm" onclick="navTo('orcamento')">+ Orçamento</button>
-    <button class="btn btn-ghost btn-sm" id="btn-logout" style="display:none" onclick="authLogout()" title="Sair">⏏</button>
+    <button class="btn btn-ghost btn-sm" id="btn-logout" style="display:none" onclick="authLogout()" title="Sair do sistema">⏏ Sair</button>
   </div>
 </header>
 
@@ -20946,6 +20975,400 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('[VisualCalc] Para ver o SQL de migration: console.log(VC_MIGRATION_SQL)');
 console.log('[VisualCalc] Para rodar diagnóstico: vcDiagnostico()');
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   VISUALCALC ERP — ONBOARDING v1.0
+   Wizard de boas-vindas para novos usuários
+═══════════════════════════════════════════════════════════════ */
+
+var _onboardingSteps = [
+  {
+    icon: '🎉',
+    titulo: 'Bem-vindo ao VisualCalc ERP!',
+    sub: 'Seu sistema de gestão para gráficas',
+    desc: 'Em poucos minutos você vai configurar sua empresa e fazer seu primeiro orçamento. Vamos começar?',
+    acao: 'Vamos lá →',
+    pular: true,
+  },
+  {
+    icon: '🏢',
+    titulo: 'Configure sua empresa',
+    sub: 'Passo 1 de 4',
+    desc: 'Acesse <strong>Configurações → Empresa</strong> e preencha o nome da gráfica, CNPJ e endereço. Esses dados aparecem nos PDFs e nas notas fiscais.',
+    acao: 'Entendido →',
+    destaque: 'config',
+  },
+  {
+    icon: '🎨',
+    titulo: 'Cadastre seus materiais',
+    sub: 'Passo 2 de 4',
+    desc: 'Vá em <strong>Materiais</strong> e cadastre seus materiais com o custo por m². Exemplo: Lona 440g = R$ 12,00/m². O sistema usa isso para calcular automaticamente.',
+    acao: 'Entendido →',
+    destaque: 'materiais',
+  },
+  {
+    icon: '📋',
+    titulo: 'Faça seu primeiro orçamento',
+    sub: 'Passo 3 de 4',
+    desc: 'Clique em <strong>Novo Orçamento</strong> no menu. Selecione o produto, informe as dimensões e clique em Calcular. O sistema gera preço, margem e proposta em PDF.',
+    acao: 'Entendido →',
+    destaque: 'orcamento',
+  },
+  {
+    icon: '🚀',
+    titulo: 'Tudo pronto!',
+    sub: 'Passo 4 de 4',
+    desc: 'Você já pode usar o VisualCalc ERP. Explore os módulos de Produção, Financeiro e Nota Fiscal conforme precisar. Qualquer dúvida, estamos aqui.',
+    acao: '🚀 Abrir o sistema',
+    pular: false,
+    final: true,
+  },
+];
+
+var _onbStep = 0;
+
+function vc_mostrarOnboarding() {
+  // Só mostrar para usuários novos (sem dados)
+  var visto = localStorage.getItem('vc_onboarding_visto');
+  if (visto) return;
+
+  var existe = document.getElementById('vc-onboarding-modal');
+  if (existe) { existe.style.display = 'flex'; _onbStep = 0; vc_renderOnbStep(); return; }
+
+  var modal = document.createElement('div');
+  modal.id = 'vc-onboarding-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)';
+  modal.innerHTML = '<div id="vc-onb-box" style="background:var(--ink2);border:1px solid var(--line);border-radius:24px;max-width:500px;width:100%;padding:40px 36px;position:relative;overflow:hidden">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e8b84b,#2ed47a)"></div>'
+    + '<div id="vc-onb-content"></div>'
+    + '</div>';
+  document.body.appendChild(modal);
+  _onbStep = 0;
+  vc_renderOnbStep();
+}
+
+function vc_renderOnbStep() {
+  var s   = _onboardingSteps[_onbStep];
+  var box = document.getElementById('vc-onb-content');
+  if (!box) return;
+
+  // Barra de progresso
+  var pct = ((_onbStep) / (_onboardingSteps.length - 1)) * 100;
+
+  box.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'
+    + '<div style="display:flex;gap:6px">'
+    + _onboardingSteps.map(function(_,i){
+        return '<div style="width:'+(i===_onbStep?24:8)+'px;height:8px;border-radius:99px;background:'+(i<=_onbStep?'var(--gold)':'var(--line)')+';transition:all .3s"></div>';
+      }).join('')
+    + '</div>'
+    + (s.pular !== false ? '<button onclick="vc_fecharOnboarding()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:4px 8px">Pular</button>' : '<div></div>')
+    + '</div>'
+    + '<div style="text-align:center;margin-bottom:24px">'
+    + '<div style="font-size:56px;margin-bottom:16px;animation:pgIn .3s ease">'+s.icon+'</div>'
+    + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:700;margin-bottom:6px">'+s.sub+'</div>'
+    + '<div style="font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:22px;margin-bottom:12px">'+s.titulo+'</div>'
+    + '<div style="font-size:14px;color:var(--text2);line-height:1.7">'+s.desc+'</div>'
+    + '</div>'
+    + '<button id="vc-onb-btn-next" style="width:100%;padding:14px;background:linear-gradient(135deg,#e8b84b,#f0c060);color:#000;border:none;border-radius:12px;font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:15px;cursor:pointer">'
+    + s.acao
+    + '</button>';
+  setTimeout(function(){ var b=document.getElementById('vc-onb-btn-next'); if(b) b.onclick=vc_onbProximo; },50);
+}
+
+function vc_onbProximo() {
+  var s = _onboardingSteps[_onbStep];
+  if (s.destaque && typeof navTo === 'function') {
+    // Destacar o item no sidebar
+    var sbItem = document.querySelector('.sb-item[data-page="'+s.destaque+'"]');
+    if (sbItem) {
+      sbItem.style.boxShadow = '0 0 0 2px var(--gold)';
+      setTimeout(function(){ sbItem.style.boxShadow = ''; }, 3000);
+    }
+  }
+  if (s.final) { vc_fecharOnboarding(); return; }
+  _onbStep++;
+  if (_onbStep >= _onboardingSteps.length) { vc_fecharOnboarding(); return; }
+  vc_renderOnbStep();
+}
+
+function vc_fecharOnboarding() {
+  localStorage.setItem('vc_onboarding_visto', '1');
+  var m = document.getElementById('vc-onboarding-modal');
+  if (m) { m.style.opacity = '0'; m.style.transition = 'opacity .3s'; setTimeout(function(){ m.remove(); }, 300); }
+}
+
+// Botão para reabrir o onboarding
+window.reabrirOnboarding = function() {
+  localStorage.removeItem('vc_onboarding_visto');
+  vc_mostrarOnboarding();
+};
+
+// Disparar onboarding para novos usuários após login
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    // Verificar se é usuário novo (sem materiais e sem orçamentos)
+    var s = window.state;
+    if (s && s.materiais && s.materiais.length === 0 && s.orcamentos && s.orcamentos.length === 0) {
+      var visto = localStorage.getItem('vc_onboarding_visto');
+      if (!visto && typeof isSbOk === 'function' && isSbOk()) {
+        setTimeout(vc_mostrarOnboarding, 1500);
+      }
+    }
+  }, 2000);
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   VISUALCALC ERP — PAGAMENTO PIX MELHORADO v2.0
+   Chave PIX configurável + QR Code + Instrução clara
+═══════════════════════════════════════════════════════════════ */
+
+// Configuração da chave PIX (admin define nas configurações)
+function getPixConfig() {
+  try {
+    var cfg = JSON.parse(localStorage.getItem('vc_pix_config') || '{}');
+    return {
+      chave:        cfg.chave        || '',
+      tipo:         cfg.tipo         || 'cpf',
+      banco:        cfg.banco        || '',
+      beneficiario: cfg.beneficiario || '',
+      instrucoes:   cfg.instrucoes   || 'Envie o comprovante por WhatsApp após o pagamento.',
+    };
+  } catch(e) { return {}; }
+}
+
+function salvarPixConfig() {
+  var cfg = {
+    chave:        (document.getElementById('pix-cfg-chave')    ||{}).value || '',
+    tipo:         (document.getElementById('pix-cfg-tipo')     ||{}).value || 'cpf',
+    banco:        (document.getElementById('pix-cfg-banco')    ||{}).value || '',
+    beneficiario: (document.getElementById('pix-cfg-benef')    ||{}).value || '',
+    instrucoes:   (document.getElementById('pix-cfg-instrucoes')||{}).value || '',
+  };
+  localStorage.setItem('vc_pix_config', JSON.stringify(cfg));
+  typeof toast === 'function' && toast('✅ Configuração PIX salva!', 'success');
+  fecharModalPixConfig();
+}
+
+function abrirModalPixConfig() {
+  var cfg = getPixConfig();
+  var modal = document.getElementById('modal-pix-config');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-pix-config';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'none';
+    modal.onclick = function(e){ if(e.target===modal) fecharModalPixConfig(); };
+    modal.innerHTML = '<div class="modal-box" style="max-width:480px">'
+      + '<button class="modal-close" onclick="fecharModalPixConfig()">✕</button>'
+      + '<div class="modal-title">⚙️ Configurar Chave PIX</div>'
+      + '<div class="modal-sub">Para receber pagamentos dos planos</div>'
+      + '<div class="form-group"><label>Tipo de Chave</label>'
+      + '<select id="pix-cfg-tipo" class="wz-input"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="email">E-mail</option><option value="telefone">Telefone</option><option value="aleatoria">Chave Aleatória</option></select></div>'
+      + '<div class="form-group"><label>Chave PIX <span class="wz-req-mark">*</span></label>'
+      + '<input type="text" id="pix-cfg-chave" class="wz-input" placeholder="sua@chave.pix"></div>'
+      + '<div class="wz-grid-2">'
+      + '<div class="form-group" style="margin:0"><label>Banco</label><input type="text" id="pix-cfg-banco" class="wz-input" placeholder="Banco do Brasil"></div>'
+      + '<div class="form-group" style="margin:0"><label>Beneficiário</label><input type="text" id="pix-cfg-benef" class="wz-input" placeholder="Nome ou empresa"></div>'
+      + '</div>'
+      + '<div class="form-group"><label>Instruções após pagamento</label>'
+      + '<textarea id="pix-cfg-instrucoes" class="wz-input" rows="2" placeholder="Envie comprovante no WhatsApp..."></textarea></div>'
+      + '<div style="display:flex;gap:8px"><button class="btn btn-primary" style="flex:1;justify-content:center" onclick="salvarPixConfig()">💾 Salvar</button>'
+      + '<button class="btn btn-ghost" onclick="fecharModalPixConfig()">Cancelar</button></div>'
+      + '</div>';
+    document.body.appendChild(modal);
+  }
+  // Preencher campos
+  var s = function(id, v){ var el=document.getElementById(id); if(el) el.value=v||''; };
+  s('pix-cfg-chave', cfg.chave); s('pix-cfg-tipo', cfg.tipo);
+  s('pix-cfg-banco', cfg.banco); s('pix-cfg-benef', cfg.beneficiario);
+  s('pix-cfg-instrucoes', cfg.instrucoes);
+  modal.style.display = 'flex';
+}
+function fecharModalPixConfig() {
+  var m = document.getElementById('modal-pix-config'); if (m) m.style.display = 'none';
+}
+
+// Melhorar o abrirModalPix existente
+var _abrirModalPixOrig = window.abrirModalPix;
+window.abrirModalPix = function(planoNome, valor) {
+  var cfg = getPixConfig();
+
+  // Se não tem chave PIX configurada e é admin, abrir config primeiro
+  if (!cfg.chave && typeof currentRole !== 'undefined' && (currentRole === 'owner' || currentRole === 'admin')) {
+    if (confirm('Você ainda não configurou sua chave PIX. Configurar agora?')) {
+      abrirModalPixConfig();
+      return;
+    }
+  }
+
+  // Atualizar o modal PIX com os dados reais
+  var keyEl   = document.getElementById('pix-key-display');
+  var bankEl  = document.getElementById('pix-bank-display');
+  var nameEl  = document.getElementById('pix-name-display');
+  var planEl  = document.getElementById('pix-plano-display');
+  var valEl   = document.getElementById('pix-valor-display');
+
+  if (keyEl)  keyEl.textContent  = cfg.chave        || '(chave não configurada)';
+  if (bankEl) bankEl.textContent = cfg.banco        || '—';
+  if (nameEl) nameEl.textContent = cfg.beneficiario || '—';
+  if (planEl) planEl.textContent = planoNome ? 'Plano ' + planoNome + ' — VisualCalc ERP' : 'Assinatura VisualCalc ERP';
+
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+  if (valEl) valEl.textContent = 'R$ ' + fmtV(valor || 0);
+
+  var m = document.getElementById('modal-pix');
+  if (m) m.style.display = 'flex';
+};
+
+// Expor função de configuração PIX globalmente
+window.abrirModalPixConfig = abrirModalPixConfig;
+window.vc_mostrarOnboarding = vc_mostrarOnboarding;
+
+console.log('[VisualCalc] Onboarding + PIX v2.0 carregados ✓');
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   STATUS BADGES v2.0 — Topbar em tempo real
+   Banco · Online · Backend · ERP Flow
+═══════════════════════════════════════════════════════ */
+
+// ── Atualizar badge do Banco (Supabase) ─────────────────
+function updateSbStatus() {
+  var dot = document.getElementById('sb-status-dot');
+  var lbl = document.getElementById('sb-status-lbl');
+  var ok  = typeof isSbOk === 'function' && isSbOk() && window.currentEmpresaId;
+
+  if (dot) {
+    dot.className = 'sb-dot' + (ok ? ' ok' : '');
+    dot.style.background = ok ? 'var(--green)' : 'var(--warn)';
+  }
+  if (lbl) {
+    if (ok) {
+      var plano = window.currentPlano || 'free';
+      lbl.textContent = 'Banco · ' + plano;
+    } else {
+      lbl.textContent = 'Banco offline';
+    }
+  }
+}
+
+// ── Atualizar badge Online/Offline ──────────────────────
+function updateOnlineStatus() {
+  var dot = document.getElementById('online-dot');
+  var lbl = document.getElementById('online-lbl');
+  var online = navigator.onLine;
+  if (dot) dot.className = 'online-dot' + (online ? '' : ' offline');
+  if (lbl) lbl.textContent = online ? 'Online' : 'Offline';
+  if (!online) typeof toast === 'function' && toast('Sem conexão com a internet', 'warn', 'Offline');
+}
+
+// ── Atualizar badge Backend Node.js ────────────────────
+async function updateBackendStatus() {
+  var badge = document.getElementById('tb-backend-badge');
+  var dot   = document.getElementById('tb-backend-dot');
+  var lbl   = document.getElementById('tb-backend-lbl');
+
+  var backendUrl = typeof getBackendUrl === 'function' ? getBackendUrl() :
+                   localStorage.getItem('vc_backend_url') || '';
+
+  if (!backendUrl) {
+    if (badge) badge.style.display = 'none';
+    return;
+  }
+
+  if (badge) badge.style.display = 'flex';
+
+  try {
+    var r = await fetch(backendUrl + '/health', { signal: AbortSignal.timeout(4000) });
+    var ok = r.ok;
+    if (dot) { dot.className = 'tb-dot ' + (ok ? 'ok' : 'error'); }
+    if (lbl) lbl.textContent = ok ? 'Backend ✓' : 'Backend ✗';
+  } catch(e) {
+    if (dot) dot.className = 'tb-dot error';
+    if (lbl) lbl.textContent = 'Backend off';
+  }
+}
+
+// ── Atualizar badge ERP Flow ────────────────────────────
+function updateErpFlowStatus() {
+  var badge = document.getElementById('tb-erpflow-badge');
+  var dot   = document.getElementById('tb-erpflow-dot');
+  var lbl   = document.getElementById('tb-erpflow-lbl');
+
+  if (!badge) return;
+
+  var sb   = typeof isSbOk === 'function' && isSbOk();
+  var emp  = !!window.currentEmpresaId;
+  var auth = !!window.currentUser;
+
+  // Verificar se o fluxo ERP está operacional
+  var fluxoOk  = sb && emp && auth;
+  var temDados = window.state &&
+    (window.state.materiais && window.state.materiais.length > 0 ||
+     window.state.clientes  && window.state.clientes.length  > 0);
+
+  if (!sb || !emp) {
+    // Não configurado
+    badge.style.display = 'flex';
+    if (dot) dot.className = 'tb-dot error';
+    if (lbl) lbl.textContent = 'ERP: sem banco';
+  } else if (!auth) {
+    // Não logado
+    badge.style.display = 'none';
+  } else if (!temDados) {
+    // Logado mas sem dados ainda
+    badge.style.display = 'flex';
+    if (dot) dot.className = 'tb-dot warn';
+    if (lbl) lbl.textContent = 'ERP Flow: configurar';
+  } else {
+    // Tudo funcionando
+    badge.style.display = 'flex';
+    if (dot) dot.className = 'tb-dot ok';
+    if (lbl) lbl.textContent = 'ERP Flow ✓';
+  }
+}
+
+// ── Atualização periódica ───────────────────────────────
+function iniciarMonitorStatus() {
+  // Atualizar imediatamente
+  updateOnlineStatus();
+  updateSbStatus();
+  updateErpFlowStatus();
+
+  // Backend só verificar se configurado (não spam)
+  setTimeout(updateBackendStatus, 2000);
+
+  // Repetir a cada 30s
+  setInterval(function() {
+    updateSbStatus();
+    updateErpFlowStatus();
+  }, 30000);
+
+  // Backend a cada 60s
+  setInterval(updateBackendStatus, 60000);
+}
+
+// Listeners de eventos
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// Iniciar após o app carregar
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(iniciarMonitorStatus, 1500);
+});
+
+// Expor para uso externo
+window.updateSbStatus      = updateSbStatus;
+window.updateErpFlowStatus = updateErpFlowStatus;
+window.updateBackendStatus = updateBackendStatus;
+
+console.log('[VisualCalc] Status Badges v2.0 ✓');
 </script>
 
 </body>
