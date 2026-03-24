@@ -4819,19 +4819,84 @@ ORDER BY a.created_at DESC LIMIT 10;</pre>
 
 <!-- Modal Financeiro -->
 <div id="modal-financeiro" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalFinanceiro()">
-  <div class="modal-box modal-box-sm">
+  <div class="modal-box" style="max-width:500px">
     <button class="modal-close" onclick="fecharModalFinanceiro()">✕</button>
-    <div class="modal-title">💰 Novo Lançamento</div>
-    <div class="modal-sub">Registrar entrada ou saída</div>
-    <div class="g2" style="gap:10px">
-      <div class="form-group" style="margin:0"><label>Tipo</label><select id="fin_tipo"><option value="entrada">↑ Entrada</option><option value="saida">↓ Saída</option></select></div>
-      <div class="form-group" style="margin:0"><label>Categoria</label><select id="fin_cat"><option value="orcamento">Orçamento</option><option value="material">Material</option><option value="servico">Serviço</option><option value="salario">Salário</option><option value="aluguel">Aluguel</option><option value="outros">Outros</option></select></div>
+    <div class="modal-title" id="fin-modal-titulo">💰 Novo Lançamento</div>
+    <div class="modal-sub">Registrar entrada ou saída no fluxo de caixa</div>
+    <input type="hidden" id="fin_edit_id">
+    <div class="wz-grid-2" style="margin-top:4px">
+      <div class="form-group" style="margin:0">
+        <label>Tipo <span class="wz-req-mark">*</span></label>
+        <select id="fin_tipo" class="wz-input">
+          <option value="entrada">↑ Entrada (Receber)</option>
+          <option value="saida">↓ Saída (Pagar)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Categoria</label>
+        <select id="fin_cat" class="wz-input">
+          <option value="vendas">💼 Vendas / Orçamento</option>
+          <option value="material">🎨 Material / Insumo</option>
+          <option value="servico">🔧 Serviço Terceirizado</option>
+          <option value="salario">👤 Salário / M.O.</option>
+          <option value="aluguel">🏢 Aluguel / Infraestrutura</option>
+          <option value="imposto">📋 Imposto / Taxa</option>
+          <option value="equipamento">⚙️ Equipamento / Manutenção</option>
+          <option value="outros">📦 Outros</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:span 2;margin:0">
+        <label>Descrição <span class="wz-req-mark">*</span></label>
+        <input type="text" id="fin_desc" class="wz-input" placeholder="Ex: Pagamento Banner Cliente João, Compra Lona...">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Valor (R$) <span class="wz-req-mark">*</span></label>
+        <input type="number" id="fin_valor" class="wz-input" placeholder="0,00" step="0.01" min="0">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Status</label>
+        <select id="fin_status" class="wz-input">
+          <option value="pendente">⏳ Pendente</option>
+          <option value="pago">✅ Pago / Recebido</option>
+          <option value="cancelado">❌ Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Data</label>
+        <input type="date" id="fin_data" class="wz-input">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Vencimento</label>
+        <input type="date" id="fin_vencimento" class="wz-input">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Forma de Pagamento</label>
+        <select id="fin_forma" class="wz-input">
+          <option value="">— Selecione —</option>
+          <option value="pix">💠 PIX</option>
+          <option value="dinheiro">💵 Dinheiro</option>
+          <option value="cartao_credito">💳 Cartão de Crédito</option>
+          <option value="cartao_debito">💳 Cartão de Débito</option>
+          <option value="boleto">📄 Boleto</option>
+          <option value="transferencia">🏦 Transferência (TED/DOC)</option>
+          <option value="cheque">📋 Cheque</option>
+          <option value="permuta">🔄 Permuta</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Origem</label>
+        <select id="fin_origem" class="wz-input">
+          <option value="manual">✍️ Manual</option>
+          <option value="pedido">📋 Pedido / Venda</option>
+          <option value="nf">🧾 Nota Fiscal</option>
+          <option value="recorrente">🔄 Recorrente</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group"><label>Descrição *</label><input type="text" id="fin_desc" placeholder="Descreva o lançamento"></div>
-    <div class="form-group"><label>Valor (R$) *</label><input type="number" id="fin_valor" placeholder="0.00" step="0.01" min="0"></div>
-    <div class="form-group"><label>Status</label><select id="fin_status"><option value="pendente">⏳ Pendente</option><option value="pago">✅ Pago</option></select></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="salvarLancamento()">Salvar</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="salvarLancamento()">
+        💾 Salvar Lançamento
+      </button>
       <button class="btn btn-ghost" onclick="fecharModalFinanceiro()">Cancelar</button>
     </div>
   </div>
@@ -6315,7 +6380,16 @@ async function dbFetchClientes() {
       sb.from('clientes').select('*')
     ).eq('ativo', true).order('nome');
     if (error) throw error;
-    if (data) { state.clientes = data.map(r => ({ ...r, _db_id:r.id })); saveState(); }
+    if (data) {
+      state.clientes = data.map(r => ({
+        ...r,
+        _db_id:   r.id,
+        // Compatibilidade com campos do wizard
+        endereco: r.logradouro || r.endereco || '',
+        cidade:   r.cidade && r.uf ? r.cidade + '/' + r.uf : (r.cidade || ''),
+      }));
+      saveState();
+    }
   } catch(e) { console.warn('dbFetchClientes:', e.message); }
 }
 
@@ -6326,9 +6400,26 @@ async function dbSaveCliente(cli) {
   const sb = getSb(); if (!sb) return cli;
   try {
     const row = withEmpresa({
-      nome:cli.nome, telefone:cli.telefone||'', email:cli.email||'',
-      endereco:cli.endereco||'', cidade:cli.cidade||'', obs:cli.obs||'',
-      cpf_cnpj:cli.cpf_cnpj||'', ativo:true
+      nome:        cli.nome,
+      telefone:    cli.telefone    || '',
+      whatsapp:    cli.whatsapp    || cli.telefone || '',
+      email:       cli.email       || '',
+      cpf_cnpj:    cli.cpf_cnpj   || '',
+      tipo:        cli.tipo        || (cli.cpf_cnpj && cli.cpf_cnpj.replace(/\D/g,'').length > 11 ? 'pj' : 'pf'),
+      // Endereço
+      cep:         cli.cep         || '',
+      logradouro:  cli.logradouro  || cli.endereco || '',
+      numero:      cli.numero      || '',
+      complemento: cli.complemento || '',
+      bairro:      cli.bairro      || '',
+      cidade:      (cli.cidade     || '').split('/')[0].trim() || '',
+      uf:          cli.uf          || (cli.cidade && cli.cidade.includes('/') ? cli.cidade.split('/')[1].trim() : 'SP'),
+      // Legado
+      endereco:    cli.logradouro  || cli.endereco || '',
+      obs:         cli.obs         || '',
+      categoria:   cli.categoria   || 'normal',
+      ativo:       true,
+      criado_por:  window.currentUser ? window.currentUser.id : null,
     });
     if (cli._db_id) {
       const { error } = await sb.from('clientes').update(row).eq('id', cli._db_id);
@@ -6477,11 +6568,25 @@ async function dbCriarPedido(orcId) {
     if (sb) {
       try {
         const row = withEmpresa({
-          orcamento_id:orc._db_id||null, numero,
-          cliente_id:orc.cliente_id||null, cliente_nome:orc.cliente,
-          produto:orc.produto, material:orc.material||'',
-          largura:+orc.largura||0, altura:+orc.altura||0, area:+orc.area||0,
-          valor:+orc.precoFinal||0, status:'producao', prioridade:'normal'
+          orcamento_id:    orc._db_id||null,
+          numero,
+          cliente_id:      orc.cliente_id||null,
+          cliente_nome:    orc.cliente||'',
+          produto:         orc.produto||'',
+          produto_nome:    orc.produto||'',
+          material:        orc.material||'',
+          material_nome:   orc.material||'',
+          largura:         +orc.largura||0,
+          altura:          +orc.altura||0,
+          area_m2:         +orc.area||0,
+          quantidade:      +orc.qtd||1,
+          custo_total:     +orc.custoTotal||0,
+          valor_total:     +orc.precoFinal||0,
+          lucro:           +orc.lucro||0,
+          margem_real:     +orc.margemReal||0,
+          status:          'producao',
+          prioridade:      'normal',
+          data_pedido:     new Date().toISOString().split('T')[0],
         });
         const { data, error } = await sb.from('pedidos').insert(row).select('id').single();
         if (!error && data) {
@@ -6503,17 +6608,58 @@ async function dbFetchPedidos() {
       sb.from('pedidos').select('*')
     ).order('created_at', { ascending:false });
     if (error) throw error;
-    state.pedidos = (data||[]).map(r => ({ ...r, _db_id:r.id, data:new Date(r.created_at).toLocaleString('pt-BR') }));
+    state.pedidos = (data||[]).map(r => ({
+      ...r,
+      _db_id:       r.id,
+      data:         r.data_pedido || (r.created_at ? new Date(r.created_at).toLocaleDateString('pt-BR') : ''),
+      cliente_nome: r.cliente_nome || '',
+      produto:      r.produto_nome || r.produto || '',
+      material:     r.material_nome || r.material || '',
+      area:         r.area_m2 || r.area || 0,
+      valor:        r.valor_total || r.valor || 0,
+      responsavel:  r.responsavel || '',
+      prazo:        r.prazo || '',
+      obs_producao: r.obs_producao || '',
+    }));
     saveState(); return state.pedidos;
   } catch(e) { console.warn('dbFetchPedidos:', e.message); return state.pedidos; }
 }
 
-async function dbUpdatePedidoStatus(id, status) {
+async function dbUpdatePedidoStatus(id, status, extras) {
   const p = state.pedidos.find(x=>x.id===id||x._db_id===id);
-  if (p) { p.status=status; saveState(); }
+  if (p) {
+    p.status = status;
+    if (extras) Object.assign(p, extras);
+    saveState();
+  }
   if (dbMode() !== 'supabase') return;
   const sb = getSb(); if (!sb) return;
-  try { await sb.from('pedidos').update({ status }).eq('id', p?._db_id||id); } catch(e) {}
+  try {
+    const updateData = Object.assign({ status }, extras || {});
+    await sb.from('pedidos').update(updateData).eq('id', p?._db_id||id);
+  } catch(e) { console.warn('dbUpdatePedidoStatus:', e.message); }
+}
+
+// Salvar responsável e prazo da ordem de produção
+async function dbSalvarOrdemProducao(pedidoId, dados) {
+  const p = state.pedidos.find(x=>String(x.id||x._db_id)===String(pedidoId));
+  if (p) {
+    p.responsavel  = dados.responsavel  || p.responsavel;
+    p.prazo        = dados.prazo        || p.prazo;
+    p.obs_producao = dados.obs_producao || p.obs_producao;
+    if (dados.status) p.status = dados.status;
+    saveState();
+  }
+  if (dbMode() !== 'supabase') return;
+  const sb = getSb(); if (!sb) return;
+  try {
+    await sb.from('pedidos').update({
+      responsavel:  dados.responsavel  || null,
+      prazo:        dados.prazo        || null,
+      obs_producao: dados.obs_producao || null,
+      status:       dados.status       || (p && p.status) || 'producao',
+    }).eq('id', p?._db_id || pedidoId);
+  } catch(e) { console.warn('dbSalvarOrdemProducao:', e.message); }
 }
 
 // ─── DB: FINANCEIRO (multiempresa) ────────────────────────────────────
@@ -6533,11 +6679,18 @@ async function dbSaveFinanceiro(fin) {
     if (sb) {
       try {
         const row = withEmpresa({
-          pedido_id:fin.pedido_id||null, orcamento_id:fin.orcamento_id||null,
-          tipo:fin.tipo, categoria:fin.categoria||'outros',
-          descricao:fin.descricao, valor:+fin.valor||0,
-          status:fin.status||'pendente',
-          vencimento:fin.vencimento||null
+          pedido_id:      fin.pedido_id      || null,
+          orcamento_id:   fin.orcamento_id   || null,
+          tipo:           fin.tipo,
+          categoria:      fin.categoria      || 'outros',
+          descricao:      fin.descricao      || '',
+          valor:          +fin.valor         || 0,
+          status:         fin.status         || 'pendente',
+          origem:         fin.origem         || 'manual',
+          origem_ref:     fin.origem_ref     || null,
+          forma_pagamento:fin.forma_pagamento|| null,
+          data:           fin.data           || new Date().toISOString().split('T')[0],
+          data_vencimento:fin.data_vencimento|| fin.vencimento || null,
         });
         const { data, error } = await sb.from('financeiro').insert(row).select('id').single();
         if (!error && data) { record._db_id = data.id; state.financeiro[0]._db_id = data.id; saveState(); }
@@ -6555,7 +6708,15 @@ async function dbFetchFinanceiro() {
       sb.from('financeiro').select('*')
     ).order('created_at', { ascending:false });
     if (error) throw error;
-    state.financeiro = (data||[]).map(r => ({ ...r, _db_id:r.id, data:new Date(r.created_at).toLocaleString('pt-BR') }));
+    state.financeiro = (data||[]).map(r => ({
+      ...r,
+      _db_id:         r.id,
+      data:           r.data || (r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : ''),
+      vencimento:     r.data_vencimento || r.vencimento || '',
+      forma_pagamento:r.forma_pagamento || '',
+      origem:         r.origem || 'manual',
+      origem_ref:     r.origem_ref || '',
+    }));
     saveState(); return state.financeiro;
   } catch(e) { console.warn('dbFetchFinanceiro:', e.message); return state.financeiro; }
 }
@@ -7659,26 +7820,67 @@ async function pagarLancamento(id) {
   hideLoading(); renderFinanceiro(); renderDashboard(); toast('Lançamento marcado como pago!','success');
 }
 
-function abrirModalFinanceiro() {
-  const el = document.getElementById('modal-financeiro'); if(el) el.style.display='flex';
+function abrirModalFinanceiro(tipo) {
+  var el = document.getElementById('modal-financeiro');
+  if (!el) return;
+
+  // Limpar campos
+  ['fin_desc','fin_edit_id'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  var valEl = document.getElementById('fin_valor'); if (valEl) valEl.value = '';
+
+  // Pré-selecionar tipo
+  var tipoEl = document.getElementById('fin_tipo');
+  if (tipoEl) tipoEl.value = tipo || 'entrada';
+
+  // Data de hoje como padrão
+  var dataEl = document.getElementById('fin_data');
+  if (dataEl) dataEl.value = new Date().toISOString().split('T')[0];
+
+  // Reset outros campos
+  var statusEl = document.getElementById('fin_status'); if (statusEl) statusEl.value = 'pendente';
+  var catEl    = document.getElementById('fin_cat');    if (catEl)    catEl.value    = tipo === 'saida' ? 'material' : 'vendas';
+  var origemEl = document.getElementById('fin_origem'); if (origemEl) origemEl.value = 'manual';
+  var formaEl  = document.getElementById('fin_forma');  if (formaEl)  formaEl.value  = '';
+  var vencEl   = document.getElementById('fin_vencimento'); if (vencEl) vencEl.value = '';
+
+  // Título
+  var tit = document.getElementById('fin-modal-titulo');
+  if (tit) tit.textContent = tipo === 'saida' ? '💸 Novo Pagamento' : '💵 Nova Entrada';
+
+  el.style.display = 'flex';
+  setTimeout(function(){ var d=document.getElementById('fin_desc'); if(d) d.focus(); }, 100);
 }
+
 function fecharModalFinanceiro() {
-  const el = document.getElementById('modal-financeiro'); if(el) el.style.display='none';
+  var el = document.getElementById('modal-financeiro');
+  if (el) el.style.display = 'none';
 }
 
 async function salvarLancamento() {
-  const tipo = document.getElementById('fin_tipo')?.value||'entrada';
-  const descricao = document.getElementById('fin_desc')?.value.trim()||'';
-  const valor = parseFloat(document.getElementById('fin_valor')?.value)||0;
-  const categoria = document.getElementById('fin_cat')?.value||'outros';
-  const status = document.getElementById('fin_status')?.value||'pendente';
-  if (!descricao) { toast('Informe a descrição','warn'); return; }
-  if (valor<=0) { toast('Informe o valor','warn'); return; }
-  showLoading('Salvando...');
-  await dbSaveFinanceiro({ tipo, descricao, valor, categoria, status });
-  hideLoading(); fecharModalFinanceiro(); renderFinanceiro(); renderDashboard();
-  toast('Lançamento registrado!','success');
-  ['fin_desc','fin_valor'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  var tipo      = (document.getElementById('fin_tipo')       ||{}).value || 'entrada';
+  var descricao = ((document.getElementById('fin_desc')      ||{}).value || '').trim();
+  var valor     = parseFloat((document.getElementById('fin_valor') ||{}).value) || 0;
+  var categoria = (document.getElementById('fin_cat')        ||{}).value || 'outros';
+  var status    = (document.getElementById('fin_status')     ||{}).value || 'pendente';
+  var data      = (document.getElementById('fin_data')       ||{}).value || new Date().toISOString().split('T')[0];
+  var vencimento= (document.getElementById('fin_vencimento') ||{}).value || null;
+  var forma     = (document.getElementById('fin_forma')      ||{}).value || '';
+  var origem    = (document.getElementById('fin_origem')     ||{}).value || 'manual';
+
+  if (!descricao) { typeof toast === 'function' && toast('Informe a descrição', 'warn'); return; }
+  if (valor <= 0) { typeof toast === 'function' && toast('Informe o valor', 'warn'); return; }
+
+  typeof showLoading === 'function' && showLoading('Salvando...');
+  await dbSaveFinanceiro({
+    tipo, descricao, valor, categoria, status,
+    data, data_vencimento: vencimento, vencimento,
+    forma_pagamento: forma, origem,
+  });
+  typeof hideLoading === 'function' && hideLoading();
+  fecharModalFinanceiro();
+  if (typeof renderFinanceiro === 'function') renderFinanceiro();
+  if (typeof renderDashboard  === 'function') renderDashboard();
+  typeof toast === 'function' && toast('✅ Lançamento registrado!', 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -10857,7 +11059,21 @@ async function dbFetchProdutosCat() {
       sb.from('produtos_cat').select('*')
     ).eq('ativo', true).order('nome');
     if (error) throw error;
-    if (data) { state.produtos_cat = data.map(r => ({ ...r, _db_id: r.id })); saveState(); }
+    if (data) {
+      state.produtos_cat = data.map(r => ({
+        ...r,
+        _db_id:          r.id,
+        sku:             r.sku    || r.codigo || '',
+        codigo:          r.codigo || r.sku    || '',
+        ncm:             r.ncm    || (r.fiscal && r.fiscal.ncm)  || '',
+        cfop:            r.cfop   || (r.fiscal && r.fiscal.cfop) || '5102',
+        cst:             r.cst    || (r.fiscal && r.fiscal.cst)  || '400',
+        unidade:         r.unidade || 'M2',
+        markup_padrao:   r.markup_padrao || (r.formula && r.formula.markup_padrao) || 0,
+        val_min_m2:      r.val_min_m2    || (r.formula && r.formula.val_min_m2)    || null,
+      }));
+      saveState();
+    }
   } catch(e) { console.warn('dbFetchProdutosCat:', e.message); }
 }
 
@@ -10867,10 +11083,40 @@ async function dbSaveProdutoCat(prod) {
   const sb = getSb(); if (!sb) return prod;
   try {
     const row = withEmpresa({
-      nome: prod.nome, tipo: prod.tipo || 'Banner', descricao: prod.descricao || '',
-      materiais_padrao: prod.materiais_padrao || [],
-      acabamentos_pad: prod.acabamentos_pad || [],
-      formula: prod.formula || {}, ativo: prod.ativo !== false,
+      nome:              prod.nome,
+      tipo:              prod.tipo              || 'Banner',
+      descricao:         prod.descricao         || '',
+      obs:               prod.obs               || prod.descricao || '',
+      sku:               prod.sku               || prod.codigo || '',
+      codigo:            prod.sku               || prod.codigo || '',
+      midia:             prod.midia             || '',
+      unitario:          !!prod.unitario,
+      preco_fixo:        prod.preco_fixo        || null,
+      visivel_rapido:    prod.visivel_rapido     !== false,
+      // Fiscal
+      ncm:               prod.ncm               || '',
+      cfop:              prod.cfop              || '5102',
+      cst:               prod.cst              || '400',
+      unidade:           prod.unidade           || 'M2',
+      origem_mercadoria: prod.origem_mercadoria || '0',
+      cbenef:            prod.cbenef            || '',
+      aliq_icms:         +prod.aliq_icms        || 0,
+      lc116:             prod.lc116             || '',
+      fiscal:            prod.fiscal            || {},
+      // Preços
+      markup_padrao:     +prod.markup_padrao    || 0,
+      margem_min:        +prod.margem_min       || 20,
+      val_min_prod:      prod.val_min_prod      || null,
+      val_min_m2:        prod.val_min_m2        || null,
+      desc_max:          prod.desc_max          || null,
+      grupo_margem:      prod.grupo_margem      || '',
+      // Produção
+      tem_metalon:       !!prod.tem_metalon,
+      tem_instalacao:    !!prod.tem_instalacao,
+      materiais_padrao:  prod.materiais_padrao  || [],
+      acabamentos_pad:   prod.acabamentos_pad   || [],
+      formula:           prod.formula           || {},
+      ativo:             prod.ativo             !== false,
     });
     if (prod._db_id) {
       const { error } = await sb.from('produtos_cat').update(row).eq('id', prod._db_id);
@@ -10880,8 +11126,32 @@ async function dbSaveProdutoCat(prod) {
       if (error) throw error;
       if (data) prod._db_id = data.id;
     }
+    saveState();
     return prod;
-  } catch(e) { console.warn('dbSaveProdutoCat:', e.message); toast('Erro: ' + e.message, 'error'); return prod; }
+  } catch(e) {
+    console.warn('dbSaveProdutoCat:', e.message);
+    // Se a tabela não tem os campos novos, salva só os campos básicos
+    if (e.message && e.message.includes('column')) {
+      try {
+        const rowSimples = withEmpresa({
+          nome: prod.nome, tipo: prod.tipo||'Banner', descricao: prod.descricao||'',
+          materiais_padrao: prod.materiais_padrao||[], acabamentos_pad: prod.acabamentos_pad||[],
+          formula: Object.assign({ ncm:prod.ncm, cfop:prod.cfop, cst:prod.cst }, prod.formula||{}),
+          ativo: prod.ativo !== false,
+        });
+        if (prod._db_id) {
+          await sb.from('produtos_cat').update(rowSimples).eq('id', prod._db_id);
+        } else {
+          const { data } = await sb.from('produtos_cat').insert(rowSimples).select('id').single();
+          if (data) prod._db_id = data.id;
+        }
+        saveState();
+        return prod;
+      } catch(e2) { console.warn('dbSaveProdutoCat fallback:', e2.message); }
+    }
+    typeof toast === 'function' && toast('Aviso: ' + e.message, 'warn');
+    return prod;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -12121,8 +12391,17 @@ async function initApp() {
 
   setLoadMsg('Carregando dados...');
   await Promise.allSettled([
-    dbFetchMateriais(), dbFetchClientes(), dbFetchFornecedores(),
-    dbFetchInsumos(),   dbFetchCompras(), dbFetchProdutosCat()
+    dbFetchMateriais(),
+    dbFetchClientes(),
+    dbFetchFornecedores(),
+    dbFetchInsumos(),
+    dbFetchCompras(),
+    dbFetchProdutosCat(),
+    dbFetchOrcamentos(),
+    dbFetchPedidos(),
+    dbFetchFinanceiro(),
+    dbFetchNFs(),
+    dbFetchItensFiscais(),
   ]);
 
   // Controle de assinatura — obrigatório
@@ -20194,29 +20473,35 @@ function fecharModalOP() {
 }
 
 async function salvarOrdemProducao() {
-  var pedId    = (document.getElementById('op-pedido-id')     || {}).value || '';
-  var resp     = (document.getElementById('op-responsavel')   || {}).value || '';
-  var prazo    = (document.getElementById('op-prazo')         || {}).value || '';
-  var statusI  = (document.getElementById('op-status-inicial')|| {}).value || 'producao';
-  var obs      = (document.getElementById('op-obs')           || {}).value || '';
+  var pedId   = (document.getElementById('op-pedido-id')      || {}).value || '';
+  var resp    = (document.getElementById('op-responsavel')    || {}).value || '';
+  var prazo   = (document.getElementById('op-prazo')          || {}).value || '';
+  var statusI = (document.getElementById('op-status-inicial') || {}).value || 'producao';
+  var obs     = (document.getElementById('op-obs')            || {}).value || '';
 
   if (!resp) { typeof toast === 'function' && toast('Selecione um responsável', 'warn'); return; }
 
-  // Atualizar o pedido com responsável e prazo
-  var peds = (window.state && window.state.pedidos) || [];
-  var idx  = peds.findIndex(function(p){ return String(p.id||p._db_id) === String(pedId); });
-  if (idx >= 0) {
-    peds[idx].responsavel  = resp;
-    peds[idx].prazo        = prazo;
-    peds[idx].obs_producao = obs;
-    peds[idx].status       = statusI;
-    if (typeof saveState === 'function') saveState();
-    if (typeof renderPedidos === 'function') renderPedidos();
-    if (typeof renderDashboard === 'function') renderDashboard();
+  typeof showLoading === 'function' && showLoading('Salvando ordem...');
+
+  // Salvar localmente e no banco
+  if (typeof dbSalvarOrdemProducao === 'function') {
+    await dbSalvarOrdemProducao(pedId, { responsavel: resp, prazo, obs_producao: obs, status: statusI });
+  } else {
+    // Fallback: atualizar só state
+    var peds = (window.state && window.state.pedidos) || [];
+    var idx  = peds.findIndex(function(p){ return String(p.id||p._db_id) === String(pedId); });
+    if (idx >= 0) {
+      peds[idx].responsavel = resp; peds[idx].prazo = prazo;
+      peds[idx].obs_producao = obs; peds[idx].status = statusI;
+      if (typeof saveState === 'function') saveState();
+    }
   }
 
+  typeof hideLoading === 'function' && hideLoading();
   fecharModalOP();
-  typeof toast === 'function' && toast('✅ Ordem de produção criada!', 'success', 'Produção');
+  if (typeof renderPedidos  === 'function') renderPedidos();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  typeof toast === 'function' && toast('✅ Ordem de produção salva!', 'success', 'Produção');
 }
 
 // Patch renderPedidos: adiciona responsável, prazo e botão OP
@@ -20519,6 +20804,151 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('[VisualCalc] ERP Módulos v2.0 ✓ — Dashboard · Financeiro · Produção · Multiusuários');
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VISUALCALC ERP PRO — SQL de Migration (Supabase)
+     Se alguns campos não existirem na tabela, rode este SQL:
+═══════════════════════════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────────────────────────
+// DIAGNÓSTICO DE CONECTIVIDADE — roda ao iniciar
+// Verifica se as tabelas têm os campos novos
+// ─────────────────────────────────────────────────────────────────
+async function vcDiagnostico() {
+  if (!isSbOk() || !currentEmpresaId) return;
+  var sb = getSb(); if (!sb) return;
+  console.group('[VisualCalc] Diagnóstico de tabelas');
+  try {
+    // Test pedidos
+    var { data: p } = await sb.from('pedidos').select('responsavel, prazo, obs_producao, produto_nome, area_m2, valor_total').limit(1);
+    console.log('✅ pedidos — campos completos OK');
+  } catch(e) {
+    console.warn('⚠️ pedidos — campos novos ausentes. Execute o SQL de migration.');
+    _vcShowMigrationHint('pedidos');
+  }
+  try {
+    // Test financeiro
+    var { data: f } = await sb.from('financeiro').select('origem, origem_ref, forma_pagamento, data_vencimento, data').limit(1);
+    console.log('✅ financeiro — campos completos OK');
+  } catch(e) {
+    console.warn('⚠️ financeiro — campos novos ausentes. Execute o SQL de migration.');
+    _vcShowMigrationHint('financeiro');
+  }
+  try {
+    // Test produtos_cat
+    var { data: pc } = await sb.from('produtos_cat').select('ncm, cfop, cst, unidade, sku, markup_padrao').limit(1);
+    console.log('✅ produtos_cat — campos fiscais OK');
+  } catch(e) {
+    console.warn('⚠️ produtos_cat — campos fiscais ausentes. Execute o SQL de migration.');
+    _vcShowMigrationHint('produtos_cat');
+  }
+  console.groupEnd();
+}
+
+function _vcShowMigrationHint(tabela) {
+  // Mostrar toast com link para o SQL
+  var msgs = {
+    pedidos: 'Tabela "pedidos": execute ALTER TABLE no Supabase (console do dev)',
+    financeiro: 'Tabela "financeiro": execute ALTER TABLE no Supabase',
+    produtos_cat: 'Tabela "produtos_cat": execute ALTER TABLE no Supabase (campos fiscais)',
+  };
+  console.info('[Migration SQL] ' + (msgs[tabela] || tabela));
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SQL DE MIGRATION — copie e cole no SQL Editor do Supabase
+// se encontrar erros de "column does not exist"
+// ─────────────────────────────────────────────────────────────────
+var VC_MIGRATION_SQL = `
+-- VisualCalc ERP Pro — Migration v2.0
+-- Cole este SQL no Supabase SQL Editor se encontrar erros de coluna
+
+-- ── pedidos: campos de produção
+ALTER TABLE public.pedidos
+  ADD COLUMN IF NOT EXISTS responsavel     TEXT,
+  ADD COLUMN IF NOT EXISTS prazo           DATE,
+  ADD COLUMN IF NOT EXISTS obs_producao    TEXT,
+  ADD COLUMN IF NOT EXISTS produto_nome    TEXT,
+  ADD COLUMN IF NOT EXISTS material_nome   TEXT,
+  ADD COLUMN IF NOT EXISTS area_m2         NUMERIC(12,4),
+  ADD COLUMN IF NOT EXISTS valor_total     NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS custo_total     NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS lucro           NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS margem_real     NUMERIC(8,2),
+  ADD COLUMN IF NOT EXISTS quantidade      INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS data_pedido     DATE DEFAULT CURRENT_DATE,
+  ADD COLUMN IF NOT EXISTS data_aprovacao  DATE,
+  ADD COLUMN IF NOT EXISTS data_entrega    DATE;
+
+-- ── financeiro: campos completos
+ALTER TABLE public.financeiro
+  ADD COLUMN IF NOT EXISTS origem          TEXT DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS origem_ref      TEXT,
+  ADD COLUMN IF NOT EXISTS forma_pagamento TEXT,
+  ADD COLUMN IF NOT EXISTS data            DATE DEFAULT CURRENT_DATE,
+  ADD COLUMN IF NOT EXISTS data_vencimento DATE,
+  ADD COLUMN IF NOT EXISTS data_pagamento  DATE,
+  ADD COLUMN IF NOT EXISTS banco           TEXT;
+
+-- ── produtos_cat: campos fiscais e de precificação
+ALTER TABLE public.produtos_cat
+  ADD COLUMN IF NOT EXISTS sku             TEXT,
+  ADD COLUMN IF NOT EXISTS codigo          TEXT,
+  ADD COLUMN IF NOT EXISTS midia           TEXT,
+  ADD COLUMN IF NOT EXISTS unitario        BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS preco_fixo      NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS visivel_rapido  BOOLEAN DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS ncm             TEXT,
+  ADD COLUMN IF NOT EXISTS cfop            TEXT DEFAULT '5102',
+  ADD COLUMN IF NOT EXISTS cst             TEXT DEFAULT '400',
+  ADD COLUMN IF NOT EXISTS unidade         TEXT DEFAULT 'M2',
+  ADD COLUMN IF NOT EXISTS origem_mercadoria TEXT DEFAULT '0',
+  ADD COLUMN IF NOT EXISTS cbenef          TEXT,
+  ADD COLUMN IF NOT EXISTS aliq_icms       NUMERIC(6,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS lc116           TEXT,
+  ADD COLUMN IF NOT EXISTS fiscal          JSONB DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS markup_padrao   NUMERIC(8,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS margem_min      NUMERIC(6,2) DEFAULT 20,
+  ADD COLUMN IF NOT EXISTS val_min_prod    NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS val_min_m2      NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS desc_max        NUMERIC(6,2),
+  ADD COLUMN IF NOT EXISTS grupo_margem    TEXT,
+  ADD COLUMN IF NOT EXISTS tem_metalon     BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS tem_instalacao  BOOLEAN DEFAULT FALSE;
+
+-- ── clientes: endereço completo
+ALTER TABLE public.clientes
+  ADD COLUMN IF NOT EXISTS tipo            TEXT DEFAULT 'pf',
+  ADD COLUMN IF NOT EXISTS whatsapp        TEXT,
+  ADD COLUMN IF NOT EXISTS cep             TEXT,
+  ADD COLUMN IF NOT EXISTS logradouro      TEXT,
+  ADD COLUMN IF NOT EXISTS numero          TEXT,
+  ADD COLUMN IF NOT EXISTS complemento     TEXT,
+  ADD COLUMN IF NOT EXISTS bairro          TEXT,
+  ADD COLUMN IF NOT EXISTS uf              TEXT DEFAULT 'SP',
+  ADD COLUMN IF NOT EXISTS categoria       TEXT DEFAULT 'normal',
+  ADD COLUMN IF NOT EXISTS criado_por      UUID REFERENCES auth.users(id);
+
+-- Confirmar
+SELECT 'Migration v2.0 OK' AS resultado;
+`;
+
+// Expor para acesso via console
+window.VC_MIGRATION_SQL = VC_MIGRATION_SQL;
+window.vcDiagnostico    = vcDiagnostico;
+
+// Rodar diagnóstico após inicialização (silencioso — só no console)
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    if (typeof isSbOk === 'function' && isSbOk()) {
+      vcDiagnostico();
+    }
+  }, 3000);
+});
+
+console.log('[VisualCalc] Para ver o SQL de migration: console.log(VC_MIGRATION_SQL)');
+console.log('[VisualCalc] Para rodar diagnóstico: vcDiagnostico()');
 </script>
 
 </body>
