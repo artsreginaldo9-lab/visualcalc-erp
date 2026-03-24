@@ -1057,6 +1057,60 @@ textarea{resize:vertical;}
 ═══════════════════════════════════════════════════════ */
 .erp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:18px;}
 
+/* ── RESULT HERO CARD ──────────────────────────────────────── */
+.res-hero{background:linear-gradient(135deg,rgba(232,184,75,.06),rgba(46,212,122,.03));border:1px solid rgba(232,184,75,.22);border-radius:var(--r-xl);padding:22px 24px;position:relative;margin-bottom:12px;overflow:hidden;animation:pgIn .3s ease;}
+.res-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold-g);}
+.res-hero-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:700;margin-bottom:6px;}
+.res-hero-price{font-family:'DM Mono',monospace;font-size:36px;font-weight:700;color:var(--gold);line-height:1.1;margin-bottom:10px;}
+.res-hero-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.res-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--r);font-size:12px;font-weight:600;}
+.res-badge-custo{background:var(--ink3);border:1px solid var(--line);color:var(--text2);}
+.res-badge-lucro{background:rgba(46,212,122,.1);border:1px solid rgba(46,212,122,.2);color:var(--green);}
+.res-badge-markup{background:rgba(56,197,224,.1);border:1px solid rgba(56,197,224,.2);color:var(--cyan);}
+.res-badge-margem{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);color:var(--purple);}
+.margem-gauge{position:absolute;top:16px;right:18px;}
+.gauge-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:5;}
+.gauge-fill{fill:none;stroke-width:5;stroke-linecap:round;}
+.gauge-text{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;fill:var(--text);}
+.gauge-label{font-size:7px;fill:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.res-number-anim{animation:resNumIn .45s cubic-bezier(.22,1,.36,1);}
+@keyframes resNumIn{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes resHeroIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ── DECISION SCORE ───────────────────────────────────────── */
+.decision-score{display:flex;align-items:center;gap:14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px;}
+.score-ring{width:52px;height:52px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;flex-shrink:0;transition:all .4s;}
+.score-info-title{font-weight:700;font-size:14px;margin-bottom:3px;}
+.score-info-sub{font-size:12px;color:var(--text3);}
+
+/* ── SMART ALERTS ─────────────────────────────────────────── */
+.smart-alerts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.smart-alert{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:var(--r);font-size:13px;animation:pgIn .2s ease;}
+.sa-ok{background:rgba(46,212,122,.07);border:1px solid rgba(46,212,122,.18);color:var(--green);}
+.sa-info{background:rgba(56,197,224,.07);border:1px solid rgba(56,197,224,.18);color:var(--cyan);}
+.sa-warn{background:rgba(232,184,75,.07);border:1px solid rgba(232,184,75,.18);color:var(--gold);}
+.sa-danger{background:rgba(240,78,78,.07);border:1px solid rgba(240,78,78,.18);color:var(--red);}
+.sa-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+
+/* ── BREAKDOWN DE CUSTOS ──────────────────────────────────── */
+.stacked-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;gap:1px;margin-bottom:10px;}
+.stacked-seg{height:100%;min-width:2px;transition:width .5s ease;}
+.breakdown-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.breakdown-item{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:10px;position:relative;overflow:hidden;animation:pgIn .2s ease;}
+.breakdown-item::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--bd-color,var(--gold));}
+.breakdown-lbl{font-size:11px;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.breakdown-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.breakdown-pct{font-size:10px;color:var(--text3);}
+.breakdown-bar{position:absolute;bottom:0;left:0;height:2px;background:var(--bd-color,var(--gold));opacity:.4;transition:width .5s ease;}
+
+/* ── IA ANALYSIS PANEL ────────────────────────────────────── */
+.ia-analysis-panel{background:linear-gradient(135deg,rgba(139,92,246,.06),rgba(56,197,224,.03));border:1px solid rgba(139,92,246,.22);border-radius:var(--r-lg);padding:16px;margin-bottom:12px;animation:pgIn .3s ease;}
+.ia-thinking{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:13px;}
+.ia-pulse{width:10px;height:10px;border-radius:50%;background:var(--purple);animation:ia-bounce .8s infinite;}
+
+/* ── RES ACTIONS ──────────────────────────────────────────── */
+.res-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 0;border-top:1px solid var(--line);margin-top:4px;}
+
 </style>
 </head>
 <body>
@@ -15808,6 +15862,511 @@ async function iniciarControleAssinatura() {
     </div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VISUALCALC ERP PRO — Backend Integration Patch v2.0
+     Conecta o frontend ao backend Node.js (Railway/Render)
+     Emissão de NF-e/NFS-e, certificado A1, status em tempo real
+═══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+(function initBackendPatch() {
+
+  // ─── Helpers de acesso ao backend ──────────────────────────────────
+  const _getUrl = () => (localStorage.getItem('vc_backend_url') || '').replace(/\/$/, '');
+  const _getKey = () => localStorage.getItem('vc_backend_api_key') || '';
+
+  async function _bFetch(path, opts = {}) {
+    const url = _getUrl();
+    const key = _getKey();
+    if (!url) throw new Error('Backend URL não configurada. Acesse Fiscal → ⚙️ Configuração → Backend.');
+
+    const res = await fetch(url + path, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key':    key,
+        'X-Empresa-Id': window.currentEmpresaId || '',
+        ...(opts.headers || {}),
+      },
+    });
+
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+    if (!res.ok) {
+      const msg = data?.error || data?.message || `HTTP ${res.status}`;
+      const e   = new Error(msg);
+      e.status  = res.status;
+      throw e;
+    }
+    return data;
+  }
+
+  // ─── Health check ───────────────────────────────────────────────────
+  async function checkBackendHealth() {
+    const url = _getUrl();
+    if (!url) return null;
+    try {
+      const r = await fetch(url + '/health', { signal: AbortSignal.timeout(5000) });
+      return r.ok ? await r.json() : null;
+    } catch { return null; }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // EMITIR NOTA FISCAL — ponto de entrada principal
+  // ═══════════════════════════════════════════════════════════════════
+  async function emitirNotaFiscal(orcId) {
+    const orc = (window.state?.orcamentos || []).find(o =>
+      String(o._db_id || o.id) === String(orcId)
+    );
+    if (!orc) { typeof toast === 'function' && toast('Orçamento não encontrado', 'error'); return; }
+
+    if (orc.status !== 'finalizado') {
+      typeof toast === 'function' && toast('Finalize o orçamento antes de emitir a NF', 'warn');
+      return;
+    }
+
+    const backendUrl = _getUrl();
+    if (!backendUrl) {
+      typeof toast === 'function' && toast('Configure o Backend URL em Fiscal → ⚙️ Configuração', 'warn');
+      if (typeof navTo === 'function') { navTo('nf'); setTimeout(() => setFiscalTab && setFiscalTab('config', null), 600); }
+      return;
+    }
+
+    // Carregar configs
+    let cfgFiscal = {};
+    try { cfgFiscal = JSON.parse(localStorage.getItem('vc_config_fiscal') || '{}'); } catch {}
+    let cfgEmissor = {};
+    try { cfgEmissor = JSON.parse(localStorage.getItem('vc_config_emissor') || '{}'); } catch {}
+
+    if (!cfgFiscal.cnpj) {
+      typeof toast === 'function' && toast('Configure o CNPJ em Fiscal → ⚙️ Configuração → Dados do Emitente', 'warn');
+      return;
+    }
+
+    // Montar empresa emitente
+    const emp = window.empresa || {};
+    const empresaPayload = {
+      cnpj:         cfgFiscal.cnpj,
+      razaoSocial:  cfgFiscal.razaoSocial || emp.nome || '',
+      nomeFantasia: emp.nome || cfgFiscal.razaoSocial || '',
+      ie:           cfgFiscal.ie       || '',
+      im:           cfgFiscal.im       || '',
+      regime:       cfgFiscal.regime   || '1',
+      cnae:         cfgFiscal.cnae     || '',
+      cep:          cfgFiscal.cep      || '',
+      logradouro:   cfgFiscal.logradouro || '',
+      numero:       cfgFiscal.numero   || 'S/N',
+      bairro:       cfgFiscal.bairro   || '',
+      cidade:       cfgFiscal.cidade   || '',
+      uf:           cfgFiscal.uf       || 'SP',
+      ibge:         cfgFiscal.ibge     || '3550308',
+      email:        emp.email          || '',
+      issPadrao:    cfgFiscal.issPadrao|| '2',
+    };
+
+    // Montar destinatário
+    const cliState = (window.state?.clientes || []).find(c =>
+      String(c._db_id || c.id) === String(orc.cliente_id)
+    );
+    const cliente = {
+      nome:     orc.cliente || cliState?.nome || 'Consumidor Final',
+      email:    cliState?.email    || '',
+      cnpj:     cliState?.cpf_cnpj || '',
+      telefone: orc.telefone || cliState?.telefone || '',
+      cidade:   cliState?.cidade   || '',
+    };
+
+    // Montar itens
+    const itensFiscais = _montarItensFiscais(orc);
+
+    // Determinar tipo NF-e vs NFS-e
+    const itensCad  = (window.state?.itens_fiscais || []);
+    const temProduto = itensCad.some(i => i.tipoItem === 'produto');
+    const temServico = itensCad.some(i => i.tipoItem === 'servico');
+    let tipo = 'nfe';
+    if (temServico && !temProduto) tipo = 'nfse';
+    else if (temServico && temProduto)
+      tipo = confirm('Emitir como:\n\nOK = NF-e (Produto)\nCancelar = NFS-e (Serviço)') ? 'nfe' : 'nfse';
+
+    const ambLabel = cfgEmissor.ambiente === 'producao' ? '🟢 PRODUÇÃO' : '🧪 SANDBOX';
+    const fmtV = typeof fmtBR === 'function' ? fmtBR : v => (+v||0).toFixed(2).replace('.',',');
+    if (!confirm(`Emitir ${tipo.toUpperCase()} [${ambLabel}]\n\nCliente: ${cliente.nome}\nValor: R$ ${fmtV(orc.precoFinal)}\n\nConfirmar?`)) return;
+
+    typeof showLoading === 'function' && showLoading(`⏳ Emitindo ${tipo.toUpperCase()}...`);
+
+    try {
+      let resultado;
+      const orcPayload = {
+        id:         orc._db_id || orc.id,
+        empresa_id: window.currentEmpresaId,
+        ref:        orc.ref      || '',
+        produto:    orc.produto  || '',
+        material:   orc.material || '',
+        largura:    orc.largura  || 0,
+        altura:     orc.altura   || 0,
+        qtd:        orc.qtd      || 1,
+        precoFinal: orc.precoFinal,
+      };
+
+      if (tipo === 'nfe') {
+        resultado = await _bFetch('/api/nf/emitir-nfe', {
+          method: 'POST',
+          body: JSON.stringify({ empresa: empresaPayload, cliente, itens: itensFiscais, orcamento: orcPayload }),
+        });
+      } else {
+        const svc = itensCad.find(i => i.tipoItem === 'servico') || {};
+        resultado = await _bFetch('/api/nf/emitir-nfse', {
+          method: 'POST',
+          body: JSON.stringify({
+            empresa:  empresaPayload,
+            cliente,
+            servico: { lc116: svc.lc116 || '7.06', iss: svc.iss || cfgFiscal.issPadrao || 2, nome: svc.nome || orc.produto },
+            orcamento: orcPayload,
+          }),
+        });
+      }
+
+      typeof hideLoading === 'function' && hideLoading();
+
+      // Salvar nota no state
+      if (!window.state) window.state = {};
+      if (!window.state.notas_fiscais) window.state.notas_fiscais = [];
+      const nota = {
+        id:           resultado.id       || (Date.now()),
+        tipo,
+        numero_nf:    resultado.numero_nf || resultado.numero_nfse || '',
+        chave_acesso: resultado.chave_acesso || '',
+        serie:        resultado.serie    || '1',
+        status:       resultado.status   || 'emitida',
+        valor:        orc.precoFinal,
+        cliente_nome: cliente.nome,
+        data_emissao: new Date().toISOString().split('T')[0],
+        xml_url:      resultado.xml_url  || '',
+        pdf_url:      resultado.pdf_url  || '',
+        orcamento_id: orc._db_id || orc.id,
+        ambiente:     resultado.ambiente || cfgEmissor.ambiente || 'homologacao',
+        _db_id:       resultado.db_id    || '',
+      };
+      window.state.notas_fiscais.unshift(nota);
+      typeof saveState === 'function' && saveState();
+
+      _mostrarToastNF(nota, tipo);
+      typeof toast === 'function' && toast(`✅ ${tipo.toUpperCase()} emitida! Nº ${nota.numero_nf || '—'}`, 'success', 'Nota Fiscal');
+
+      // Recarregar lista de notas se estiver visível
+      if (typeof renderListaNF === 'function') renderListaNF();
+
+    } catch(e) {
+      typeof hideLoading === 'function' && hideLoading();
+      console.error('[emitirNotaFiscal]', e);
+      typeof toast === 'function' && toast('❌ ' + e.message, 'error', `Erro ao emitir ${tipo.toUpperCase()}`);
+    }
+  }
+
+  function _mostrarToastNF(nota, tipo) {
+    const tc = document.getElementById('toast-container');
+    if (!tc) return;
+    const fmtV = typeof fmtBR === 'function' ? fmtBR : v => (+v||0).toFixed(2).replace('.',',');
+    const t = document.createElement('div');
+    t.className = 'toast success';
+    t.style.minWidth = '320px';
+    t.style.pointerEvents = 'all';
+    t.innerHTML = `
+      <span class="toast-icon">📄</span>
+      <div style="flex:1">
+        <div class="toast-title">${tipo.toUpperCase()} ${nota.status === 'emitida' ? 'Emitida' : nota.status}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">Nº ${nota.numero_nf||'—'} · R$ ${fmtV(nota.valor)}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          ${nota.pdf_url ? `<a href="${nota.pdf_url}" target="_blank" class="btn btn-success btn-xs">🖨 PDF/DANFE</a>` : ''}
+          ${nota.xml_url ? `<a href="${nota.xml_url}" target="_blank" class="btn btn-ghost btn-xs">📄 XML</a>` : ''}
+          <button class="btn btn-ghost btn-xs" onclick="if(typeof navTo==='function')navTo('nf')">Ver todas →</button>
+        </div>
+      </div>
+      <div class="toast-bar"></div>`;
+    tc.appendChild(t);
+    setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 10000);
+  }
+
+  function _montarItensFiscais(orc) {
+    const cad = (window.state?.itens_fiscais || []).filter(i => i.tipoItem === 'produto');
+    const match = cad.find(i => {
+      const n = (orc.produto || '').toLowerCase();
+      return n.includes((i.nome||'').toLowerCase()) || n.includes((i.codigo||'').toLowerCase());
+    });
+    const fmtV = typeof fmtBR === 'function' ? fmtBR : v => (+v||0).toFixed(2).replace('.',',');
+    if (match) return [{
+      codigo:        match.codigo,
+      descricao:     match.descFiscal || match.nome,
+      ncm:           match.ncm   || '49119100',
+      cfop:          match.cfop  || '5102',
+      cst:           match.cst   || '400',
+      unidade:       match.unidade || 'UN',
+      quantidade:    orc.qtd || 1,
+      valorUnitario: (orc.precoFinal / (orc.qtd || 1)),
+      valorTotal:    orc.precoFinal,
+    }];
+    return [{
+      codigo:        'PROD001',
+      descricao:     orc.produto || 'Produto Comunicação Visual',
+      ncm:           '49119100',
+      cfop:          '5102',
+      cst:           '400',
+      unidade:       (orc.area || 0) > 1 ? 'M2' : 'UN',
+      quantidade:    orc.qtd || 1,
+      valorUnitario: (orc.precoFinal / (orc.qtd || 1)),
+      valorTotal:    orc.precoFinal,
+    }];
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CONSULTAR STATUS DE UMA NF
+  // ═══════════════════════════════════════════════════════════════════
+  async function consultarStatusNF(nfId, tipo) {
+    try {
+      typeof showLoading === 'function' && showLoading('Consultando status...');
+      const r = await _bFetch(`/api/nf/status/${nfId}?tipo=${tipo || 'nfe'}`);
+      typeof hideLoading === 'function' && hideLoading();
+
+      const nota = (window.state?.notas_fiscais || []).find(n => String(n.id) === String(nfId));
+      if (nota) {
+        nota.status  = r.status  || nota.status;
+        nota.pdf_url = r.pdf_url || nota.pdf_url;
+        nota.xml_url = r.xml_url || nota.xml_url;
+        typeof saveState === 'function' && saveState();
+        typeof renderListaNF === 'function' && renderListaNF();
+      }
+      typeof toast === 'function' && toast(`Status: ${r.status || '—'}`, 'info', 'NF atualizada');
+      return r;
+    } catch(e) {
+      typeof hideLoading === 'function' && hideLoading();
+      typeof toast === 'function' && toast('Erro: ' + e.message, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MODAL "VER NF" — exibe número, chave, PDF, XML
+  // ═══════════════════════════════════════════════════════════════════
+  async function verNF(nfId) {
+    const nota = (window.state?.notas_fiscais || []).find(n => String(n.id) === String(nfId));
+    if (!nota) { typeof toast === 'function' && toast('Nota não encontrada', 'warn'); return; }
+
+    if (_getUrl()) {
+      const r = await consultarStatusNF(nfId, nota.tipo);
+      if (r) { nota.pdf_url = r.pdf_url || nota.pdf_url; nota.xml_url = r.xml_url || nota.xml_url; }
+    }
+
+    const fmtV  = typeof fmtBR === 'function' ? fmtBR : v => (+v||0).toFixed(2).replace('.',',');
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:20px';
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:460px">
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+        <div class="modal-title">📄 ${(nota.tipo||'nfe').toUpperCase()} — Nº ${nota.numero_nf||'—'}</div>
+        <div class="modal-sub">${nota.cliente_nome||'—'} · ${nota.data_emissao||''}</div>
+        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+            <div><span style="color:var(--text3)">Número:</span> <strong>${nota.numero_nf||'—'}</strong></div>
+            <div><span style="color:var(--text3)">Série:</span> <strong>${nota.serie||'1'}</strong></div>
+            <div><span style="color:var(--text3)">Valor:</span> <strong style="color:var(--gold)">R$ ${fmtV(nota.valor)}</strong></div>
+            <div><span style="color:var(--text3)">Status:</span>
+              <span class="badge ${nota.status==='autorizada'||nota.status==='emitida'?'badge-green':nota.status==='cancelada'?'badge-red':'badge-yellow'}">${nota.status||'—'}</span>
+            </div>
+            <div style="grid-column:span 2"><span style="color:var(--text3)">Ambiente:</span>
+              <span class="badge ${nota.ambiente==='producao'?'badge-green':'badge-yellow'}">${nota.ambiente||'sandbox'}</span>
+            </div>
+            ${nota.chave_acesso?`<div style="grid-column:span 2;font-family:DM Mono,monospace;font-size:9px;color:var(--text3);word-break:break-all;margin-top:4px">${nota.chave_acesso}</div>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${nota.pdf_url?`<a href="${nota.pdf_url}" target="_blank" class="btn btn-success">🖨 Baixar PDF/DANFE</a>`:''}
+          ${nota.xml_url?`<a href="${nota.xml_url}" target="_blank" class="btn btn-secondary">📄 Baixar XML</a>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="consultarStatusNF('${nota.id}','${nota.tipo||'nfe'}')">🔄 Atualizar</button>
+          <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-overlay').remove()">Fechar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // ENVIAR CERTIFICADO VIA BACKEND (sem CORS)
+  // ═══════════════════════════════════════════════════════════════════
+  async function enviarCertificadoViaBackend() {
+    if (!window._certState?.arquivo) {
+      typeof toast === 'function' && toast('Selecione o arquivo .pfx primeiro', 'warn');
+      return;
+    }
+
+    const senha = document.getElementById('cert-senha')?.value || '';
+    const cnpj  = (document.getElementById('nf-cnpj')?.value || '').replace(/\D/g, '');
+    const btn   = document.getElementById('btn-enviar-cert');
+
+    if (!senha)            { typeof toast === 'function' && toast('Informe a senha do certificado', 'warn'); return; }
+    if (cnpj.length !== 14){ typeof toast === 'function' && toast('CNPJ inválido', 'warn'); return; }
+    if (!_getUrl())        { typeof toast === 'function' && toast('Configure o Backend URL primeiro', 'warn'); return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload  = e => res(e.target.result.split(',')[1]);
+        r.onerror = () => rej(new Error('Erro ao ler arquivo'));
+        r.readAsDataURL(window._certState.arquivo);
+      });
+
+      await _bFetch('/api/certificado/upload', {
+        method: 'POST',
+        body: JSON.stringify({ base64, senha, cnpj, empresa_id: window.currentEmpresaId }),
+      });
+
+      // Limpar referências sensíveis da memória
+      window._certState.arquivo = null;
+      const senhaEl = document.getElementById('cert-senha');
+      if (senhaEl) senhaEl.value = '';
+      const fileEl = document.getElementById('cert-file-input');
+      if (fileEl) fileEl.value = '';
+
+      // Salvar metadados (sem o arquivo)
+      if (typeof _salvarMetadadosCert === 'function') {
+        await _salvarMetadadosCert({ provedor: 'nuvemfiscal', cert_nome: window._certState?.nomeArquivo || '', cert_status: 'configurado', cnpj });
+      }
+      if (typeof _atualizarStatusCert === 'function') {
+        _atualizarStatusCert('configurado', window._certState?.nomeArquivo || '');
+      }
+
+      typeof toast === 'function' && toast('✅ Certificado enviado ao backend com sucesso!', 'success');
+    } catch(e) {
+      typeof toast === 'function' && toast('❌ ' + e.message, 'error', 'Erro no certificado');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🔐 Enviar ao Provedor'; }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SALVAR E TESTAR CONFIG DO BACKEND
+  // ═══════════════════════════════════════════════════════════════════
+  function salvarBackendConfig() {
+    const url = (document.getElementById('cfg-backend-url')?.value || '').trim();
+    const key = (document.getElementById('cfg-backend-key')?.value || '').trim();
+    if (!url) { typeof toast === 'function' && toast('Informe a URL do backend', 'warn'); return; }
+    if (!url.startsWith('http')) { typeof toast === 'function' && toast('URL deve começar com http/https', 'warn'); return; }
+    localStorage.setItem('vc_backend_url', url.replace(/\/$/, ''));
+    if (key) localStorage.setItem('vc_backend_api_key', key);
+    const line = document.getElementById('backend-status-line');
+    if (line) line.innerHTML = `<span style="color:var(--cyan)">✅ URL salva: ${url} — clique em Testar para verificar</span>`;
+    typeof toast === 'function' && toast('Configuração do backend salva!', 'success');
+  }
+
+  async function testarBackend() {
+    const urlField = document.getElementById('cfg-backend-url');
+    const url = (urlField?.value || '').trim() || _getUrl();
+    const btn = document.getElementById('btn-testar-backend');
+    const line = document.getElementById('backend-status-line');
+
+    if (!url) { typeof toast === 'function' && toast('Configure a URL do backend primeiro', 'warn'); return; }
+    if (btn)  { btn.disabled = true; btn.textContent = '...'; }
+    if (line) line.innerHTML = '<span style="color:var(--text3)">⏳ Testando conexão...</span>';
+
+    // Guardar temporariamente para o teste
+    const original = localStorage.getItem('vc_backend_url');
+    localStorage.setItem('vc_backend_url', url.replace(/\/$/, ''));
+
+    const h = await checkBackendHealth();
+    if (h) {
+      if (line) line.innerHTML = `<span style="color:var(--green)">✅ Online — ${h.service||'VisualCalc Backend'} v${h.version||'?'} | Ambiente: ${h.ambiente||'sandbox'}</span>`;
+      typeof toast === 'function' && toast('✅ Backend conectado!', 'success');
+    } else {
+      if (line) line.innerHTML = '<span style="color:var(--red)">❌ Backend não respondeu. Verifique a URL e se o Railway está no ar.</span>';
+      typeof toast === 'function' && toast('Backend offline ou URL incorreta', 'error');
+      localStorage.setItem('vc_backend_url', original || '');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Testar'; }
+  }
+
+  // ─── Preencher campos ao carregar ──────────────────────────────────
+  function _preencherCamposBackend() {
+    const url = _getUrl();
+    const urlEl = document.getElementById('cfg-backend-url');
+    if (urlEl && url) {
+      urlEl.value = url;
+      const line = document.getElementById('backend-status-line');
+      if (line) line.innerHTML = `<span style="color:var(--cyan)">URL configurada: ${url}</span>`;
+    }
+  }
+
+  // ─── Renderizar lista de NFs com botões Ver NF ──────────────────────
+  function renderListaNFPatch() {
+    const el = document.getElementById('lista-nf');
+    if (!el) return;
+
+    const notas = (window.state?.notas_fiscais || []);
+    const filtroTipo   = (document.getElementById('nf-filtro-tipo')?.value   || 'todos');
+    const filtroStatus = (document.getElementById('nf-filtro-status')?.value || 'todos');
+    const fmtV = typeof fmtBR === 'function' ? fmtBR : v => (+v||0).toFixed(2).replace('.',',');
+
+    const filtradas = notas.filter(n => {
+      if (filtroTipo   !== 'todos' && n.tipo   !== filtroTipo)   return false;
+      if (filtroStatus !== 'todos' && n.status !== filtroStatus) return false;
+      return true;
+    });
+
+    if (!filtradas.length) {
+      el.innerHTML = '<div class="alert alert-info">ℹ️ Nenhuma nota fiscal emitida ainda. Configure o backend e emita a partir de orçamentos finalizados.</div>';
+      return;
+    }
+
+    const badgeCls = { pendente:'badge-yellow', emitida:'badge-green', autorizada:'badge-green', cancelada:'badge-red', erro:'badge-red' };
+    el.innerHTML = '<div class="card" style="padding:0;overflow:hidden"><table class="data-table">'
+      + '<thead><tr><th>Nº</th><th>Tipo</th><th>Cliente</th><th>Valor</th><th>Emissão</th><th>Ambiente</th><th>Status</th><th>Ações</th></tr></thead>'
+      + '<tbody>'
+      + filtradas.map(n =>
+          `<tr>
+            <td style="font-family:DM Mono,monospace;font-weight:600;font-size:12px">${n.numero_nf||'—'}</td>
+            <td><span class="badge ${n.tipo==='nfe'?'badge-blue':'badge-purple'}">${(n.tipo||'NF-e').toUpperCase()}</span></td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.cliente_nome||'—'}</td>
+            <td style="font-family:DM Mono,monospace;color:var(--gold)">R$ ${fmtV(n.valor||0)}</td>
+            <td style="font-size:12px;color:var(--text3)">${n.data_emissao||'—'}</td>
+            <td><span class="badge ${n.ambiente==='producao'?'badge-green':'badge-yellow'}" style="font-size:10px">${n.ambiente||'sandbox'}</span></td>
+            <td><span class="badge ${badgeCls[n.status]||'badge-gray'}">${n.status||'—'}</span></td>
+            <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-xs" onclick="verNF('${n.id}')">👁 Ver</button>
+              ${n.pdf_url?`<a href="${n.pdf_url}" target="_blank" class="btn btn-success btn-xs">🖨 PDF</a>`:''}
+              ${n.xml_url?`<a href="${n.xml_url}" target="_blank" class="btn btn-ghost btn-xs">📄 XML</a>`:''}
+              <button class="btn btn-ghost btn-xs" onclick="consultarStatusNF('${n.id}','${n.tipo||'nfe'}')">🔄</button>
+            </div></td>
+          </tr>`
+      ).join('')
+      + '</tbody></table></div>';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // EXPOR GLOBALMENTE — sobrescreve versões internas
+  // ═══════════════════════════════════════════════════════════════════
+  Object.assign(window, {
+    emitirNotaFiscal,
+    consultarStatusNF,
+    verNF,
+    enviarCertificado: enviarCertificadoViaBackend,
+    salvarBackendConfig,
+    testarBackend,
+    checkBackendHealth,
+    renderListaNF: renderListaNFPatch,
+  });
+
+  // Inicializar ao DOM carregar
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(_preencherCamposBackend, 600);
+  });
+
+  console.log('[VisualCalc] Backend Integration Patch v2.0 ✓ | Railway-ready');
+})();
+</script>
 
 </body>
 
