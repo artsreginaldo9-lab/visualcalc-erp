@@ -1793,6 +1793,125 @@ textarea{resize:vertical;}
   .auth-card-title { font-size: 20px; }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MÓDULO PRODUTOS v2.0 — CSS
+   Abas do modal · Fiscal · Preços · Produção
+═══════════════════════════════════════════════════════════ */
+
+/* ── ABAS DO MODAL ──────────────────────────────────────── */
+.prod-tabs {
+  display: flex; gap: 4px;
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 4px;
+}
+.prod-tab {
+  flex: 1; padding: 8px 12px;
+  background: none; border: none;
+  border-radius: var(--r);
+  color: var(--text3); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.prod-tab:hover { color: var(--text); background: var(--ink4); }
+.prod-tab.active {
+  background: var(--ink2); color: var(--gold);
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.prod-tab-pane { animation: pgIn .2s ease; }
+
+/* ── BANNER FISCAL ──────────────────────────────────────── */
+.prod-fiscal-banner {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(139,92,246,.08);
+  border: 1px solid rgba(139,92,246,.2);
+  border-radius: var(--r-lg);
+  padding: 13px 16px;
+  margin-bottom: 18px;
+  font-size: 13px; color: var(--text2);
+}
+.prod-fiscal-banner span { font-size: 22px; flex-shrink: 0; }
+
+/* ── RESUMO FISCAL ──────────────────────────────────────── */
+.prod-fiscal-resumo {
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+
+/* ── PREVIEW DE PREÇO ───────────────────────────────────── */
+.prod-preco-preview {
+  background: linear-gradient(135deg, rgba(232,184,75,.06), rgba(46,212,122,.03));
+  border: 1px solid rgba(232,184,75,.2);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+
+/* ── ACABAMENTOS ────────────────────────────────────────── */
+.prod-acabamentos-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px; margin-top: 6px;
+}
+.prod-acab-check {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-size: 12.5px; color: var(--text2);
+  cursor: pointer; transition: all .15s;
+}
+.prod-acab-check:hover { border-color: var(--gold); color: var(--text); }
+.prod-acab-check input[type="checkbox"] { accent-color: var(--gold); width: 14px; height: 14px; }
+.prod-acab-check input:checked + span,
+.prod-acab-check:has(input:checked) { color: var(--gold); border-color: rgba(232,184,75,.3); background: rgba(232,184,75,.06); }
+
+/* ── NCM HINT ───────────────────────────────────────────── */
+.prod-ncm-hint {
+  font-size: 11px; color: var(--cyan); margin-top: 4px;
+  font-style: italic; min-height: 14px;
+}
+
+/* ── PÁGINA DE PRODUTOS — TABELA ────────────────────────── */
+.prod-list-table { width: 100%; border-collapse: collapse; }
+.prod-list-table thead tr { background: var(--ink3); }
+.prod-list-table th {
+  padding: 10px 14px; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text3); font-weight: 700; text-align: left;
+  white-space: nowrap;
+}
+.prod-list-table td {
+  padding: 11px 14px; border-bottom: 1px solid var(--line);
+  font-size: 13px; vertical-align: middle;
+}
+.prod-list-table tbody tr:hover { background: rgba(255,255,255,.02); cursor: pointer; }
+.prod-list-table tbody tr:last-child td { border-bottom: none; }
+.prod-ncm-pill {
+  display: inline-block;
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600;
+  background: rgba(56,197,224,.08); color: var(--cyan);
+  border: 1px solid rgba(56,197,224,.2);
+  padding: 2px 8px; border-radius: 99px;
+}
+.prod-cfop-pill {
+  display: inline-block;
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600;
+  background: rgba(232,184,75,.08); color: var(--gold);
+  border: 1px solid rgba(232,184,75,.2);
+  padding: 2px 8px; border-radius: 99px;
+}
+.prod-sku-pill {
+  display: inline-block;
+  font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 600;
+  background: rgba(139,92,246,.08); color: var(--purple);
+  border: 1px solid rgba(139,92,246,.2);
+  padding: 1px 7px; border-radius: 99px;
+}
+
 </style>
 </head>
 <body>
@@ -5044,47 +5163,340 @@ ORDER BY a.created_at DESC LIMIT 10;</pre>
 </div>
 
 <!-- Modal Produto Estruturado -->
+<!-- ═══════════════════════════════════════════════════════
+     MODAL PRODUTO COMPLETO v2.0
+     Dados gerais · Fiscal (NCM/CFOP/CST) · Preços · Produção
+     Inspirado no Dinamo GF — campos profissionais para gráficas
+═══════════════════════════════════════════════════════ -->
 <div id="modal-produto-cat" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalProdutoCat()">
-  <div class="modal-box" style="width:500px">
+  <div class="modal-box" style="max-width:720px;width:95vw;max-height:90vh;overflow-y:auto">
     <button class="modal-close" onclick="fecharModalProdutoCat()">✕</button>
-    <div class="modal-title" id="mpcat-title">+ Novo Produto</div>
+    <div class="modal-title" id="mpcat-title">📦 Novo Produto</div>
+    <div class="modal-sub">Configure produto, dados fiscais e parâmetros de cálculo</div>
     <input type="hidden" id="mpcat-id">
-    <div class="form-group"><label>Nome do Produto *</label><input type="text" id="mpcat-nome" placeholder="Ex: Banner em Lona, Adesivo Vinil..."></div>
-    <div class="form-row">
-      <div class="form-group" style="margin:0"><label>Tipo</label>
-        <input type="text" id="mpcat-tipo" list="dl-mpcat-tipo" placeholder="Digite ou escolha o tipo..."
-        autocomplete="off" style="width:100%">
-      <datalist id="dl-mpcat-tipo">
-        <option>Banner</option><option>Faixa</option><option>Adesivo</option>
-        <option>Adesivo Vinil</option><option>Adesivo Fosco</option><option>Adesivo Perfurado</option>
-        <option>Placa ACM</option><option>Placa PVC</option><option>Placa Dibond</option>
-        <option>Fachada ACM</option><option>Fachada Iluminada</option>
-        <option>Letreiro</option><option>Letra Caixa</option><option>Letra Caixa LED</option>
-        <option>Totem</option><option>Totem LED</option>
-        <option>Cartão de Visita</option><option>Flyer</option><option>Folder</option>
-        <option>Panfleto</option><option>Cardápio</option><option>Rótulo</option>
-        <option>Lona</option><option>Lona Blackout</option><option>Lona Retro</option>
-        <option>Display</option><option>Display L</option><option>Pop-up</option>
-        <option>Backdrop</option><option>Roll-up</option>
-        <option>Plotter Recorte</option><option>Jateado</option><option>Espelhado</option>
-        <option>Luminoso</option><option>Painel</option><option>Outdoor</option>
-        <option>Busdoor</option><option>Backlight</option><option>Frontlight</option>
-        <option>Acrílico</option><option>Caixinha ACM</option>
-        <option>Wrap Veicular</option><option>Envelopamento</option>
-        <option>Caneta</option><option>Camiseta</option><option>Brinde</option>
-        <option>Outros</option>
-      </datalist>
+
+    <!-- ABAS DO MODAL -->
+    <div class="prod-tabs" style="margin:16px 0 20px">
+      <button class="prod-tab active" onclick="setProdTab('geral',this)">📋 Geral</button>
+      <button class="prod-tab" onclick="setProdTab('fiscal',this)">🧾 Fiscal (NF-e)</button>
+      <button class="prod-tab" onclick="setProdTab('precos',this)">💰 Preços</button>
+      <button class="prod-tab" onclick="setProdTab('producao',this)">⚙️ Produção</button>
+    </div>
+
+    <!-- ABA: GERAL -->
+    <div id="prod-tab-geral" class="prod-tab-pane">
+      <div class="wz-grid-2">
+        <div class="form-group" style="grid-column:span 2">
+          <label>Nome do Produto <span class="wz-req-mark">*</span></label>
+          <input type="text" id="mpcat-nome" class="wz-input" placeholder="Ex: Banner em Lona Frontlit, Fachada ACM...">
+        </div>
+        <div class="form-group">
+          <label>Tipo / Categoria</label>
+          <input type="text" id="mpcat-tipo" list="dl-mpcat-tipo" class="wz-input" placeholder="Banner, Adesivo, ACM..." autocomplete="off">
+          <datalist id="dl-mpcat-tipo">
+            <option>Banner</option><option>Faixa</option><option>Adesivo Vinil</option>
+            <option>Adesivo Fosco</option><option>Adesivo Perfurado</option><option>Placa ACM</option>
+            <option>Placa PVC</option><option>Placa Dibond</option><option>Fachada ACM</option>
+            <option>Fachada Iluminada</option><option>Letreiro</option><option>Letra Caixa</option>
+            <option>Letra Caixa LED</option><option>Totem</option><option>Totem LED</option>
+            <option>Cartão de Visita</option><option>Flyer</option><option>Folder</option>
+            <option>Lona Blackout</option><option>Lona Retro</option><option>Roll-up</option>
+            <option>Backdrop</option><option>Display</option><option>Outdoor</option>
+            <option>Wrap Veicular</option><option>Envelopamento</option><option>Acrílico</option>
+            <option>Outros</option>
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Código Interno (SKU)</label>
+          <input type="text" id="mpcat-sku" class="wz-input" placeholder="BAN-001, ADV-002...">
+          <div class="wz-field-hint">Código para controle interno e rastreamento</div>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Mídia</label>
+          <select id="mpcat-midia" class="wz-input">
+            <option value="">— Selecione —</option>
+            <option value="impressao">🖨 Impressão Digital</option>
+            <option value="corte">✂️ Plotter de Recorte</option>
+            <option value="acm">🏗 Estrutura ACM</option>
+            <option value="led">💡 LED / Iluminação</option>
+            <option value="offset">📄 Offset / Gráfica</option>
+            <option value="bordado">🧵 Bordado / Silk</option>
+            <option value="outros">📦 Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>É Produto Unitário?</label>
+          <select id="mpcat-unitario" class="wz-input" onchange="mpToggleUnitario(this.value)">
+            <option value="nao">Não — calculado por m² (largura × altura)</option>
+            <option value="sim">Sim — preço fixo por unidade</option>
+          </select>
+          <div class="wz-field-hint">Produtos unitários não usam dimensões de m²</div>
+        </div>
+        <div class="form-group" id="mp-preco-unit-wrap" style="display:none">
+          <label>Forçar Valor Sugerido (R$)</label>
+          <input type="number" id="mpcat-preco-fixo" class="wz-input" placeholder="0,00" step="0.01" min="0">
+          <div class="wz-field-hint">Ignora cálculo de custo — usa este valor direto</div>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Observação Automática</label>
+          <textarea id="mpcat-desc" class="wz-input" rows="3"
+            placeholder="Texto que aparece automaticamente no orçamento / NF. Ex: Impressão digital de alta resolução, acabamento com ilhós a cada 50cm..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="mpcat-ativo" class="wz-input">
+            <option value="1">✅ Ativo</option>
+            <option value="0">🔴 Inativo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Visível no Orçamento Rápido?</label>
+          <select id="mpcat-rapido" class="wz-input">
+            <option value="1">✅ Sim — aparece no seletor</option>
+            <option value="0">Não — apenas acesso manual</option>
+          </select>
+        </div>
       </div>
     </div>
-    <div class="form-group"><label>Descrição</label><textarea id="mpcat-desc" rows="2" placeholder="Especificações, observações..."></textarea></div>
-    <div class="form-row">
-      <div class="form-group" style="margin:0"><label>Markup Padrão (%)</label><input type="number" id="mpcat-markup" placeholder="150" min="0"></div>
-      <div class="form-group" style="margin:0"><label>Mão de Obra Padrão (R$)</label><input type="number" id="mpcat-mao-obra" placeholder="0.00" min="0" step="0.01"></div>
+
+    <!-- ABA: FISCAL -->
+    <div id="prod-tab-fiscal" class="prod-tab-pane" style="display:none">
+      <div class="prod-fiscal-banner">
+        <span>🧾</span>
+        <div>
+          <strong>Dados obrigatórios para emissão de NF-e</strong><br>
+          <span style="font-size:12px;opacity:.8">Preencha NCM, CFOP e CST corretamente para evitar rejeição na SEFAZ</span>
+        </div>
+      </div>
+
+      <div class="wz-grid-2">
+        <div class="form-group">
+          <label>NCM — Nomenclatura Comum do Mercosul <span class="wz-req-mark">*</span></label>
+          <input type="text" id="mpcat-ncm" class="wz-input" list="dl-ncm-prod"
+            placeholder="Ex: 4911.91.00" autocomplete="off" oninput="mpNcmHint(this.value)">
+          <datalist id="dl-ncm-prod">
+            <option value="49119100">49119100 — Impressos publicitários (Banner, Faixas, Cartazes)</option>
+            <option value="39199090">39199090 — Adesivos autocolantes (Adesivo Vinil, Recorte)</option>
+            <option value="76061100">76061100 — Chapas de alumínio (ACM, Dibond)</option>
+            <option value="39204900">39204900 — Placas e chapas de PVC rígido</option>
+            <option value="94054090">94054090 — Luminosos e letreiros com LED</option>
+            <option value="73089090">73089090 — Estruturas metálicas (Metalon, Totem)</option>
+            <option value="39206290">39206290 — Lona impressa (Lona Frontlit, Blackout)</option>
+            <option value="48199090">48199090 — Impressos em papel (Folder, Flyer, Cartão)</option>
+            <option value="58050000">58050000 — Tecido para impressão (Tecido dye-sub)</option>
+            <option value="39259090">39259090 — Artigos de plástico (Acrílico, Display)</option>
+          </datalist>
+          <div class="wz-field-hint prod-ncm-hint" id="mp-ncm-hint"></div>
+        </div>
+
+        <div class="form-group">
+          <label>CFOP — Código Fiscal da Operação <span class="wz-req-mark">*</span></label>
+          <select id="mpcat-cfop" class="wz-input">
+            <optgroup label="Vendas dentro do Estado (SP)">
+              <option value="5101">5101 — Venda de produção própria (dentro do estado)</option>
+              <option value="5102" selected>5102 — Venda de mercadoria adquirida (dentro do estado)</option>
+              <option value="5124">5124 — Industrialização efetuada p/ outra empresa</option>
+            </optgroup>
+            <optgroup label="Vendas para outros estados">
+              <option value="6101">6101 — Venda de produção própria (outro estado)</option>
+              <option value="6102">6102 — Venda de mercadoria adquirida (outro estado)</option>
+            </optgroup>
+            <optgroup label="Prestação de Serviço (NFS-e)">
+              <option value="5933">5933 — Prestação de serviço tributada pelo ISSQN</option>
+            </optgroup>
+          </select>
+          <div class="wz-field-hint">Para a maioria das gráficas: <strong>5102</strong></div>
+        </div>
+
+        <div class="form-group">
+          <label>CST — Código de Situação Tributária (ICMS)</label>
+          <select id="mpcat-cst" class="wz-input">
+            <optgroup label="Simples Nacional (CSOSN)">
+              <option value="400" selected>400 — Não tributada pelo Simples Nacional</option>
+              <option value="102">102 — Tributada sem permissão de crédito</option>
+              <option value="300">300 — Imune</option>
+              <option value="500">500 — ICMS cobrado anteriormente por ST</option>
+            </optgroup>
+            <optgroup label="Regime Normal">
+              <option value="00">00 — Tributada integralmente</option>
+              <option value="20">20 — Com redução de base de cálculo</option>
+              <option value="40">40 — Isenta</option>
+              <option value="41">41 — Não tributada</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Origem da Mercadoria</label>
+          <select id="mpcat-origem" class="wz-input">
+            <option value="0" selected>0 — Nacional</option>
+            <option value="1">1 — Estrangeira (importação direta)</option>
+            <option value="2">2 — Estrangeira (adquirida no mercado interno)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Unidade Fiscal</label>
+          <select id="mpcat-unidade" class="wz-input">
+            <option value="M2" selected>M² — Metro quadrado</option>
+            <option value="UN">UN — Unidade</option>
+            <option value="M">M — Metro linear</option>
+            <option value="PC">PC — Peça</option>
+            <option value="KG">KG — Quilograma</option>
+            <option value="CX">CX — Caixa</option>
+            <option value="SV">SV — Serviço</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Código de Benefício Fiscal (cBenef)</label>
+          <input type="text" id="mpcat-cbenef" class="wz-input" placeholder="Ex: SP830072 (opcional)">
+          <div class="wz-field-hint">Apenas se houver benefício fiscal estadual</div>
+        </div>
+
+        <div class="form-group">
+          <label>Alíquota ICMS (%)</label>
+          <input type="number" id="mpcat-aliq-icms" class="wz-input" placeholder="0" step="0.01" min="0" max="100" value="0">
+          <div class="wz-field-hint">Para Simples Nacional geralmente: 0</div>
+        </div>
+
+        <div class="form-group">
+          <label>Alíquota ISS / LC116 (Serviços)</label>
+          <select id="mpcat-lc116" class="wz-input">
+            <option value="">— Não se aplica —</option>
+            <option value="7.06">7.06 — Serviços de impressão gráfica</option>
+            <option value="7.02">7.02 — Execução de obra civil / instalação</option>
+            <option value="13.05">13.05 — Fotografia, filmagem</option>
+            <option value="17.06">17.06 — Propaganda e publicidade</option>
+            <option value="32.01">32.01 — Serviços de produção visual</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Resumo fiscal -->
+      <div class="prod-fiscal-resumo" id="mp-fiscal-resumo">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">Resumo para NF-e</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div><div style="font-size:10px;color:var(--text3)">NCM</div><div id="mp-res-ncm" style="font-family:DM Mono,monospace;font-size:13px;font-weight:600;color:var(--cyan)">—</div></div>
+          <div><div style="font-size:10px;color:var(--text3)">CFOP</div><div id="mp-res-cfop" style="font-family:DM Mono,monospace;font-size:13px;font-weight:600;color:var(--gold)">—</div></div>
+          <div><div style="font-size:10px;color:var(--text3)">CST/CSOSN</div><div id="mp-res-cst" style="font-family:DM Mono,monospace;font-size:13px;font-weight:600;color:var(--purple)">—</div></div>
+          <div><div style="font-size:10px;color:var(--text3)">Unidade</div><div id="mp-res-unid" style="font-family:DM Mono,monospace;font-size:13px;font-weight:600;color:var(--green)">—</div></div>
+        </div>
+      </div>
     </div>
-    <div class="divider"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+
+    <!-- ABA: PREÇOS -->
+    <div id="prod-tab-precos" class="prod-tab-pane" style="display:none">
+      <div class="wz-grid-2">
+        <div class="form-group">
+          <label>Markup Padrão (%)</label>
+          <input type="number" id="mpcat-markup" class="wz-input" placeholder="150" min="0" step="0.1" oninput="mpCalcPreco()">
+          <div class="wz-field-hint">Markup aplicado automaticamente no wizard de orçamento</div>
+        </div>
+        <div class="form-group">
+          <label>Margem Mínima Aceita (%)</label>
+          <input type="number" id="mpcat-margem-min" class="wz-input" placeholder="20" min="0" max="100" step="0.1">
+          <div class="wz-field-hint">Alerta se o preço cair abaixo desta margem</div>
+        </div>
+        <div class="form-group">
+          <label>Valor Mínimo do Produto (R$)</label>
+          <input type="number" id="mpcat-val-min-prod" class="wz-input" placeholder="0,00" step="0.01" min="0">
+          <div class="wz-field-hint">Preço nunca fica abaixo deste valor</div>
+        </div>
+        <div class="form-group">
+          <label>Valor Mínimo por m² (R$)</label>
+          <input type="number" id="mpcat-val-min-m2" class="wz-input" placeholder="0,00" step="0.01" min="0">
+          <div class="wz-field-hint">Por m² calculado nunca fica abaixo deste valor</div>
+        </div>
+        <div class="form-group">
+          <label>Desconto Máximo Permitido (%)</label>
+          <input type="number" id="mpcat-desc-max" class="wz-input" placeholder="15" min="0" max="100">
+          <div class="wz-field-hint">Bloqueia descontos acima deste limite</div>
+        </div>
+        <div class="form-group">
+          <label>Grupo de Margem</label>
+          <select id="mpcat-grupo-margem" class="wz-input">
+            <option value="">— Padrão —</option>
+            <option value="varejo">Varejo (cliente final)</option>
+            <option value="atacado">Atacado (revendedor)</option>
+            <option value="vip">VIP (cliente especial)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Preview de preço -->
+      <div class="prod-preco-preview" id="mp-preco-preview" style="display:none">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">Simulação de Preço (1m²)</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
+          <div><span style="color:var(--text3)">Custo: </span><span id="mp-sim-custo" style="font-family:DM Mono,monospace;font-weight:600">R$ —</span></div>
+          <div><span style="color:var(--text3)">Markup: </span><span id="mp-sim-markup" style="color:var(--cyan);font-weight:600">—%</span></div>
+          <div><span style="color:var(--text3)">Preço: </span><span id="mp-sim-preco" style="font-family:DM Mono,monospace;font-weight:700;color:var(--gold)">R$ —</span></div>
+          <div><span style="color:var(--text3)">Margem: </span><span id="mp-sim-margem" style="font-family:DM Mono,monospace;font-weight:600;color:var(--green)">—%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA: PRODUÇÃO -->
+    <div id="prod-tab-producao" class="prod-tab-pane" style="display:none">
+      <div class="wz-grid-2">
+        <div class="form-group">
+          <label>Mão de Obra Padrão (R$/m²)</label>
+          <input type="number" id="mpcat-mao-obra" class="wz-input" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Velocidade de Impressão (m²/h)</label>
+          <input type="number" id="mpcat-vel-impressao" class="wz-input" placeholder="25" min="0.1" step="0.5">
+          <div class="wz-field-hint">Velocidade padrão da máquina para este produto</div>
+        </div>
+        <div class="form-group">
+          <label>Custo de Impressão Padrão (R$/m²)</label>
+          <input type="number" id="mpcat-custo-impressao" class="wz-input" placeholder="8.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Desperdício Padrão (%)</label>
+          <input type="number" id="mpcat-desperdicio" class="wz-input" placeholder="10" min="0" max="50">
+        </div>
+        <div class="form-group">
+          <label>Requer Metalon / Estrutura?</label>
+          <select id="mpcat-tem-metalon" class="wz-input">
+            <option value="0">Não</option>
+            <option value="1">Sim — habilitar seção metalon no orçamento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Requer Instalação?</label>
+          <select id="mpcat-tem-instalacao" class="wz-input">
+            <option value="0">Não</option>
+            <option value="1">Sim — incluir custo de instalação</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Acabamentos Disponíveis</label>
+          <div class="prod-acabamentos-grid" id="mp-acabamentos-check">
+            <label class="prod-acab-check"><input type="checkbox" value="ilhos"> Ilhós</label>
+            <label class="prod-acab-check"><input type="checkbox" value="bastao"> Bastão</label>
+            <label class="prod-acab-check"><input type="checkbox" value="bolso"> Bolso</label>
+            <label class="prod-acab-check"><input type="checkbox" value="velcro"> Velcro</label>
+            <label class="prod-acab-check"><input type="checkbox" value="laminacao"> Laminação</label>
+            <label class="prod-acab-check"><input type="checkbox" value="hot_stamping"> Hot Stamping</label>
+            <label class="prod-acab-check"><input type="checkbox" value="corte_laser"> Corte Laser</label>
+            <label class="prod-acab-check"><input type="checkbox" value="verniz"> Verniz UV</label>
+            <label class="prod-acab-check"><input type="checkbox" value="fundo_branco"> Fundo Branco</label>
+            <label class="prod-acab-check"><input type="checkbox" value="recorte"> Recorte Personalizado</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER DO MODAL -->
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">
       <button class="btn btn-ghost" onclick="fecharModalProdutoCat()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarProdutoCat()">💾 Salvar Produto</button>
+      <button class="btn btn-secondary btn-sm" onclick="setProdTab('fiscal',document.querySelector('.prod-tab:nth-child(2)'))">
+        🧾 Ver Dados Fiscais
+      </button>
+      <button class="btn btn-primary" onclick="salvarProdutoCat()">
+        💾 Salvar Produto
+      </button>
     </div>
   </div>
 </div>
@@ -11042,95 +11454,376 @@ function verDetalhesCompra(compraId) {
 
 var _prodEditId = null;
 
-function renderProdutos() {
-  const el = document.getElementById('page-produtos-content');
-  if (!el) return;
+// ─────────────────────────────────────────────────────────────
+// MÓDULO PRODUTOS v2.0 — Render profissional com dados fiscais
+// ─────────────────────────────────────────────────────────────
+var _prodFiltro = '';
+var _prodFiltroTipo = 'todos';
 
-  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
-    + '<div><span style="color:var(--text3);font-size:13px">' + state.produtos_cat.length + ' produto(s) estruturado(s)</span></div>'
+function renderProdutos() {
+  var el = document.getElementById('page-produtos-content');
+  if (!el) return;
+  var total = state.produtos_cat.length;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+
+  // Cabeçalho
+  el.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
+    + '<div>'
+    + '<div style="font-size:20px;font-family:Bricolage Grotesque,sans-serif;font-weight:800">Produtos Cadastrados</div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + total + ' produto(s) · NCM, CFOP e CST para NF-e</div>'
+    + '</div>'
     + '<button class="btn btn-primary" onclick="abrirModalProdutoCat(null)">＋ Novo Produto</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'
+    + '<input type="text" id="prod-busca" placeholder="🔍 Nome, SKU, NCM..." style="min-width:220px;max-width:300px;padding:9px 13px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text);font-size:13px;outline:none" value="' + _prodFiltro + '" oninput="_prodFiltro=this.value.toLowerCase();renderProdutos()">'
+    + '<select style="padding:9px 13px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);color:var(--text);font-size:13px" onchange="_prodFiltroTipo=this.value;renderProdutos()">'
+    + '<option value="todos">Todos os tipos</option>'
+    + '<option value="Banner">Banner</option><option value="Adesivo Vinil">Adesivo Vinil</option>'
+    + '<option value="Placa ACM">Placa ACM</option><option value="Fachada ACM">Fachada ACM</option>'
+    + '<option value="Letra Caixa LED">Letra Caixa LED</option><option value="Lona Blackout">Lona</option>'
+    + '<option value="Cartão de Visita">Impresso</option><option value="Outros">Outros</option>'
+    + '</select>'
+    + '<button class="btn btn-ghost btn-sm" onclick="_prodFiltro=\'\';_prodFiltroTipo=\'todos\';renderProdutos()">✕</button>'
     + '</div>';
 
-  if (!state.produtos_cat.length) {
-    el.innerHTML += '<div class="alert alert-info">📦 Nenhum produto estruturado. Configure produtos com materiais padrão para agilizar orçamentos.</div>';
+  // Filtrar
+  var lista = state.produtos_cat.filter(function(p) {
+    if (_prodFiltroTipo !== 'todos' && p.tipo !== _prodFiltroTipo) return false;
+    if (!_prodFiltro) return true;
+    return (p.nome||'').toLowerCase().includes(_prodFiltro)
+        || (p.sku||p.codigo||'').toLowerCase().includes(_prodFiltro)
+        || (String(p.ncm||(p.fiscal&&p.fiscal.ncm)||'')).includes(_prodFiltro)
+        || (p.tipo||'').toLowerCase().includes(_prodFiltro);
+  });
+
+  if (!lista.length) {
+    el.innerHTML += total === 0
+      ? '<div class="alert alert-info">📦 Nenhum produto cadastrado. Clique em "＋ Novo Produto" para criar com NCM, CFOP e CST.</div>'
+      : '<div class="alert alert-info">🔍 Nenhum produto encontrado para este filtro.</div>';
     return;
   }
 
-  const tipos = ['Banner','Faixa','Adesivo','Placa ACM','Placa PVC','Fachada','Letreiro','Outros'];
-  const tipoCor = { 'Banner':'badge-blue','Faixa':'badge-cyan','Adesivo':'badge-green','Placa ACM':'badge-yellow','Placa PVC':'badge-yellow','Fachada':'badge-purple','Letreiro':'badge-purple','Outros':'badge-gray' };
-
-  el.innerHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'
-    + state.produtos_cat.map(function(p) {
-        const prodId = p._db_id || p.id;
-        const mats   = Array.isArray(p.materiais_padrao) ? p.materiais_padrao : [];
-        const acab   = Array.isArray(p.acabamentos_pad)  ? p.acabamentos_pad  : [];
-        const form   = p.formula || {};
-        return '<div style="background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px">'
-          + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
-          + '<div><div style="font-weight:700;font-size:14px">' + p.nome + '</div>'
-          + '<span class="badge ' + (tipoCor[p.tipo]||'badge-gray') + '" style="font-size:9px;margin-top:4px">' + (p.tipo||'—') + '</span></div>'
-          + '<span class="badge ' + (p.ativo !== false ? 'badge-green' : 'badge-gray') + '" style="font-size:9px">' + (p.ativo !== false ? '● Ativo' : '○') + '</span>'
-          + '</div>'
-          + (p.descricao ? '<div style="font-size:12px;color:var(--text2);margin-bottom:8px">' + p.descricao + '</div>' : '')
-          + (mats.length ? '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">📦 ' + mats.length + ' material(is) padrão</div>' : '')
-          + (form.markup_padrao ? '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Markup padrão: <span style="color:var(--gold)">' + form.markup_padrao + '%</span></div>' : '')
-          + '<div style="display:flex;gap:6px">'
-          + '<button class="btn btn-secondary btn-xs" onclick="abrirModalProdutoCat(\'' + prodId + '\')">✏️ Editar</button>'
-          + '<button class="btn btn-primary btn-xs" onclick="usarProdutoNoOrcamento(\'' + prodId + '\')">📋 Usar</button>'
-          + '</div></div>';
+  // Tabela
+  el.innerHTML += '<div class="card" style="padding:0;overflow:hidden;overflow-x:auto">'
+    + '<table class="prod-list-table">'
+    + '<thead><tr>'
+    + '<th>Produto</th><th>Tipo</th><th>NCM</th><th>CFOP</th><th>Unidade</th><th>Markup</th><th>Mín m²</th><th>Status</th><th>Ações</th>'
+    + '</tr></thead><tbody>'
+    + lista.map(function(p) {
+        var prodId = p._db_id || p.id;
+        var f = p.fiscal || {};
+        var form = p.formula || {};
+        var ncm  = p.ncm  || f.ncm  || '';
+        var cfop = p.cfop || f.cfop || '';
+        var cst  = p.cst  || f.cst  || '';
+        var sku  = p.sku  || p.codigo || '';
+        var markup   = form.markup_padrao || p.markup_padrao || '';
+        var valMinM2 = p.val_min_m2 || form.val_min_m2 || '';
+        var unidade  = p.unidade || f.unidade || 'M²';
+        var ativo    = p.ativo !== false && p.ativo !== 0;
+        return '<tr style="cursor:pointer" onclick="abrirModalProdutoCat(\'' + prodId + '\')">'
+          + '<td><div style="font-weight:600;font-size:13px">' + (p.nome||'—') + '</div>'
+          + (sku ? '<div style="margin-top:2px"><span class="prod-sku-pill">' + sku + '</span></div>' : '')
+          + '</td>'
+          + '<td><span style="font-size:12px;color:var(--text2)">' + (p.tipo||'—') + '</span></td>'
+          + '<td>' + (ncm ? '<span class="prod-ncm-pill">' + ncm + '</span>' : '<span style="color:var(--red);font-size:11px;font-weight:600">⚠ sem NCM</span>') + '</td>'
+          + '<td>' + (cfop ? '<span class="prod-cfop-pill">' + cfop + '</span>' : '<span style="color:var(--text3);font-size:12px">—</span>') + '</td>'
+          + '<td style="font-size:12px;color:var(--text3)">' + unidade + '</td>'
+          + '<td style="font-family:DM Mono,monospace;color:var(--gold);font-size:12px">' + (markup ? markup + '%' : '—') + '</td>'
+          + '<td style="font-family:DM Mono,monospace;font-size:12px">' + (valMinM2 ? 'R$ ' + fmtV(valMinM2) : '—') + '</td>'
+          + '<td><span class="badge ' + (ativo ? 'badge-green' : 'badge-gray') + '" style="font-size:10px">' + (ativo ? '● Ativo' : '○ Inativo') + '</span></td>'
+          + '<td onclick="event.stopPropagation()"><div style="display:flex;gap:4px">'
+          + '<button class="btn btn-secondary btn-xs" title="Editar" onclick="abrirModalProdutoCat(\'' + prodId + '\')">✏️</button>'
+          + '<button class="btn btn-primary btn-xs" title="Usar no orçamento" onclick="usarProdutoNoOrcamento(\'' + prodId + '\')">📋</button>'
+          + '<button class="btn btn-ghost btn-xs" title="Excluir" onclick="confirmarExcluirProduto(\'' + prodId + '\')">🗑</button>'
+          + '</div></td>'
+          + '</tr>';
       }).join('')
-    + '</div>';
+    + '</tbody></table></div>';
+}
+
+function confirmarExcluirProduto(prodId) {
+  if (!confirm('Excluir este produto? Esta ação não pode ser desfeita.')) return;
+  state.produtos_cat = state.produtos_cat.filter(function(p){ return String(p._db_id||p.id) !== String(prodId); });
+  if (typeof saveState === 'function') saveState();
+  renderProdutos();
+  typeof toast === 'function' && toast('Produto excluído', 'info');
 }
 
 function abrirModalProdutoCat(prodId) {
-  const modal = document.getElementById('modal-produto-cat');
+  var modal = document.getElementById('modal-produto-cat');
   if (!modal) return;
   _prodEditId = prodId;
-  document.getElementById('mpcat-id').value = '';
-  document.getElementById('mpcat-title').textContent = prodId ? '✏️ Editar Produto' : '+ Novo Produto';
-  ['mpcat-nome','mpcat-desc'].forEach(function(id) { var el=document.getElementById(id); if(el)el.value=''; });
-  const selT = document.getElementById('mpcat-tipo'); if (selT) selT.value = 'Banner';
-  const mkEl = document.getElementById('mpcat-markup'); if (mkEl) mkEl.value = '';
-  const moEl = document.getElementById('mpcat-mao-obra'); if (moEl) moEl.value = '';
+
+  // Reset todos os campos
+  var reset = function(id, v) { var el=document.getElementById(id); if(el) el.value = v !== undefined ? v : ''; };
+  reset('mpcat-id'); reset('mpcat-nome'); reset('mpcat-desc'); reset('mpcat-sku');
+  reset('mpcat-ncm'); reset('mpcat-markup'); reset('mpcat-mao-obra');
+  reset('mpcat-preco-fixo'); reset('mpcat-margem-min'); reset('mpcat-val-min-prod');
+  reset('mpcat-val-min-m2'); reset('mpcat-desc-max'); reset('mpcat-cbenef');
+  reset('mpcat-aliq-icms','0'); reset('mpcat-vel-impressao'); reset('mpcat-custo-impressao');
+  reset('mpcat-desperdicio');
+
+  var setSelVal = function(id, v) { var el=document.getElementById(id); if(el && v) el.value = v; };
+  setSelVal('mpcat-tipo', 'Banner');
+  setSelVal('mpcat-cfop', '5102');
+  setSelVal('mpcat-cst', '400');
+  setSelVal('mpcat-origem', '0');
+  setSelVal('mpcat-unidade', 'M2');
+  setSelVal('mpcat-midia', '');
+  setSelVal('mpcat-ativo', '1');
+  setSelVal('mpcat-rapido', '1');
+  setSelVal('mpcat-unitario', 'nao');
+  setSelVal('mpcat-tem-metalon', '0');
+  setSelVal('mpcat-tem-instalacao', '0');
+  setSelVal('mpcat-lc116', '');
+  setSelVal('mpcat-grupo-margem', '');
+
+  // Desmarcar acabamentos
+  document.querySelectorAll('#mp-acabamentos-check input[type="checkbox"]').forEach(function(cb){ cb.checked = false; });
+
+  var titulo = document.getElementById('mpcat-title');
+  if (titulo) titulo.textContent = prodId ? '✏️ Editar Produto' : '📦 Novo Produto';
 
   if (prodId) {
-    const p = state.produtos_cat.find(function(x) { return String(x._db_id||x.id) === String(prodId); });
-    if (!p) return;
-    document.getElementById('mpcat-id').value = String(p._db_id||p.id);
-    var setV = function(id, v) { var el=document.getElementById(id); if(el)el.value=v||''; };
-    setV('mpcat-nome', p.nome); setV('mpcat-desc', p.descricao);
-    if (selT) selT.value = p.tipo || 'Banner';
-    const f = p.formula || {};
-    if (mkEl) mkEl.value = f.markup_padrao || '';
-    if (moEl) moEl.value = f.mao_obra_padrao || '';
+    var p = state.produtos_cat.find(function(x) { return String(x._db_id||x.id) === String(prodId); });
+    if (!p) { modal.style.display = 'flex'; return; }
+
+    reset('mpcat-id', String(p._db_id||p.id));
+    reset('mpcat-nome', p.nome||'');
+    reset('mpcat-desc', p.descricao||p.obs||'');
+    reset('mpcat-sku', p.sku||p.codigo||'');
+
+    // Dados fiscais
+    var f = p.fiscal || {};
+    reset('mpcat-ncm', p.ncm || f.ncm || '');
+    setSelVal('mpcat-cfop', p.cfop || f.cfop || '5102');
+    setSelVal('mpcat-cst', p.cst || f.cst || '400');
+    setSelVal('mpcat-origem', String(p.origem_mercadoria || f.origem || '0'));
+    setSelVal('mpcat-unidade', p.unidade || f.unidade || 'M2');
+    reset('mpcat-cbenef', p.cbenef || f.cbenef || '');
+    reset('mpcat-aliq-icms', String(p.aliq_icms || f.aliq_icms || 0));
+    setSelVal('mpcat-lc116', p.lc116 || f.lc116 || '');
+
+    // Tipo e categoria
+    setSelVal('mpcat-tipo', p.tipo || 'Banner');
+    setSelVal('mpcat-midia', p.midia || '');
+    setSelVal('mpcat-unitario', p.unitario ? 'sim' : 'nao');
+    setSelVal('mpcat-ativo', p.ativo !== false && p.ativo !== 0 ? '1' : '0');
+    setSelVal('mpcat-rapido', p.visivel_rapido !== false ? '1' : '0');
+    reset('mpcat-preco-fixo', p.preco_fixo || '');
+
+    // Preços
+    var form = p.formula || {};
+    reset('mpcat-markup', form.markup_padrao || p.markup_padrao || '');
+    reset('mpcat-margem-min', form.margem_min || p.margem_min || '');
+    reset('mpcat-val-min-prod', p.val_min_prod || form.val_min_prod || '');
+    reset('mpcat-val-min-m2', p.val_min_m2 || form.val_min_m2 || '');
+    reset('mpcat-desc-max', p.desc_max || form.desc_max || '');
+    setSelVal('mpcat-grupo-margem', p.grupo_margem || '');
+
+    // Produção
+    reset('mpcat-mao-obra', form.mao_obra_padrao || p.mao_obra_padrao || '');
+    reset('mpcat-vel-impressao', form.vel_impressao || '');
+    reset('mpcat-custo-impressao', form.custo_impressao || '');
+    reset('mpcat-desperdicio', form.desperdicio || '');
+    setSelVal('mpcat-tem-metalon', p.tem_metalon ? '1' : '0');
+    setSelVal('mpcat-tem-instalacao', p.tem_instalacao ? '1' : '0');
+
+    // Acabamentos
+    var acabs = Array.isArray(p.acabamentos_pad) ? p.acabamentos_pad : [];
+    document.querySelectorAll('#mp-acabamentos-check input[type="checkbox"]').forEach(function(cb){
+      cb.checked = acabs.includes(cb.value);
+    });
+
+    mpToggleUnitario(p.unitario ? 'sim' : 'nao');
   }
+
+  // Ir para aba geral
+  setProdTab('geral', document.querySelector('.prod-tab'));
+  mpAtualizarResumoFiscal();
   modal.style.display = 'flex';
+  setTimeout(function(){ var n=document.getElementById('mpcat-nome'); if(n) n.focus(); }, 150);
 }
 
 function fecharModalProdutoCat() {
-  const m = document.getElementById('modal-produto-cat'); if (m) m.style.display = 'none';
+  var m = document.getElementById('modal-produto-cat'); if (m) m.style.display = 'none';
+}
+
+// ── Helpers do modal ─────────────────────────────────────
+function setProdTab(tab, btn) {
+  ['geral','fiscal','precos','producao'].forEach(function(t){
+    var el = document.getElementById('prod-tab-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.prod-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  if (tab === 'fiscal') mpAtualizarResumoFiscal();
+}
+
+function mpToggleUnitario(val) {
+  var wrap = document.getElementById('mp-preco-unit-wrap');
+  if (wrap) wrap.style.display = val === 'sim' ? 'block' : 'none';
+}
+
+function mpNcmHint(val) {
+  var ncmMap = {
+    '49119100': 'Impressos publicitários: Banners, Faixas, Cartazes, Folders',
+    '4911.91.00': 'Impressos publicitários: Banners, Faixas, Cartazes, Folders',
+    '39199090': 'Adesivos autocolantes: Vinil, Fosco, Perfurado, Jateado',
+    '3919.90.90': 'Adesivos autocolantes: Vinil, Fosco, Perfurado, Jateado',
+    '76061100': 'Chapas/placas de alumínio: ACM, Dibond, Fachadas',
+    '7606.11.00': 'Chapas/placas de alumínio: ACM, Dibond, Fachadas',
+    '39204900': 'Placas e chapas de PVC rígido: Placas PVC, PS',
+    '3920.49.00': 'Placas e chapas de PVC rígido: Placas PVC, PS',
+    '94054090': 'Aparelhos de iluminação: Letreiro LED, Luminosos, Caixas de luz',
+    '9405.40.90': 'Aparelhos de iluminação: Letreiro LED, Luminosos, Caixas de luz',
+    '73089090': 'Estruturas metálicas: Metalon, Totem, Estruturas ACM',
+    '7308.90.90': 'Estruturas metálicas: Metalon, Totem, Estruturas ACM',
+    '39206290': 'Artigos de plástico: Lona impressa, Frontlit, Blackout',
+    '3920.62.90': 'Artigos de plástico: Lona impressa, Frontlit, Blackout',
+    '48199090': 'Embalagens e impressos de papel: Folder, Flyer, Cartão de visita',
+    '4819.90.90': 'Embalagens e impressos de papel: Folder, Flyer, Cartão de visita',
+    '39259090': 'Artefatos de plástico: Acrílico, Display, Porta-cartão',
+    '3925.90.90': 'Artefatos de plástico: Acrílico, Display, Porta-cartão',
+  };
+  var hint = document.getElementById('mp-ncm-hint');
+  if (!hint) return;
+  var clean = val.replace(/\D/g,'').substring(0,8);
+  var match = ncmMap[val] || ncmMap[clean];
+  hint.textContent = match ? '✓ ' + match : '';
+}
+
+function mpAtualizarResumoFiscal() {
+  var g = function(id){ return (document.getElementById(id)||{}).value||''; };
+  var set = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=v||'—'; };
+  set('mp-res-ncm',  g('mpcat-ncm') || '—');
+  set('mp-res-cfop', g('mpcat-cfop') || '—');
+  set('mp-res-cst',  g('mpcat-cst') || '—');
+  set('mp-res-unid', g('mpcat-unidade') || '—');
+
+  // Atualizar listeners
+  ['mpcat-ncm','mpcat-cfop','mpcat-cst','mpcat-unidade'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && !el._resumoListener) {
+      el.addEventListener('change', mpAtualizarResumoFiscal);
+      el.addEventListener('input',  mpAtualizarResumoFiscal);
+      el._resumoListener = true;
+    }
+  });
+  var ncmEl = document.getElementById('mpcat-ncm');
+  if (ncmEl) mpNcmHint(ncmEl.value);
+}
+
+function mpCalcPreco() {
+  var markup = parseFloat((document.getElementById('mpcat-markup')||{}).value)||0;
+  var prev   = document.getElementById('mp-preco-preview');
+  if (!prev) return;
+  if (markup > 0) {
+    var custoRef = 10; // R$ 10/m² de referência
+    var preco  = custoRef * (1 + markup / 100);
+    var margem = (1 - custoRef / preco) * 100;
+    var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+    prev.style.display = 'block';
+    var set = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+    set('mp-sim-custo',  'R$ ' + fmtV(custoRef) + ' (referência)');
+    set('mp-sim-markup', markup + '%');
+    set('mp-sim-preco',  'R$ ' + fmtV(preco));
+    set('mp-sim-margem', margem.toFixed(1) + '%');
+  } else {
+    prev.style.display = 'none';
+  }
 }
 
 async function salvarProdutoCat() {
-  const nome = (document.getElementById('mpcat-nome') || {}).value.trim();
-  if (!nome) { toast('Informe o nome do produto', 'warn'); return; }
-  const editId = (document.getElementById('mpcat-id') || {}).value;
-  const getV = function(id) { return (document.getElementById(id)||{}).value||''; };
-  const obj = {
-    nome, tipo: getV('mpcat-tipo') || 'Banner', descricao: getV('mpcat-desc'),
-    materiais_padrao: [], acabamentos_pad: [],
-    formula: { markup_padrao: parseFloat(getV('mpcat-markup'))||0, mao_obra_padrao: parseFloat(getV('mpcat-mao-obra'))||0 },
-    ativo: true,
+  var nome = (document.getElementById('mpcat-nome') || {}).value.trim();
+  if (!nome) { typeof toast==='function' && toast('Informe o nome do produto', 'warn'); return; }
+
+  var editId = (document.getElementById('mpcat-id') || {}).value;
+  var g = function(id) { return ((document.getElementById(id)||{}).value||'').trim(); };
+  var gf = function(id) { return parseFloat(g(id))||0; };
+  var gs = function(id) { return (document.getElementById(id)||{}).value||''; };
+
+  // Coletar acabamentos marcados
+  var acabamentos = [];
+  document.querySelectorAll('#mp-acabamentos-check input[type="checkbox"]:checked').forEach(function(cb){
+    acabamentos.push(cb.value);
+  });
+
+  var obj = {
+    nome,
+    tipo:              gs('mpcat-tipo') || 'Banner',
+    midia:             gs('mpcat-midia'),
+    descricao:         g('mpcat-desc'),
+    obs:               g('mpcat-desc'),
+    sku:               g('mpcat-sku'),
+    codigo:            g('mpcat-sku'),
+    unitario:          gs('mpcat-unitario') === 'sim',
+    preco_fixo:        gf('mpcat-preco-fixo') || null,
+    ativo:             gs('mpcat-ativo') !== '0',
+    visivel_rapido:    gs('mpcat-rapido') !== '0',
+    // Dados fiscais
+    ncm:               g('mpcat-ncm').replace(/\./g,''),
+    cfop:              g('mpcat-cfop'),
+    cst:               g('mpcat-cst'),
+    unidade:           gs('mpcat-unidade') || 'M2',
+    origem_mercadoria: g('mpcat-origem') || '0',
+    cbenef:            g('mpcat-cbenef'),
+    aliq_icms:         gf('mpcat-aliq-icms'),
+    lc116:             gs('mpcat-lc116'),
+    fiscal: {
+      ncm:    g('mpcat-ncm').replace(/\./g,''),
+      cfop:   g('mpcat-cfop'),
+      cst:    g('mpcat-cst'),
+      unidade: gs('mpcat-unidade') || 'M2',
+      origem: g('mpcat-origem') || '0',
+      cbenef: g('mpcat-cbenef'),
+      aliq_icms: gf('mpcat-aliq-icms'),
+      lc116:  gs('mpcat-lc116'),
+    },
+    // Preços
+    markup_padrao:  gf('mpcat-markup'),
+    margem_min:     gf('mpcat-margem-min'),
+    val_min_prod:   gf('mpcat-val-min-prod') || null,
+    val_min_m2:     gf('mpcat-val-min-m2') || null,
+    desc_max:       gf('mpcat-desc-max') || null,
+    grupo_margem:   gs('mpcat-grupo-margem'),
+    // Produção
+    tem_metalon:    gs('mpcat-tem-metalon') === '1',
+    tem_instalacao: gs('mpcat-tem-instalacao') === '1',
+    acabamentos_pad: acabamentos,
+    materiais_padrao: [],
+    formula: {
+      markup_padrao:    gf('mpcat-markup'),
+      mao_obra_padrao:  gf('mpcat-mao-obra'),
+      vel_impressao:    gf('mpcat-vel-impressao') || 25,
+      custo_impressao:  gf('mpcat-custo-impressao') || 8,
+      desperdicio:      gf('mpcat-desperdicio') || 10,
+      val_min_m2:       gf('mpcat-val-min-m2') || null,
+      val_min_prod:     gf('mpcat-val-min-prod') || null,
+      margem_min:       gf('mpcat-margem-min') || 20,
+    },
   };
-  showLoading(editId ? 'Atualizando produto...' : 'Salvando produto...');
+
+  typeof showLoading === 'function' && showLoading(editId ? 'Atualizando...' : 'Salvando...');
+
   if (editId) {
-    const idx = state.produtos_cat.findIndex(function(x){return String(x._db_id||x.id)===editId;});
-    if (idx >= 0) { state.produtos_cat[idx] = {...state.produtos_cat[idx],...obj}; await dbSaveProdutoCat(state.produtos_cat[idx]); }
+    var idx = state.produtos_cat.findIndex(function(x){return String(x._db_id||x.id)===editId;});
+    if (idx >= 0) {
+      state.produtos_cat[idx] = Object.assign({}, state.produtos_cat[idx], obj);
+      if (typeof dbSaveProdutoCat === 'function') await dbSaveProdutoCat(state.produtos_cat[idx]);
+    }
   } else {
-    const np = { id: state.nextId++, ...obj }; state.produtos_cat.push(np); await dbSaveProdutoCat(np);
+    var np = Object.assign({ id: state.nextId++ }, obj);
+    state.produtos_cat.push(np);
+    if (typeof dbSaveProdutoCat === 'function') await dbSaveProdutoCat(np);
   }
-  hideLoading(); fecharModalProdutoCat(); renderProdutos();
-  toast(editId ? 'Produto atualizado!' : 'Produto cadastrado!', 'success');
+
+  typeof hideLoading === 'function' && hideLoading();
+  fecharModalProdutoCat();
+  renderProdutos();
+  typeof toast === 'function' && toast(editId ? '✅ Produto atualizado!' : '✅ Produto cadastrado com dados fiscais!', 'success', 'Produtos');
 }
 
 function usarProdutoNoOrcamento(prodId) {
