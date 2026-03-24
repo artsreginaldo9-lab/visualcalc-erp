@@ -548,7 +548,7 @@ if (typeof module !== 'undefined' && module.exports) {
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{
-  background:var(--ink);
+  background:radial-gradient(circle at top left,#1a2238,#0b0f1a 40%);
   color:var(--text);
   font-family:'Inter',sans-serif;
   font-size:14px;
@@ -600,8 +600,8 @@ body::after{
   display:flex;flex-direction:column;
   transition:transform .26s cubic-bezier(.4,0,.2,1);
 }
-.main-area{margin-left:var(--sb-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
-.page-body{flex:1;padding:24px 28px;max-width:1500px;width:100%;}
+.main-area{margin-left:var(--sb-w);width:calc(100% - var(--sb-w));flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.page-body{flex:1;padding:24px;width:100%;max-width:100%;}
 
 /* ── SIDEBAR ─────────────────────────────────────────────── */
 .sb-brand{
@@ -673,19 +673,19 @@ body::after{
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:199;backdrop-filter:blur(4px);}
 
 /* ── CARDS & GRID ────────────────────────────────────────── */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
 .card{
   background:var(--ink2);border:1px solid var(--line);
-  border-radius:var(--r-lg);padding:20px;position:relative;overflow:hidden;
+  border-radius:var(--r-lg);padding:20px;position:relative;overflow:hidden;width:100%;
 }
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,184,75,.15),transparent);}
 .card-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 .card-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--ink3);border:1px solid var(--line);flex-shrink:0;}
 
 /* ── KPI CARDS ───────────────────────────────────────────── */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
 .kpi-card{
   background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);
   padding:18px;position:relative;overflow:hidden;transition:transform .18s,border-color .18s;
@@ -1405,6 +1405,103 @@ textarea{resize:vertical;}
 .perm-matrix td{padding:10px 14px;border-top:1px solid var(--line);font-size:13px;}
 .perm-check{color:var(--green);font-size:16px;}
 .perm-block{color:var(--text3);font-size:14px;opacity:.4;}
+
+/* ═══════════════════════════════════════════════════════
+   VISUALCALC ERP — Layout Fix v3.1 (full-screen SaaS)
+═══════════════════════════════════════════════════════ */
+
+/* Garantir que #app ocupe 100% */
+#app { width:100%; min-height:100vh; }
+
+/* Main area: sempre preenche o espaço restante */
+.main-area {
+  margin-left: var(--sb-w);
+  width: calc(100% - var(--sb-w));
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Page body sem max-width limitante */
+.page-body {
+  width: 100%;
+  max-width: 100%;
+  padding: 24px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Topbar ocupa toda a largura */
+.topbar { width: 100%; box-sizing: border-box; }
+
+/* Todas as páginas ocupam largura total */
+.page, .page.active { width: 100%; min-width: 0; }
+
+/* Cards sempre 100% do container pai */
+.card, .kpi-card, .kpi-sm, .fin-card { width: 100%; min-width: 0; }
+
+/* Grids responsivos — nunca transbordam */
+.g2, .g3, .g4, .kpi-grid, .dash-kpi-row, .dash-kpi-row2 {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Dashboard KPI row principal */
+.dash-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Tabelas responsivas */
+.data-table-wrap { width: 100%; overflow-x: auto; }
+.data-table       { width: 100%; }
+
+/* Kanban sem overflow */
+.kanban-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+/* Seção de orçamento / wizard */
+.wz-container, .wz-body { width: 100%; max-width: 100%; min-width: 0; }
+
+/* Corrigir áreas que usam margin/padding fixos legados */
+.section-header { width: 100%; }
+
+/* Mobile: recolher sidebar e expandir main */
+@media (max-width: 768px) {
+  .main-area {
+    margin-left: 0;
+    width: 100%;
+  }
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .g2, .g3, .g4 {
+    grid-template-columns: 1fr;
+  }
+  .dash-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kanban-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-kpi-row { grid-template-columns: 1fr; }
+  .page-body    { padding: 14px; }
+}
 
 </style>
 </head>
