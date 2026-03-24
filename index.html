@@ -1111,6 +1111,301 @@ textarea{resize:vertical;}
 /* ── RES ACTIONS ──────────────────────────────────────────── */
 .res-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 0;border-top:1px solid var(--line);margin-top:4px;}
 
+/* ═══════════════════════════════════════════════════════════
+   WIZARD DE ORÇAMENTO v3.0 — CSS COMPLETO
+═══════════════════════════════════════════════════════════ */
+
+/* ── HEADER ──────────────────────────────────────────────── */
+.wz-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.wz-header-info{}
+.wz-header-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;margin-bottom:3px;}
+.wz-header-sub{font-size:12px;color:var(--text3);}
+.wz-header-actions{display:flex;align-items:center;gap:8px;}
+.wz-ref-badge{background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);border-radius:99px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--gold);}
+
+/* ── STEPS TRACK ─────────────────────────────────────────── */
+.wz-steps-track{position:relative;margin-bottom:28px;padding:0 4px;}
+.wz-steps{display:flex;justify-content:space-between;position:relative;z-index:1;}
+.wz-steps-line{position:absolute;top:20px;left:20px;right:20px;height:2px;background:var(--line);z-index:0;}
+.wz-steps-fill{position:absolute;top:20px;left:20px;height:2px;background:var(--gold-g);z-index:0;transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+/* ── STEP ITEM ───────────────────────────────────────────── */
+.wz-step{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;position:relative;flex:1;transition:all .2s;}
+.wz-step-node{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid var(--line);background:var(--ink2);color:var(--text3);transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;}
+.wz-step-label{font-size:10.5px;font-weight:600;color:var(--text3);white-space:nowrap;letter-spacing:.02em;transition:color .2s;text-align:center;}
+
+/* Estado: ativo */
+.wz-step.active .wz-step-node{background:var(--gold-g);border-color:var(--gold);color:#000;box-shadow:0 0 0 4px rgba(232,184,75,.15),0 4px 16px rgba(232,184,75,.3);}
+.wz-step.active .wz-step-label{color:var(--gold);font-weight:700;}
+
+/* Estado: concluído */
+.wz-step.done .wz-step-node{background:rgba(46,212,122,.15);border-color:var(--green);color:var(--green);}
+.wz-step.done .wz-step-label{color:var(--green);}
+
+/* Estado: bloqueado */
+.wz-step.locked{cursor:not-allowed;}
+.wz-step.locked .wz-step-node{opacity:.35;}
+.wz-step.locked .wz-step-label{opacity:.35;}
+
+/* Hover em steps liberados */
+.wz-step:not(.locked):not(.active):hover .wz-step-node{border-color:var(--line2);background:var(--ink3);color:var(--text);}
+.wz-step:not(.locked):not(.active):hover .wz-step-label{color:var(--text2);}
+
+/* ── BODY DO WIZARD ──────────────────────────────────────── */
+.wz-body{position:relative;min-height:400px;}
+
+/* ── PANE DE ETAPA ───────────────────────────────────────── */
+.wz-step-pane{animation:wzSlideIn .28s cubic-bezier(.4,0,.2,1);}
+@keyframes wzSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes wzSlideInLeft{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+
+/* ── PANE HEADER ─────────────────────────────────────────── */
+.wz-pane-header{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+.wz-pane-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--line);flex-shrink:0;}
+.wz-pane-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;}
+.wz-pane-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+
+/* ── GRIDS ───────────────────────────────────────────────── */
+.wz-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.wz-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.wz-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+@media(max-width:768px){.wz-grid-2,.wz-grid-3,.wz-grid-4{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.wz-grid-2,.wz-grid-3,.wz-grid-4{grid-template-columns:1fr;}}
+
+/* ── INPUTS ──────────────────────────────────────────────── */
+.wz-input{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:10px 13px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13.5px;transition:border-color .15s,box-shadow .15s;outline:none;appearance:none;}
+.wz-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,75,.08);}
+.wz-input.wz-error{border-color:var(--red);box-shadow:0 0 0 3px rgba(240,78,78,.08);}
+.wz-req-mark{color:var(--red);font-size:12px;}
+.wz-field-hint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;}
+.wz-required label{display:flex;align-items:center;gap:3px;}
+
+/* ── SUB CARDS ───────────────────────────────────────────── */
+.wz-card-sub{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;}
+.wz-card-sub-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+/* ── ÁREA DISPLAY ────────────────────────────────────────── */
+.wz-area-pill{display:flex;justify-content:space-between;align-items:center;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin-top:10px;}
+.wz-area-label{font-size:13px;color:var(--text2);}
+.wz-area-value{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--gold);}
+
+/* ── COST ROWS ───────────────────────────────────────────── */
+.wz-cost-rows{display:flex;flex-direction:column;gap:8px;}
+.wz-cost-row{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);transition:border-color .15s;}
+.wz-cost-row:hover{border-color:var(--line2);}
+.wz-cost-info{flex:1;}
+.wz-cost-name{font-size:13px;color:var(--text);font-weight:500;display:block;}
+.wz-cost-hint{font-size:11px;color:var(--text3);}
+.wz-cost-controls{display:flex;align-items:center;gap:8px;}
+.wz-cost-input{width:96px;text-align:right;background:var(--ink4);border:1px solid var(--line);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;}
+.wz-cost-input:focus{border-color:var(--gold);}
+
+/* ── TRANSPORT DISPLAY ───────────────────────────────────── */
+.wz-transport-display{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);margin-top:8px;}
+.wz-transport-value{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:var(--warn);}
+
+/* ── BOTÃO CALCULAR ──────────────────────────────────────── */
+.wz-calc-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--gold-g);color:#000;border:none;border-radius:var(--r-lg);padding:16px 28px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:16px;cursor:pointer;transition:all .2s;letter-spacing:.01em;}
+.wz-calc-btn:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 8px 28px rgba(232,184,75,.35);}
+.wz-calc-btn:active{transform:translateY(0);filter:brightness(.95);}
+.wz-calc-icon{font-size:20px;}
+.wz-calc-arrow{font-size:18px;transition:transform .2s;}
+.wz-calc-btn:hover .wz-calc-arrow{transform:translateX(4px);}
+
+/* ── RESULT CTA ──────────────────────────────────────────── */
+.wz-result-ctas{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 0;border-top:1px solid var(--line);margin-top:10px;}
+
+/* ── EMPTY STATE ─────────────────────────────────────────── */
+.wz-empty-state{text-align:center;padding:48px 20px;background:var(--ink2);border:1px dashed var(--line);border-radius:var(--r-xl);}
+.wz-empty-icon{font-size:48px;margin-bottom:12px;}
+.wz-empty-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;margin-bottom:6px;}
+.wz-empty-sub{font-size:13px;color:var(--text3);}
+
+/* ── STEP 5: CLIENTE ─────────────────────────────────────── */
+.wz-client-notice{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.wz-notice-item{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:var(--r);font-size:13px;flex:1;min-width:200px;}
+.wz-notice-opt{background:rgba(56,197,224,.07);border:1px solid rgba(56,197,224,.18);color:var(--cyan);}
+.wz-notice-req{background:rgba(240,145,58,.07);border:1px solid rgba(240,145,58,.18);color:var(--warn);}
+.wz-notice-item strong{font-weight:700;}
+
+.wz-client-selector{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;}
+.wz-btn-new-client{display:flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(46,212,122,.1);border:1px solid rgba(46,212,122,.25);border-radius:var(--r);color:var(--green);font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.wz-btn-new-client:hover{background:rgba(46,212,122,.18);border-color:rgba(46,212,122,.4);}
+
+.wz-divider-or{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--text3);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;}
+.wz-divider-or::before,.wz-divider-or::after{content:'';flex:1;height:1px;background:var(--line);}
+
+/* ── STEP 6: FINALIZAÇÃO ─────────────────────────────────── */
+.wz-summary-card{background:linear-gradient(135deg,rgba(232,184,75,.06),rgba(46,212,122,.03));border:1px solid rgba(232,184,75,.2);border-radius:var(--r-xl);padding:20px;margin-bottom:14px;}
+.wz-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
+.wz-summary-kpi{text-align:center;}
+.wz-summary-kpi-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:700;margin-bottom:4px;}
+.wz-summary-kpi-value{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;}
+
+.wz-nf-status{margin-bottom:18px;border-radius:var(--r-lg);padding:13px 16px;display:flex;align-items:center;gap:12px;font-size:13px;}
+.wz-nf-ok{background:rgba(46,212,122,.07);border:1px solid rgba(46,212,122,.2);color:var(--green);}
+.wz-nf-warn{background:rgba(240,78,78,.07);border:1px solid rgba(240,78,78,.2);color:var(--red);}
+
+.wz-final-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:560px){.wz-final-actions{grid-template-columns:1fr;}}
+.wz-action-btn{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:var(--r-lg);border:1px solid var(--line);background:var(--ink2);cursor:pointer;transition:all .18s;text-align:left;}
+.wz-action-btn:hover{border-color:var(--line2);background:var(--ink3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.wz-action-icon{font-size:28px;flex-shrink:0;width:44px;text-align:center;}
+.wz-action-label{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;color:var(--text);display:block;}
+.wz-action-desc{font-size:11px;color:var(--text3);}
+.wz-action-save{border-color:rgba(46,212,122,.25);}
+.wz-action-save:hover{border-color:var(--green);box-shadow:0 8px 24px rgba(46,212,122,.12);}
+.wz-action-pdf{border-color:rgba(56,197,224,.25);}
+.wz-action-pdf:hover{border-color:var(--cyan);box-shadow:0 8px 24px rgba(56,197,224,.12);}
+.wz-action-wa{border-color:rgba(46,212,122,.2);}
+.wz-action-wa:hover{border-color:var(--green);}
+.wz-action-nf{border-color:rgba(139,92,246,.25);}
+.wz-action-nf:hover{border-color:var(--purple);box-shadow:0 8px 24px rgba(139,92,246,.12);}
+.wz-action-nf-disabled{opacity:.5;cursor:not-allowed;pointer-events:none;}
+
+/* ── NAV BAR ─────────────────────────────────────────────── */
+.wz-nav-bar{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:16px;border-top:1px solid var(--line);}
+.wz-nav-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--r);font-family:'Outfit',sans-serif;font-weight:600;font-size:14px;cursor:pointer;border:none;transition:all .16s;}
+.wz-nav-prev{background:var(--ink3);color:var(--text2);border:1px solid var(--line);}
+.wz-nav-prev:hover{background:var(--ink4);color:var(--text);}
+.wz-nav-next{background:var(--gold-g);color:#000;}
+.wz-nav-next:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,184,75,.3);}
+.wz-nav-next:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;filter:none;}
+.wz-nav-progress{font-size:12px;color:var(--text3);}
+.wz-nav-step-info strong{color:var(--text);}
+
+/* ── VALIDATION FEEDBACK ─────────────────────────────────── */
+.wz-validation-msg{font-size:11.5px;margin-top:4px;font-weight:500;display:flex;align-items:center;gap:4px;}
+.wz-validation-msg.error{color:var(--red);}
+.wz-validation-msg.ok{color:var(--green);}
+
+/* ── TOOLTIP STEP ────────────────────────────────────────── */
+.wz-step-req-badge{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#000;}
+
+/* ═══════════════════════════════════════════════════════════
+   ERP COMPLETO v2.0 — CSS DOS 4 MÓDULOS EXPANDIDOS
+   Dashboard Executivo · Financeiro · Produção · Multiusuários
+═══════════════════════════════════════════════════════════ */
+
+/* ── DASHBOARD EXECUTIVO ──────────────────────────────────── */
+.dash-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.dash-greeting{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.3px;}
+.dash-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.dash-period-selector{display:flex;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+.dash-period-btn{padding:6px 14px;background:none;border:none;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.dash-period-btn.active{background:var(--ink4);color:var(--gold);}
+.dash-period-btn:hover:not(.active){color:var(--text);}
+
+/* KPIs principais */
+.dash-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+@media(max-width:900px){.dash-kpi-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.dash-kpi-row{grid-template-columns:1fr;}}
+.dash-kpi-card{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:var(--r-xl);border:1px solid var(--line);background:var(--ink2);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;}
+.dash-kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.dash-kpi-gold::before{background:var(--gold-g);}
+.dash-kpi-green::before{background:linear-gradient(90deg,var(--green),#4ade80);}
+.dash-kpi-cyan::before{background:linear-gradient(90deg,var(--cyan),#67e8f9);}
+.dash-kpi-purple::before{background:linear-gradient(90deg,var(--purple),#a78bfa);}
+.dash-kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.3);}
+.dash-kpi-icon{font-size:28px;flex-shrink:0;width:44px;text-align:center;opacity:.9;}
+.dash-kpi-body{flex:1;min-width:0;}
+.dash-kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:700;margin-bottom:4px;}
+.dash-kpi-value{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--text);line-height:1;margin-bottom:3px;}
+.dash-kpi-delta{font-size:11px;color:var(--text3);}
+.dash-kpi-delta.up{color:var(--green);}
+.dash-kpi-delta.down{color:var(--red);}
+
+/* KPIs secundários */
+.dash-kpi-row2{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:900px){.dash-kpi-row2{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:500px){.dash-kpi-row2{grid-template-columns:repeat(2,1fr);}}
+.kpi-sm2{display:flex;align-items:center;gap:10px;background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:11px 13px;}
+.kpi-sm2-icon{font-size:18px;flex-shrink:0;}
+.kpi-sm2-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--text);}
+.kpi-sm2-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:2px;}
+.kpi-sm2-val.g{color:var(--green);}
+.kpi-sm2-val.b{color:var(--cyan);}
+.kpi-sm2-val.y{color:var(--gold);}
+
+/* Gráfico de vendas */
+.dash-charts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:1100px){.dash-charts-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.dash-charts-grid{grid-template-columns:1fr;}}
+.dash-chart-card{min-height:160px;}
+.dash-chart-label{font-size:9px;color:var(--text3);text-align:center;font-family:'DM Mono',monospace;}
+
+/* Ações rápidas */
+.dash-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.dash-quick-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;text-align:left;}
+.dash-quick-btn:hover{background:var(--ink4);border-color:var(--line2);color:var(--text);transform:translateX(2px);}
+.dash-quick-btn span{font-size:15px;}
+
+/* Produtos mais vendidos */
+.dash-produto-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
+.dash-produto-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;}
+.dash-produto-rank.r1{background:rgba(232,184,75,.15);color:var(--gold);border:1px solid rgba(232,184,75,.3);}
+.dash-produto-rank.r2{background:rgba(255,255,255,.06);color:var(--text3);border:1px solid var(--line);}
+.dash-produto-rank.r3{background:rgba(240,145,58,.1);color:var(--warn);border:1px solid rgba(240,145,58,.25);}
+.dash-produto-bar-wrap{flex:1;background:var(--line);border-radius:99px;height:4px;overflow:hidden;}
+.dash-produto-bar{height:100%;border-radius:99px;background:var(--gold-g);transition:width .5s ease;}
+
+/* ── FINANCEIRO EXPANDIDO ─────────────────────────────────── */
+.fin-sub{font-size:10.5px;color:var(--text3);margin-top:3px;}
+.fin-mes-banner{background:linear-gradient(135deg,rgba(232,184,75,.06),rgba(46,212,122,.04));border:1px solid rgba(232,184,75,.2);border-radius:var(--r-xl);padding:16px 20px;margin-bottom:16px;}
+.fin-mes-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.fin-mes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+@media(max-width:700px){.fin-mes-grid{grid-template-columns:repeat(2,1fr);}}
+.fin-mes-kpi{text-align:center;}
+.fin-mes-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:4px;}
+.fin-mes-kpi-value{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;}
+.fin-mes-kpi-value.entrada{color:var(--green);}
+.fin-mes-kpi-value.saida{color:var(--red);}
+.fin-filtros{display:flex;align-items:flex-end;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.fin-filtro-datas{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;}
+
+/* Origem badge */
+.badge-origem{background:rgba(56,197,224,.08);border:1px solid rgba(56,197,224,.18);color:var(--cyan);font-size:9.5px;padding:2px 7px;border-radius:99px;font-weight:600;}
+.badge-origem-manual{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.18);color:var(--purple);}
+
+/* ── PRODUÇÃO — CAMPOS EXPANDIDOS ────────────────────────── */
+.ped-card-resp{font-size:11px;color:var(--cyan);font-weight:600;margin-top:3px;display:flex;align-items:center;gap:4px;}
+.ped-card-prazo{font-size:10.5px;color:var(--text3);margin-top:2px;}
+.ped-card-prazo.vencido{color:var(--red);font-weight:600;}
+.ped-card-prazo.hoje{color:var(--warn);font-weight:600;}
+.ped-card-prazo.ok{color:var(--green);}
+
+/* ── MODAL DE ORDEM DE PRODUÇÃO ───────────────────────────── */
+.op-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── USUÁRIOS — GESTÃO DE EQUIPE ─────────────────────────── */
+.usr-card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-xl);padding:18px;display:flex;align-items:center;gap:14px;transition:border-color .15s;}
+.usr-card:hover{border-color:var(--line2);}
+.usr-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:18px;flex-shrink:0;}
+.usr-avatar-admin{background:rgba(232,184,75,.15);color:var(--gold);border:2px solid rgba(232,184,75,.3);}
+.usr-avatar-vendas{background:rgba(46,212,122,.12);color:var(--green);border:2px solid rgba(46,212,122,.25);}
+.usr-avatar-producao{background:rgba(56,197,224,.12);color:var(--cyan);border:2px solid rgba(56,197,224,.25);}
+.usr-avatar-financeiro{background:rgba(139,92,246,.12);color:var(--purple);border:2px solid rgba(139,92,246,.25);}
+.usr-info{flex:1;min-width:0;}
+.usr-nome{font-weight:700;font-size:14px;margin-bottom:3px;}
+.usr-email{font-size:12px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.usr-tipo-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:99px;margin-top:4px;display:inline-block;}
+.usr-tipo-admin{background:rgba(232,184,75,.1);color:var(--gold);border:1px solid rgba(232,184,75,.25);}
+.usr-tipo-vendas{background:rgba(46,212,122,.1);color:var(--green);border:1px solid rgba(46,212,122,.25);}
+.usr-tipo-producao{background:rgba(56,197,224,.1);color:var(--cyan);border:1px solid rgba(56,197,224,.25);}
+.usr-tipo-financeiro{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.25);}
+.usr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:16px;}
+.usr-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.usr-status-dot.ativo{background:var(--green);box-shadow:0 0 6px var(--green);}
+.usr-status-dot.inativo{background:var(--text3);}
+
+/* ── PERMISSÕES VISUAIS ───────────────────────────────────── */
+.perm-matrix{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;}
+.perm-matrix table{width:100%;border-collapse:collapse;}
+.perm-matrix th{background:var(--ink3);padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);}
+.perm-matrix td{padding:10px 14px;border-top:1px solid var(--line);font-size:13px;}
+.perm-check{color:var(--green);font-size:16px;}
+.perm-block{color:var(--text3);font-size:14px;opacity:.4;}
+
 </style>
 </head>
 <body>
@@ -1208,6 +1503,7 @@ textarea{resize:vertical;}
     <button class="sb-item" data-page="nf" data-module="nf" onclick="navTo('nf')"><span class="sb-item-icon">🧾</span>Notas Fiscais</button>
     <button class="sb-item" id="sb-assinatura-item" data-page="assinatura" onclick="navTo('assinatura')"><span class="sb-item-icon">💎</span>Assinatura <span class="sb-badge" id="badge-ass" style="background:var(--green);color:#000;display:none">●</span></button>
     <div class="sb-section">Sistema</div>
+    <button class="sb-item" data-page="usuarios" data-module="usuarios" onclick="navTo('usuarios')"><span class="sb-item-icon">👥</span>Equipe <span class="sb-badge" id="badge-usr" style="background:var(--cyan);color:#000;display:none">0</span></button>
     <div class="sb-section">PCP</div>
     <button class="sb-item" id="sb-pcp-item" data-page="pcp" data-module="pcp" onclick="navTo('pcp')"><span class="sb-item-icon">🏭</span>PCP — Produção</button>
     <button class="sb-item" id="sb-admin-saas-item" data-page="admin-saas" style="display:none;color:var(--gold);font-weight:600" onclick="navTo('admin-saas')"><span class="sb-item-icon">🛡️</span>Admin SaaS</button>
@@ -1247,153 +1543,390 @@ textarea{resize:vertical;}
 <div class="page-body">
 
 <!-- ══════ DASHBOARD ══════ -->
+<!-- ══════════════════════════════════════════════════════
+     DASHBOARD EXECUTIVO v2.0 — VisualCalc ERP Pro
+══════════════════════════════════════════════════════ -->
 <div class="page active" id="page-dashboard">
-  <div class="kpi-grid">
-    <div class="kpi-card" style="--kc:var(--gold)"><span class="kpi-icon">💰</span><div class="kpi-lbl">Faturamento Total</div><div class="kpi-val g" id="kpi-faturado">R$ 0,00</div><div class="kpi-sub">Finalizados</div></div>
-    <div class="kpi-card" style="--kc:var(--green)"><span class="kpi-icon">📈</span><div class="kpi-lbl">Lucro Total</div><div class="kpi-val g" id="kpi-lucro">R$ 0,00</div><div class="kpi-sub">Margem realizada</div></div>
-    <div class="kpi-card" style="--kc:var(--cyan)"><span class="kpi-icon">🎯</span><div class="kpi-lbl">Ticket Médio</div><div class="kpi-val b" id="kpi-ticket">R$ 0,00</div><div class="kpi-sub">Por aprovado</div></div>
-    <div class="kpi-card" style="--kc:var(--purple)"><span class="kpi-icon">🔄</span><div class="kpi-lbl">Conversão</div><div class="kpi-val p" id="kpi-conversao">0%</div><div class="kpi-sub">Aprovados/gerados</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px">
-    <div class="kpi-sm"><div class="kpi-lbl">Total Orçamentos</div><div class="kpi-val" id="kpi-orcs">0</div></div>
-    <div class="kpi-sm"><div class="kpi-lbl">Em Produção</div><div class="kpi-val b" id="kpi-peds">0</div></div>
-    <div class="kpi-sm"><div class="kpi-lbl">Entradas (pago)</div><div class="kpi-val g" id="kpi-entradas">R$ 0,00</div></div>
-    <div class="kpi-sm"><div class="kpi-lbl">A Receber</div><div class="kpi-val y" id="kpi-pendentes">R$ 0,00</div></div>
-  </div>
-  <div class="g2" style="gap:18px">
+
+  <!-- Header com saudação dinâmica -->
+  <div class="dash-header">
     <div>
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title"><div class="card-icon">📊</div>Funil de Status</div>
-        <div id="dash-funil"><div style="color:var(--text3);font-size:12px">Nenhum orçamento ainda</div></div>
+      <div class="dash-greeting" id="dash-greeting">Bom dia 👋</div>
+      <div class="dash-sub" id="dash-user-sub">Visão executiva · tempo real</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="dash-period-selector">
+        <button class="dash-period-btn active" onclick="setDashPeriod('mes',this)">Este mês</button>
+        <button class="dash-period-btn" onclick="setDashPeriod('trimestre',this)">Trimestre</button>
+        <button class="dash-period-btn" onclick="setDashPeriod('ano',this)">Ano</button>
       </div>
-      <div class="card">
-        <div class="card-title"><div class="card-icon">🔧</div>Pedidos em Produção</div>
-        <div id="dash-pedidos"><div style="color:var(--text3);font-size:12px">Nenhum pedido em andamento</div></div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:11px" onclick="navTo('pedidos')">Ver todos →</button>
+      <button class="btn btn-ghost btn-sm" onclick="renderDashboard()">🔄</button>
+    </div>
+  </div>
+
+  <!-- KPIs Principais -->
+  <div class="dash-kpi-row">
+    <div class="dash-kpi-card dash-kpi-gold">
+      <div class="dash-kpi-icon">💰</div>
+      <div class="dash-kpi-body">
+        <div class="dash-kpi-label">Faturamento do Mês</div>
+        <div class="dash-kpi-value" id="kpi-fat-mes">R$ 0,00</div>
+        <div class="dash-kpi-delta" id="kpi-fat-delta">— total do período</div>
       </div>
     </div>
-    <div>
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title"><div class="card-icon">🕐</div>Últimos Orçamentos</div>
-        <div id="dash-recentes"><div style="color:var(--text3);font-size:12px;text-align:center;padding:18px 0">Nenhum ainda</div></div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:11px" onclick="navTo('historico')">Ver todos →</button>
-      </div>
-      <div class="card">
-        <div class="card-title"><div class="card-icon">⚡</div>Ações Rápidas</div>
-        <div style="display:flex;flex-wrap:wrap;gap:7px">
-          <button class="btn btn-primary btn-sm" onclick="navTo('orcamento')">📋 Orçamento</button>
-          <button class="btn btn-secondary btn-sm" onclick="navTo('clientes')">👥 Cliente</button>
-          <button class="btn btn-secondary btn-sm" onclick="abrirModalFinanceiro()">💰 Lançamento</button>
-          <button class="btn btn-secondary btn-sm" onclick="exportarCSV('orcamentos')">⬆️ Exportar</button>
-        </div>
-        <div class="divider"></div>
-        <div style="font-size:11px;color:var(--text3)">Alt+1~9 navegar · Ctrl+Enter calcular · Esc fechar</div>
+    <div class="dash-kpi-card dash-kpi-green">
+      <div class="dash-kpi-icon">📈</div>
+      <div class="dash-kpi-body">
+        <div class="dash-kpi-label">Lucro do Mês</div>
+        <div class="dash-kpi-value" id="kpi-lucro-mes">R$ 0,00</div>
+        <div class="dash-kpi-delta" id="kpi-lucro-delta">— margem média</div>
       </div>
     </div>
+    <div class="dash-kpi-card dash-kpi-cyan">
+      <div class="dash-kpi-icon">🔧</div>
+      <div class="dash-kpi-body">
+        <div class="dash-kpi-label">Pedidos Ativos</div>
+        <div class="dash-kpi-value" id="kpi-ped-ativos">0</div>
+        <div class="dash-kpi-delta" id="kpi-ped-delta">em produção agora</div>
+      </div>
+    </div>
+    <div class="dash-kpi-card dash-kpi-purple">
+      <div class="dash-kpi-icon">💳</div>
+      <div class="dash-kpi-body">
+        <div class="dash-kpi-label">Saldo Financeiro</div>
+        <div class="dash-kpi-value" id="kpi-saldo-dash">R$ 0,00</div>
+        <div class="dash-kpi-delta" id="kpi-saldo-delta">entradas − saídas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs secundários -->
+  <div class="dash-kpi-row2">
+    <div class="kpi-sm2"><span class="kpi-sm2-icon">📋</span><div><div class="kpi-sm2-val" id="kpi-orcs">0</div><div class="kpi-sm2-lbl">Orçamentos</div></div></div>
+    <div class="kpi-sm2"><span class="kpi-sm2-icon">✅</span><div><div class="kpi-sm2-val g" id="kpi-aprovados">0</div><div class="kpi-sm2-lbl">Aprovados</div></div></div>
+    <div class="kpi-sm2"><span class="kpi-sm2-icon">🔄</span><div><div class="kpi-sm2-val b" id="kpi-conversao">0%</div><div class="kpi-sm2-lbl">Conversão</div></div></div>
+    <div class="kpi-sm2"><span class="kpi-sm2-icon">🎯</span><div><div class="kpi-sm2-val y" id="kpi-ticket">R$ 0</div><div class="kpi-sm2-lbl">Ticket Médio</div></div></div>
+    <div class="kpi-sm2"><span class="kpi-sm2-icon">⏳</span><div><div class="kpi-sm2-val" id="kpi-pendentes">R$ 0</div><div class="kpi-sm2-lbl">A Receber</div></div></div>
+    <div class="kpi-sm2"><span class="kpi-sm2-icon">💰</span><div><div class="kpi-sm2-val" id="kpi-faturado">R$ 0</div><div class="kpi-sm2-lbl">Fat. Total</div></div></div>
+  </div>
+
+  <!-- Gráficos + conteúdo -->
+  <div class="dash-charts-grid">
+
+    <!-- Gráfico: Vendas por dia -->
+    <div class="card dash-chart-card" style="grid-column:span 2">
+      <div class="card-title" style="margin-bottom:14px">
+        <div class="card-icon">📊</div>
+        Vendas por Dia — últimos 14 dias
+        <span id="dash-chart-total" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);font-weight:600"></span>
+      </div>
+      <div id="dash-chart-vendas" style="width:100%">
+        <svg id="svg-vendas" viewBox="0 0 700 120" preserveAspectRatio="none" style="width:100%;height:120px;display:block"></svg>
+      </div>
+      <div id="dash-chart-labels" style="display:flex;justify-content:space-between;padding:2px 6px;margin-top:2px"></div>
+    </div>
+
+    <!-- Produtos mais vendidos -->
+    <div class="card dash-chart-card">
+      <div class="card-title"><div class="card-icon">🏆</div>Produtos Mais Vendidos</div>
+      <div id="dash-top-produtos"><div style="color:var(--text3);font-size:12px;padding:10px 0">Nenhuma venda ainda</div></div>
+    </div>
+
+    <!-- Funil de status -->
+    <div class="card dash-chart-card">
+      <div class="card-title"><div class="card-icon">🔻</div>Funil de Orçamentos</div>
+      <div id="dash-funil"><div style="color:var(--text3);font-size:12px">Nenhum orçamento</div></div>
+    </div>
+
+    <!-- Produção ativa -->
+    <div class="card dash-chart-card">
+      <div class="card-title"><div class="card-icon">🏭</div>Produção Ativa</div>
+      <div id="dash-pedidos"><div style="color:var(--text3);font-size:12px">Nenhum pedido</div></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="navTo('pedidos')">Ver Kanban →</button>
+    </div>
+
+    <!-- Últimos orçamentos -->
+    <div class="card dash-chart-card">
+      <div class="card-title"><div class="card-icon">🕐</div>Últimos Orçamentos</div>
+      <div id="dash-recentes"><div style="color:var(--text3);font-size:12px;padding:10px 0">Nenhum ainda</div></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="navTo('historico')">Ver todos →</button>
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="card dash-chart-card">
+      <div class="card-title"><div class="card-icon">⚡</div>Ações Rápidas</div>
+      <div class="dash-quick-actions">
+        <button class="dash-quick-btn" onclick="navTo('orcamento')"><span>📋</span>Novo Orçamento</button>
+        <button class="dash-quick-btn" onclick="navTo('clientes')"><span>👥</span>Novo Cliente</button>
+        <button class="dash-quick-btn" onclick="abrirModalFinanceiro('entrada')"><span>💵</span>Lançar Entrada</button>
+        <button class="dash-quick-btn" onclick="abrirModalFinanceiro('saida')"><span>💸</span>Lançar Saída</button>
+        <button class="dash-quick-btn" onclick="navTo('pedidos')"><span>🔧</span>Ver Produção</button>
+        <button class="dash-quick-btn" onclick="exportarCSV('orcamentos')"><span>⬆️</span>Exportar CSV</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <!-- ══════ ORÇAMENTO ══════ -->
+<!-- ══════════════════════════════════════════════════════════════
+     VISUALCALC ERP PRO — WIZARD DE ORÇAMENTO v3.0
+     Fluxo profissional por etapas · 6 steps · Validação em tempo real
+══════════════════════════════════════════════════════════════ -->
 <div class="page" id="page-orcamento">
-  <div class="section-header">
-    <div><div class="section-title">Novo Orçamento</div><div class="section-sub">Calcule custos e gere propostas profissionais</div></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm" onclick="limparOrcamento()">🗑 Limpar</button>
-      <button class="btn btn-primary btn-lg" onclick="executarCalculo()">⚡ Calcular</button>
+
+  <!-- ── HEADER DA PÁGINA ─────────────────────────────────────── -->
+  <div class="wz-header">
+    <div class="wz-header-info">
+      <div class="wz-header-title">
+        <span id="wz-page-icon">📋</span>
+        <span id="wz-page-title">Novo Orçamento</span>
+      </div>
+      <div class="wz-header-sub" id="wz-page-sub">Fluxo guiado em 6 etapas</div>
+    </div>
+    <div class="wz-header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="wzReset()">🗑 Limpar</button>
+      <div class="wz-ref-badge" id="wz-ref-badge" style="display:none">
+        <span id="wz-ref-text">ORC-0001</span>
+      </div>
     </div>
   </div>
-  <div class="g2" style="gap:20px">
-    <div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title"><div class="card-icon">👤</div>Identificação</div>
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label>Cliente (cadastrado)</label><select id="orc_cliente_id" onchange="preencherDadosCliente()"><option value="">— Selecione —</option></select></div>
-          <div class="form-group" style="margin:0"><label>Nome (manual)</label><input type="text" id="orc_cliente" placeholder="Ou digite aqui"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="margin:0"><label>Telefone</label><input type="text" id="orc_telefone" placeholder="(11) 99999-9999"></div>
-          <div class="form-group" style="margin:0"><label>Referência</label><input type="text" id="orc_ref" placeholder="ORC-001 (automático)"></div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title"><div class="card-icon">📦</div>Produto & Material</div>
-        <div class="form-row">
-          <div class="form-group" style="margin:0"><label>Produto *</label><select id="orc_produto"><option value="">— Selecione —</option></select></div>
-          <div class="form-group" style="margin:0"><label>Material *</label><select id="orc_material" onchange="atualizarCustoMaterial()"><option value="">— Selecione —</option></select></div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title"><div class="card-icon">📐</div>Medidas & Quantidade</div>
-        <div class="form-row" style="margin-bottom:12px">
-          <div class="form-group" style="margin:0"><label>Largura (m)</label><input type="number" id="orc_largura" placeholder="0.00" step="0.01" min="0" oninput="calcArea()"></div>
-          <div class="form-group" style="margin:0"><label>Altura (m)</label><input type="number" id="orc_altura" placeholder="0.00" step="0.01" min="0" oninput="calcArea()"></div>
-          <div class="form-group" style="margin:0"><label>Quantidade</label><input type="number" id="orc_qtd" value="1" min="1" oninput="calcArea()"></div>
-        </div>
-        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:12px 15px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;color:var(--text2)">Área Total Calculada</span>
-          <span id="area_display" style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--gold)">0.0000 m²</span>
-        </div>
-      </div>
-      <div class="card"><div class="card-title"><div class="card-icon">✂️</div>Acabamentos</div><div id="acabamentos_container"><div style="color:var(--text3);font-size:12px">Selecione um produto</div></div></div>
 
-      <!-- ══ CÁLCULO ESTRUTURAL METALON ══ -->
-      <div class="card" style="margin-top:16px;border-color:rgba(139,92,246,.3)">
-        <div class="card-title"><div class="card-icon" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3)">🏗</div>Estrutura Metálica (Metalon)
-          <label class="toggle" style="margin-left:auto"><input type="checkbox" id="tog_metalon" onchange="toggleMetalonSection()"><span class="toggle-slider"></span></label>
-        </div>
-        <div id="metalon_section" style="display:none">
-          <div class="form-row" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label>Tipo de Estrutura</label>
-              <select id="met_tipo" onchange="calcularMetalon()">
-                <option value="simples">Simples (perímetro)</option>
-                <option value="reforcada">Reforçada (travessas)</option>
-                <option value="fachada_acm">Fachada ACM (densa)</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin:0"><label>Espaç. Travessas (m)</label>
-              <input type="number" id="met_espacamento" value="0.5" step="0.05" min="0.1" oninput="calcularMetalon()">
-            </div>
-          </div>
-          <div class="form-row" style="margin-bottom:10px">
-            <div class="form-group" style="margin:0"><label>Custo Metalon (R$/m)</label>
-              <input type="number" id="met_custo_metro" value="8.50" step="0.10" min="0" oninput="calcularMetalon()">
-            </div>
-            <div class="form-group" style="margin:0"><label>Custo Parafusos/Solda</label>
-              <input type="number" id="met_custo_fixacao" value="25" step="1" min="0" oninput="calcularMetalon()">
-            </div>
-          </div>
-          <div id="metalon_resultado" style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:var(--r);padding:12px;font-size:12px">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
-              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Metalon Total</div><div id="met_total_m" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--purple)">0.00 m</div></div>
-              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Travessas</div><div id="met_travessas" style="font-family:'DM Mono',monospace;font-weight:600">0</div></div>
-              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Custo Estrutura</div><div id="met_custo_total" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--gold)">R$ 0,00</div></div>
-            </div>
-          </div>
+  <!-- ── BARRA DE ETAPAS ───────────────────────────────────────── -->
+  <div class="wz-steps-track">
+    <div class="wz-steps-line"></div>
+    <div class="wz-steps-fill" id="wz-steps-fill"></div>
+    <div class="wz-steps" id="wz-steps-bar">
+      <!-- Etapas injetadas via JS -->
+    </div>
+  </div>
+
+  <!-- ── CONTAINER DAS ETAPAS ─────────────────────────────────── -->
+  <div class="wz-body" id="wz-body">
+
+    <!-- ═══ ETAPA 1 — PRODUTO ═══ -->
+    <div class="wz-step-pane" id="wz-pane-1">
+      <div class="wz-pane-header">
+        <div class="wz-pane-icon" style="background:rgba(56,197,224,.15);border-color:rgba(56,197,224,.3)">📦</div>
+        <div>
+          <div class="wz-pane-title">Produto</div>
+          <div class="wz-pane-sub">Defina o produto, NCM e código fiscal</div>
         </div>
       </div>
 
-      <!-- ══ MOTOR DE PRODUÇÃO ══ -->
-      <div class="card" style="margin-top:16px;border-color:rgba(56,197,224,.2)">
-        <div class="card-title"><div class="card-icon" style="background:rgba(56,197,224,.1);border-color:rgba(56,197,224,.25)">⚙️</div>Motor de Produção</div>
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label>Vel. Máquina (m²/h)</label>
-            <input type="number" id="prod_vel_maquina" value="25" step="1" min="1" oninput="calcularCustoProducao()">
+      <div class="wz-grid-2">
+        <div class="form-group wz-required">
+          <label>Tipo de Produto <span class="wz-req-mark">*</span></label>
+          <select id="orc_produto" onchange="wzValidateStep(1);atualizarCustoMaterial()" class="wz-input">
+            <option value="">— Selecione o produto —</option>
+          </select>
+          <div class="wz-field-hint">Banner, Fachada ACM, Adesivo, Letra Caixa...</div>
+        </div>
+
+        <div class="form-group wz-required">
+          <label>Código Interno (SKU) <span class="wz-req-mark">*</span></label>
+          <input type="text" id="orc_sku" placeholder="Ex: BAN-001, FAC-002" class="wz-input"
+            oninput="wzValidateStep(1)">
+          <div class="wz-field-hint">Código interno para controle de estoque</div>
+        </div>
+
+        <div class="form-group wz-required">
+          <label>NCM <span class="wz-req-mark">*</span></label>
+          <input type="text" id="orc_ncm" placeholder="Ex: 4911.91.00" class="wz-input"
+            list="dl-ncm-orc" autocomplete="off" oninput="wzValidateStep(1)">
+          <datalist id="dl-ncm-orc">
+            <option value="4911.91.00">4911.91.00 — Impressos publicitários</option>
+            <option value="3919.90.00">3919.90.00 — Adesivos autocolantes</option>
+            <option value="7606.11.00">7606.11.00 — ACM / Alumínio</option>
+            <option value="3920.49.00">3920.49.00 — Placas PVC / plástico</option>
+            <option value="9405.40.00">9405.40.00 — Luminosos / LED</option>
+            <option value="7308.90.90">7308.90.90 — Estruturas metálicas</option>
+          </datalist>
+          <div class="wz-field-hint">Nomenclatura Comum do Mercosul — obrigatório na NF-e</div>
+        </div>
+
+        <div class="form-group wz-required">
+          <label>Unidade de Medida <span class="wz-req-mark">*</span></label>
+          <select id="orc_unidade" class="wz-input" onchange="wzValidateStep(1)">
+            <option value="M2">M² — Metro quadrado</option>
+            <option value="UN">UN — Unidade</option>
+            <option value="M">M — Metro linear</option>
+            <option value="KG">KG — Quilograma</option>
+            <option value="PC">PC — Peça</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Medidas & Quantidade -->
+      <div class="wz-card-sub" style="margin-top:16px">
+        <div class="wz-card-sub-title">📐 Dimensões & Quantidade</div>
+        <div class="wz-grid-3">
+          <div class="form-group">
+            <label>Largura (m) <span class="wz-req-mark">*</span></label>
+            <input type="number" id="orc_largura" placeholder="0.00" step="0.01" min="0"
+              class="wz-input" oninput="calcArea();wzValidateStep(1)">
           </div>
-          <div class="form-group" style="margin:0"><label>Custo Hora Máquina (R$)</label>
-            <input type="number" id="prod_custo_hora_maq" value="45" step="1" min="0" oninput="calcularCustoProducao()">
+          <div class="form-group">
+            <label>Altura (m) <span class="wz-req-mark">*</span></label>
+            <input type="number" id="orc_altura" placeholder="0.00" step="0.01" min="0"
+              class="wz-input" oninput="calcArea();wzValidateStep(1)">
+          </div>
+          <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" id="orc_qtd" value="1" min="1"
+              class="wz-input" oninput="calcArea()">
           </div>
         </div>
-        <div class="form-row" style="margin-bottom:10px">
-          <div class="form-group" style="margin:0"><label>Custo Hora Funcionário (R$)</label>
-            <input type="number" id="prod_custo_hora_func" value="18" step="0.50" min="0" oninput="calcularCustoProducao()">
+        <div class="wz-area-pill">
+          <span class="wz-area-label">Área Total</span>
+          <span id="area_display" class="wz-area-value">0.0000 m²</span>
+        </div>
+      </div>
+
+      <!-- Preview produto -->
+      <div id="orc-preview-box" style="margin-top:14px"></div>
+    </div>
+
+    <!-- ═══ ETAPA 2 — MATERIAIS ═══ -->
+    <div class="wz-step-pane" id="wz-pane-2" style="display:none">
+      <div class="wz-pane-header">
+        <div class="wz-pane-icon" style="background:rgba(232,184,75,.15);border-color:rgba(232,184,75,.3)">🎨</div>
+        <div>
+          <div class="wz-pane-title">Materiais</div>
+          <div class="wz-pane-sub">Selecione o material e configure os custos</div>
+        </div>
+      </div>
+
+      <div class="wz-grid-2">
+        <div class="form-group wz-required">
+          <label>Material <span class="wz-req-mark">*</span></label>
+          <select id="orc_material" onchange="atualizarCustoMaterial();wzValidateStep(2)" class="wz-input">
+            <option value="">— Selecione o material —</option>
+          </select>
+          <div class="wz-field-hint">Custo por m² é preenchido automaticamente</div>
+        </div>
+
+        <div class="form-group">
+          <label>Referência do Orçamento</label>
+          <input type="text" id="orc_ref" placeholder="ORC-001 (automático)" class="wz-input">
+        </div>
+      </div>
+
+      <!-- Custos diretos -->
+      <div class="wz-card-sub" style="margin-top:16px">
+        <div class="wz-card-sub-title">💰 Custos Diretos por m²</div>
+        <div class="wz-cost-rows">
+          <div class="wz-cost-row">
+            <div class="wz-cost-info">
+              <span class="wz-cost-name">Material</span>
+              <span class="wz-cost-hint" id="custo_material_sub">Automático do cadastro</span>
+            </div>
+            <div class="wz-cost-controls">
+              <input type="number" id="custo_material" placeholder="0.00" step="0.01" class="wz-cost-input"
+                oninput="wzValidateStep(2)">
+              <label class="toggle"><input type="checkbox" checked id="tog_material"><span class="toggle-slider"></span></label>
+            </div>
           </div>
-          <div class="form-group" style="margin:0"><label>Desperdício (%)</label>
-            <input type="number" id="prod_desperdicio" value="10" step="1" min="0" max="50" oninput="calcularCustoProducao()">
+          <div class="wz-cost-row">
+            <div class="wz-cost-info">
+              <span class="wz-cost-name">Impressão / Tinta</span>
+              <span class="wz-cost-hint">R$/m²</span>
+            </div>
+            <div class="wz-cost-controls">
+              <input type="number" id="custo_impressao" value="8" step="0.01" class="wz-cost-input">
+              <label class="toggle"><input type="checkbox" checked id="tog_impressao"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+          <div class="wz-cost-row">
+            <div class="wz-cost-info">
+              <span class="wz-cost-name">Mão de Obra</span>
+              <span class="wz-cost-hint">R$/m²</span>
+            </div>
+            <div class="wz-cost-controls">
+              <input type="number" id="custo_mao_obra" value="5" step="0.01" class="wz-cost-input">
+              <label class="toggle"><input type="checkbox" checked id="tog_mao_obra"><span class="toggle-slider"></span></label>
+            </div>
           </div>
         </div>
-        <div id="prod_resultado" style="background:rgba(56,197,224,.05);border:1px solid rgba(56,197,224,.15);border-radius:var(--r);padding:10px">
+      </div>
+
+      <!-- Acabamentos -->
+      <div class="wz-card-sub" style="margin-top:14px">
+        <div class="wz-card-sub-title">✂️ Acabamentos</div>
+        <div id="acabamentos_container"><div style="color:var(--text3);font-size:12px;padding:8px 0">Selecione um produto na Etapa 1</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ ETAPA 3 — FORMAÇÃO DE CUSTO ═══ -->
+    <div class="wz-step-pane" id="wz-pane-3" style="display:none">
+      <div class="wz-pane-header">
+        <div class="wz-pane-icon" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3)">⚙️</div>
+        <div>
+          <div class="wz-pane-title">Formação de Custo</div>
+          <div class="wz-pane-sub">Serviços, transporte, produção e margem</div>
+        </div>
+      </div>
+
+      <div class="wz-grid-2">
+        <!-- Serviços adicionais -->
+        <div class="wz-card-sub">
+          <div class="wz-card-sub-title">🚚 Serviços Adicionais</div>
+          <div id="servicos_container"></div>
+        </div>
+
+        <!-- Instalação & Transporte -->
+        <div class="wz-card-sub" style="border-color:rgba(240,145,58,.2)">
+          <div class="wz-card-sub-title" style="color:var(--warn)">🔧 Instalação & Transporte</div>
+          <div class="form-group">
+            <label>Custo Instalação (R$)</label>
+            <input type="number" id="custo_instalacao" value="0" step="10" min="0" placeholder="0" class="wz-input"
+              oninput="this.value>0?document.getElementById('ins_badge').style.display='inline':document.getElementById('ins_badge').style.display='none'">
+          </div>
+          <div class="wz-grid-2" style="gap:8px">
+            <div class="form-group" style="margin:0">
+              <label>Distância (km)</label>
+              <input type="number" id="km_transporte" value="0" step="1" min="0" placeholder="0"
+                class="wz-input" oninput="_calcularTransporte()">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Custo/km (R$)</label>
+              <input type="number" id="custo_por_km" value="2.50" step="0.10" min="0"
+                class="wz-input" oninput="_calcularTransporte()">
+            </div>
+          </div>
+          <div class="wz-transport-display">
+            <span style="font-size:11px;color:var(--text3)">Transporte
+              <span id="ins_badge" style="display:none;background:rgba(240,145,58,.15);color:var(--warn);border:1px solid rgba(240,145,58,.3);border-radius:99px;font-size:10px;padding:1px 7px;margin-left:4px">ativo</span>
+            </span>
+            <span id="transporte_calc" class="wz-transport-value">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Motor de Produção -->
+      <div class="wz-card-sub" style="margin-top:14px;border-color:rgba(56,197,224,.2)">
+        <div class="wz-card-sub-title" style="color:var(--cyan)">⚡ Motor de Produção</div>
+        <div class="wz-grid-4">
+          <div class="form-group" style="margin:0">
+            <label>Vel. Máquina (m²/h)</label>
+            <input type="number" id="prod_vel_maquina" value="25" step="1" min="1" class="wz-input" oninput="calcularCustoProducao()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Custo Hora Máq. (R$)</label>
+            <input type="number" id="prod_custo_hora_maq" value="45" step="1" min="0" class="wz-input" oninput="calcularCustoProducao()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Custo Hora Func. (R$)</label>
+            <input type="number" id="prod_custo_hora_func" value="18" step="0.50" min="0" class="wz-input" oninput="calcularCustoProducao()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Desperdício (%)</label>
+            <input type="number" id="prod_desperdicio" value="10" step="1" min="0" max="50" class="wz-input" oninput="calcularCustoProducao()">
+          </div>
+        </div>
+        <div id="prod_resultado" style="background:rgba(56,197,224,.05);border:1px solid rgba(56,197,224,.1);border-radius:var(--r);padding:10px;margin-top:10px">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;font-size:11px">
-            <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Tempo Produção</div><div id="prod_tempo" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--cyan)">0.00h</div></div>
+            <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Tempo</div><div id="prod_tempo" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--cyan)">0.00h</div></div>
             <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Custo Máquina</div><div id="prod_custo_maq" style="font-family:'DM Mono',monospace;font-weight:600">R$ 0,00</div></div>
             <div><div style="color:var(--text3);text-transform:uppercase;font-weight:700;font-size:9.5px">Custo M.O.</div><div id="prod_custo_mo" style="font-family:'DM Mono',monospace;font-weight:600">R$ 0,00</div></div>
           </div>
@@ -1403,183 +1936,419 @@ textarea{resize:vertical;}
           <span style="font-size:12px;color:var(--text2)">Incluir custos de produção no orçamento</span>
         </div>
       </div>
-    </div>
-    <div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title"><div class="card-icon">💰</div>Custos Diretos</div>
-        <div class="toggle-row"><div><div class="toggle-label">Material</div><div class="toggle-sub" id="custo_material_sub">Automático por m²</div></div><div style="display:flex;align-items:center;gap:8px"><input type="number" id="custo_material" placeholder="0.00" step="0.01" style="width:94px;text-align:right"><label class="toggle"><input type="checkbox" checked id="tog_material"><span class="toggle-slider"></span></label></div></div>
-        <div class="toggle-row"><div><div class="toggle-label">Impressão / Tinta</div><div class="toggle-sub">R$/m²</div></div><div style="display:flex;align-items:center;gap:8px"><input type="number" id="custo_impressao" value="8" step="0.01" style="width:94px;text-align:right"><label class="toggle"><input type="checkbox" checked id="tog_impressao"><span class="toggle-slider"></span></label></div></div>
-        <div class="toggle-row"><div><div class="toggle-label">Mão de Obra</div><div class="toggle-sub">R$/m²</div></div><div style="display:flex;align-items:center;gap:8px"><input type="number" id="custo_mao_obra" value="5" step="0.01" style="width:94px;text-align:right"><label class="toggle"><input type="checkbox" checked id="tog_mao_obra"><span class="toggle-slider"></span></label></div></div>
-      </div>
-      <div class="card" style="margin-bottom:16px"><div class="card-title"><div class="card-icon">🚚</div>Serviços Adicionais</div><div id="servicos_container"></div></div>
 
-      <!-- ══ INSTALAÇÃO & TRANSPORTE ══ -->
-      <div class="card" style="margin-bottom:16px;border-color:rgba(240,145,58,.25)">
-        <div class="card-title"><div class="card-icon" style="background:rgba(240,145,58,.1);border-color:rgba(240,145,58,.25)">🔧</div>Instalação & Transporte
-          <span style="font-size:10px;color:var(--text3);margin-left:8px">(integrados no custo total)</span>
+      <!-- Metalon -->
+      <div class="wz-card-sub" style="margin-top:14px;border-color:rgba(139,92,246,.25)">
+        <div class="wz-card-sub-title" style="color:var(--purple);display:flex;align-items:center;justify-content:space-between">
+          <span>🏗 Estrutura Metálica (Metalon)</span>
+          <label class="toggle"><input type="checkbox" id="tog_metalon" onchange="toggleMetalonSection()"><span class="toggle-slider"></span></label>
         </div>
-        <div class="form-row" style="margin-bottom:8px">
-          <div class="form-group" style="margin:0">
-            <label>Custo Instalação (R$)</label>
-            <input type="number" id="custo_instalacao" value="0" step="10" min="0" placeholder="0"
-              oninput="this.value>0?document.getElementById('ins_badge').style.display='inline':document.getElementById('ins_badge').style.display='none'">
+        <div id="metalon_section" style="display:none;margin-top:10px">
+          <div class="wz-grid-2">
+            <div class="form-group" style="margin:0">
+              <label>Tipo de Estrutura</label>
+              <select id="met_tipo" class="wz-input" onchange="calcularMetalon()">
+                <option value="simples">Simples (perímetro)</option>
+                <option value="reforcada">Reforçada (travessas)</option>
+                <option value="fachada_acm">Fachada ACM (densa)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Espaçamento (m)</label>
+              <input type="number" id="met_espacamento" value="0.5" step="0.05" min="0.1" class="wz-input" oninput="calcularMetalon()">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Custo Metalon (R$/m)</label>
+              <input type="number" id="met_custo_metro" value="8.50" step="0.10" min="0" class="wz-input" oninput="calcularMetalon()">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Custo Parafusos/Solda</label>
+              <input type="number" id="met_custo_fixacao" value="25" step="1" min="0" class="wz-input" oninput="calcularMetalon()">
+            </div>
           </div>
-          <div class="form-group" style="margin:0">
-            <label>Distância Transporte (km)</label>
-            <input type="number" id="km_transporte" value="0" step="1" min="0" placeholder="0"
-              oninput="_calcularTransporte()">
+          <div id="metalon_resultado" style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:var(--r);padding:12px;margin-top:10px;font-size:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Metalon Total</div><div id="met_total_m" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--purple)">0.00 m</div></div>
+              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Travessas</div><div id="met_travessas" style="font-family:'DM Mono',monospace;font-weight:600">0</div></div>
+              <div><div style="color:var(--text3);font-size:10px;text-transform:uppercase;font-weight:700">Custo Estrutura</div><div id="met_custo_total" style="font-family:'DM Mono',monospace;font-weight:600;color:var(--gold)">R$ 0,00</div></div>
+            </div>
           </div>
-        </div>
-        <div class="form-row" style="margin-bottom:8px">
-          <div class="form-group" style="margin:0">
-            <label>Custo por km (R$)</label>
-            <input type="number" id="custo_por_km" value="2.50" step="0.10" min="0" oninput="_calcularTransporte()">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label style="display:flex;align-items:center;gap:6px">
-              Custo Transporte <span id="ins_badge" style="display:none;background:rgba(240,145,58,.15);color:var(--warn);border:1px solid rgba(240,145,58,.3);border-radius:99px;font-size:10px;padding:1px 7px">ativo</span>
-            </label>
-            <div id="transporte_calc" style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--warn);padding:9px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)">R$ 0,00</div>
-          </div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title"><div class="card-icon">📊</div>Margem de Lucro</div>
-        <div class="slider-row" style="margin-bottom:10px"><input type="range" id="margem_slider" min="0" max="200" value="40" oninput="syncMargem(this.value)"><div class="slider-val" id="margem_val">40%</div></div>
-        <div class="form-row">
-          <div class="form-group" style="margin:0"><label>Margem (%)</label><input type="number" id="margem_input" value="40" min="0" oninput="syncMargemInput(this.value)"></div>
-          <div class="form-group" style="margin:0"><label>Desconto (%)</label><input type="number" id="desconto_input" value="0" min="0" max="100"></div>
         </div>
       </div>
 
-      <!-- ══ ESCALA DE PRODUÇÃO ══ -->
-      <div class="card" style="margin-bottom:16px;border-color:rgba(46,212,122,.2)">
-        <div class="card-title"><div class="card-icon" style="background:rgba(46,212,122,.1);border-color:rgba(46,212,122,.25)">📈</div>Escala & Ajuste de Preço</div>
-        <div id="escala_badge" style="display:none;margin-bottom:10px"></div>
-        <div class="form-row" style="margin-bottom:8px">
-          <div class="form-group" style="margin:0"><label>Tipo de Cliente</label>
-            <select id="tipo_cliente_preco" onchange="calcularAjustesPreco()">
+      <!-- Margem -->
+      <div class="wz-card-sub" style="margin-top:14px">
+        <div class="wz-card-sub-title">📊 Margem & Precificação</div>
+        <div style="margin-bottom:12px">
+          <div class="slider-row">
+            <input type="range" id="margem_slider" min="0" max="200" value="40" oninput="syncMargem(this.value)">
+            <div class="slider-val" id="margem_val">40%</div>
+          </div>
+        </div>
+        <div class="wz-grid-4">
+          <div class="form-group" style="margin:0">
+            <label>Margem (%)</label>
+            <input type="number" id="margem_input" value="40" min="0" class="wz-input" oninput="syncMargemInput(this.value)">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Desconto (%)</label>
+            <input type="number" id="desconto_input" value="0" min="0" max="100" class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Tipo Cliente</label>
+            <select id="tipo_cliente_preco" class="wz-input" onchange="calcularAjustesPreco()">
               <option value="normal">Normal</option>
-              <option value="vip">⭐ VIP (desconto extra)</option>
-              <option value="novo">🆕 Novo Cliente (promoção)</option>
+              <option value="vip">⭐ VIP (-8%)</option>
+              <option value="novo">🆕 Novo (-5%)</option>
             </select>
           </div>
-          <div class="form-group" style="margin:0"><label>Urgência</label>
-            <select id="urgencia_preco" onchange="calcularAjustesPreco()">
+          <div class="form-group" style="margin:0">
+            <label>Urgência</label>
+            <select id="urgencia_preco" class="wz-input" onchange="calcularAjustesPreco()">
               <option value="normal">Normal</option>
               <option value="urgente">🔥 Urgente (+15%)</option>
               <option value="super_urgente">⚡ Super Urgente (+30%)</option>
             </select>
           </div>
         </div>
-        <div id="ajuste_preco_info" style="font-size:11px;color:var(--text3);padding:6px 8px;background:var(--ink3);border-radius:var(--r)">
-          Sem ajustes aplicados
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--text3)">
-          <strong style="color:var(--green)">Escala automática:</strong> 100+ un → -5% · 500+ un → -10% · 1000+ un → -15%
+        <div id="ajuste_preco_info" style="font-size:11px;color:var(--text3);padding:6px 8px;background:var(--ink3);border-radius:var(--r);margin-top:8px">Sem ajustes aplicados</div>
+        <div id="escala_badge" style="display:none;margin-top:8px"></div>
+      </div>
+
+      <!-- Dados PDF -->
+      <div class="wz-card-sub" style="margin-top:14px">
+        <div class="wz-card-sub-title">📄 Dados para PDF</div>
+        <div class="wz-grid-3">
+          <div class="form-group" style="margin:0">
+            <label>Prazo</label>
+            <input type="text" id="orc_prazo" value="5 dias úteis" class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Forma de Pagamento</label>
+            <input type="text" id="orc_pagamento" placeholder="50%+50%" class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Validade (dias)</label>
+            <input type="number" id="orc_validade" value="7" min="1" class="wz-input">
+          </div>
         </div>
       </div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title"><div class="card-icon">📄</div>Dados para o PDF</div>
-        <div class="form-row">
-          <div class="form-group" style="margin:0"><label>Prazo</label><input type="text" id="orc_prazo" value="5 dias úteis"></div>
-          <div class="form-group" style="margin:0"><label>Pagamento</label><input type="text" id="orc_pagamento" placeholder="50%+50%"></div>
-          <div class="form-group" style="margin:0"><label>Validade (dias)</label><input type="number" id="orc_validade" value="7" min="1"></div>
+
+      <!-- Botão calcular -->
+      <div style="margin-top:20px">
+        <button class="wz-calc-btn" onclick="executarCalculo();setTimeout(()=>wzGoToStep(4),300)">
+          <span class="wz-calc-icon">⚡</span>
+          <span>Calcular Orçamento</span>
+          <span class="wz-calc-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ ETAPA 4 — RESULTADO ═══ -->
+    <div class="wz-step-pane" id="wz-pane-4" style="display:none">
+      <div class="wz-pane-header">
+        <div class="wz-pane-icon" style="background:rgba(232,184,75,.15);border-color:rgba(232,184,75,.3)">💰</div>
+        <div>
+          <div class="wz-pane-title">Resultado</div>
+          <div class="wz-pane-sub">Análise completa do orçamento calculado</div>
         </div>
       </div>
-      <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="executarCalculo()">⚡ Calcular Orçamento</button>
+
+      <!-- Alerta se não calculou -->
+      <div id="wz-result-empty" class="wz-empty-state">
+        <div class="wz-empty-icon">⚡</div>
+        <div class="wz-empty-title">Calcule o orçamento primeiro</div>
+        <div class="wz-empty-sub">Volte à Etapa 3 e clique em "Calcular Orçamento"</div>
+        <button class="btn btn-primary" onclick="wzGoToStep(3)" style="margin-top:12px">← Etapa 3 — Formação de Custo</button>
+      </div>
+
+      <!-- Resultado completo -->
+      <div id="resultado_container" style="display:none">
+
+        <!-- Hero Price -->
+        <div class="res-hero" id="res-hero-card">
+          <div class="margem-gauge" id="margem-gauge-wrap">
+            <svg viewBox="0 0 72 72" width="72" height="72">
+              <circle class="gauge-track" cx="36" cy="36" r="28"/>
+              <circle class="gauge-fill" id="gauge-arc" cx="36" cy="36" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="175.93"
+                transform="rotate(-90 36 36)" stroke="var(--green)"/>
+              <text class="gauge-text" x="36" y="34" text-anchor="middle" dominant-baseline="middle" id="gauge-pct-text">—</text>
+              <text class="gauge-label" x="36" y="48" text-anchor="middle">margem</text>
+            </svg>
+          </div>
+          <div style="padding-right:88px">
+            <div class="res-hero-label">💰 Preço Final Sugerido</div>
+            <div class="res-hero-price" id="res_preco">—</div>
+            <div class="res-hero-badges" id="res-hero-badges">
+              <span class="res-badge res-badge-custo"><span style="opacity:.7">Custo</span><span id="res_custo" style="font-family:'DM Mono',monospace">—</span></span>
+              <span class="res-badge res-badge-lucro"><span style="opacity:.7">Lucro</span><span id="res_lucro" style="font-family:'DM Mono',monospace">—</span></span>
+              <span class="res-badge res-badge-markup"><span style="opacity:.7">Markup</span><span id="res_markup">—</span></span>
+              <span class="res-badge res-badge-margem" id="res_margem_badge" style="display:none"><span id="res_margem">—</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decision Score -->
+        <div class="decision-score" id="decision-score-box">
+          <div class="score-ring" id="score-ring">—</div>
+          <div>
+            <div class="score-info-title" id="score-title">Calculando...</div>
+            <div class="score-info-sub" id="score-sub">Aguardando dados</div>
+          </div>
+        </div>
+
+        <!-- Smart Alerts -->
+        <div class="smart-alerts" id="smart-alerts"></div>
+
+        <!-- Breakdown -->
+        <div id="breakdown-section" style="margin-bottom:14px">
+          <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:7px">
+            <span>📊 Composição do Custo</span>
+            <span id="breakdown-total-label" style="margin-left:auto;color:var(--text2);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0"></span>
+          </div>
+          <div class="stacked-bar" id="res-stacked-bar"></div>
+          <div class="breakdown-grid" id="res-breakdown-grid"></div>
+        </div>
+
+        <!-- Detalhamento -->
+        <div id="detalhamento_resultado" style="margin-bottom:12px"></div>
+
+        <!-- IA -->
+        <div id="ia-analysis-panel" style="display:none" class="ia-analysis-panel">
+          <div id="ia-analysis-content"></div>
+        </div>
+
+        <!-- Botão avançar para cliente -->
+        <div class="wz-result-ctas">
+          <button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" style="border-color:rgba(139,92,246,.35);color:var(--purple)">🤖 Analisar com IA</button>
+          <button class="btn btn-ghost btn-sm" onclick="_mostrarRelatorioCompleto()" style="border-color:rgba(56,197,224,.3);color:var(--cyan)">📋 Relatório</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary btn-lg" onclick="wzGoToStep(5)">
+            Próximo: Dados do Cliente →
+          </button>
+        </div>
+
+        <!-- legado: mantidos para compatibilidade -->
+        <div id="simulador_lucro_box" style="display:none"></div>
+        <div id="sim_barra_custo" style="display:none"></div>
+        <div id="sim_legenda" style="display:none"></div>
+        <div id="sim_kpis" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ETAPA 5 — CLIENTE ═══ -->
+    <div class="wz-step-pane" id="wz-pane-5" style="display:none">
+      <div class="wz-pane-header">
+        <div class="wz-pane-icon" style="background:rgba(46,212,122,.15);border-color:rgba(46,212,122,.3)">👤</div>
+        <div>
+          <div class="wz-pane-title">Dados do Cliente</div>
+          <div class="wz-pane-sub">Obrigatório para salvar como venda e emitir nota fiscal</div>
+        </div>
+      </div>
+
+      <!-- Aviso de opcional/obrigatório -->
+      <div class="wz-client-notice">
+        <div class="wz-notice-item wz-notice-opt">
+          <span>📋</span>
+          <div>
+            <strong>Opcional</strong> para gerar orçamento e PDF
+          </div>
+        </div>
+        <div class="wz-notice-item wz-notice-req">
+          <span>🔒</span>
+          <div>
+            <strong>Obrigatório</strong> para salvar como venda e emitir NF
+          </div>
+        </div>
+      </div>
+
+      <!-- Selector de cliente cadastrado -->
+      <div class="wz-client-selector">
+        <div class="form-group" style="flex:1">
+          <label>Cliente Cadastrado</label>
+          <select id="orc_cliente_id" onchange="preencherDadosCliente();wzSyncClienteFromSelect()" class="wz-input">
+            <option value="">— Selecionar cliente existente —</option>
+          </select>
+        </div>
+        <button class="wz-btn-new-client" onclick="abrirModalClienteRapido()">
+          <span>➕</span> Cadastrar Cliente Rápido
+        </button>
+      </div>
+
+      <div class="wz-divider-or"><span>ou preencha manualmente</span></div>
+
+      <!-- Dados básicos -->
+      <div class="wz-grid-2">
+        <div class="form-group">
+          <label>Nome / Razão Social</label>
+          <input type="text" id="orc_cliente" placeholder="João da Silva ou Empresa LTDA" class="wz-input"
+            oninput="wzValidateStep(5)">
+        </div>
+        <div class="form-group">
+          <label>CPF / CNPJ</label>
+          <input type="text" id="orc_cliente_cpfcnpj" placeholder="000.000.000-00 ou 00.000.000/0001-00" class="wz-input"
+            oninput="wzMaskCpfCnpj(this)">
+          <div class="wz-field-hint">Obrigatório para emissão de NF</div>
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="orc_telefone" placeholder="(11) 99999-9999" class="wz-input">
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="orc_cliente_email" placeholder="cliente@email.com" class="wz-input">
+        </div>
+      </div>
+
+      <!-- Endereço -->
+      <div class="wz-card-sub" style="margin-top:14px">
+        <div class="wz-card-sub-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>📍 Endereço (para NF)</span>
+          <button class="btn btn-ghost btn-xs" onclick="wzBuscarCep()" id="btn-buscar-cep">🔍 Buscar CEP</button>
+        </div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0">
+            <label>CEP</label>
+            <input type="text" id="orc_cep" placeholder="00000-000" maxlength="9" class="wz-input"
+              oninput="wzMaskCep(this)" onblur="wzBuscarCep()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Rua / Logradouro</label>
+            <input type="text" id="orc_logradouro" placeholder="Rua, Av., Alameda..." class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Número</label>
+            <input type="text" id="orc_numero_end" placeholder="123 / S/N" class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Bairro</label>
+            <input type="text" id="orc_bairro" placeholder="Centro" class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Cidade</label>
+            <input type="text" id="orc_cidade_end" placeholder="São Paulo" class="wz-input">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Estado (UF)</label>
+            <select id="orc_uf_end" class="wz-input">
+              <option value="">UF</option>
+              <option>SP</option><option>RJ</option><option>MG</option><option>RS</option>
+              <option>SC</option><option>PR</option><option>BA</option><option>PE</option>
+              <option>CE</option><option>GO</option><option>DF</option><option>MT</option>
+              <option>MS</option><option>PA</option><option>AM</option><option>ES</option>
+              <option>RN</option><option>PB</option><option>AL</option><option>SE</option>
+              <option>PI</option><option>MA</option><option>TO</option><option>RO</option>
+              <option>AC</option><option>RR</option><option>AP</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ETAPA 6 — FINALIZAÇÃO ═══ -->
+    <div class="wz-step-pane" id="wz-pane-6" style="display:none">
+      <div class="wz-pane-header">
+        <div class="wz-pane-icon" style="background:rgba(232,184,75,.15);border-color:rgba(232,184,75,.3)">🎯</div>
+        <div>
+          <div class="wz-pane-title">Finalização</div>
+          <div class="wz-pane-sub">Salve, gere PDF ou emita a nota fiscal</div>
+        </div>
+      </div>
+
+      <!-- Resumo do orçamento -->
+      <div class="wz-summary-card" id="wz-summary-card">
+        <!-- Preenchido via JS -->
+      </div>
+
+      <!-- Status do cliente para NF -->
+      <div class="wz-nf-status" id="wz-nf-status">
+        <!-- Preenchido via JS -->
+      </div>
+
+      <!-- Ações principais -->
+      <div class="wz-final-actions">
+        <button class="wz-action-btn wz-action-save" onclick="wzSalvarOrcamento()">
+          <span class="wz-action-icon">💾</span>
+          <span class="wz-action-label">Salvar Orçamento</span>
+          <span class="wz-action-desc">Salva no histórico</span>
+        </button>
+        <button class="wz-action-btn wz-action-pdf" onclick="wzGerarPDF()">
+          <span class="wz-action-icon">📄</span>
+          <span class="wz-action-label">Gerar PDF</span>
+          <span class="wz-action-desc">Proposta comercial</span>
+        </button>
+        <button class="wz-action-btn wz-action-wa" onclick="enviarWhatsAppRapido()">
+          <span class="wz-action-icon">📲</span>
+          <span class="wz-action-label">Enviar WhatsApp</span>
+          <span class="wz-action-desc">Mensagem com valor</span>
+        </button>
+        <button class="wz-action-btn wz-action-nf" id="wz-btn-emitir-nf" onclick="wzEmitirNF()">
+          <span class="wz-action-icon">🧾</span>
+          <span class="wz-action-label">Emitir Nota Fiscal</span>
+          <span class="wz-action-desc">NF-e / NFS-e</span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /wz-body -->
+
+  <!-- ── BARRA DE NAVEGAÇÃO INFERIOR ──────────────────────────── -->
+  <div class="wz-nav-bar" id="wz-nav-bar">
+    <button class="wz-nav-btn wz-nav-prev" id="wz-btn-prev" onclick="wzPrev()" style="display:none">
+      ← Anterior
+    </button>
+    <div class="wz-nav-progress" id="wz-nav-progress">
+      <span class="wz-nav-step-info">Etapa <strong id="wz-nav-current">1</strong> de <strong>6</strong></span>
+    </div>
+    <button class="wz-nav-btn wz-nav-next" id="wz-btn-next" onclick="wzNext()">
+      Próximo →
+    </button>
+  </div>
+
+</div><!-- /page-orcamento -->
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — CADASTRO RÁPIDO DE CLIENTE
+═══════════════════════════════════════════════════════ -->
+<div id="modal-cliente-rapido" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalClienteRapido()">
+  <div class="modal-box" style="max-width:540px">
+    <button class="modal-close" onclick="fecharModalClienteRapido()">✕</button>
+    <div class="modal-title">➕ Cadastrar Cliente Rápido</div>
+    <div class="modal-sub">Salva e preenche automaticamente o orçamento</div>
+
+    <div class="wz-grid-2" style="margin-top:4px">
+      <div class="form-group" style="grid-column:span 2">
+        <label>Nome / Razão Social <span class="wz-req-mark">*</span></label>
+        <input type="text" id="mcr-nome" placeholder="João da Silva ou Empresa LTDA" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>CPF / CNPJ</label>
+        <input type="text" id="mcr-cpfcnpj" placeholder="000.000.000-00" class="wz-input" oninput="wzMaskCpfCnpj(this)">
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="tel" id="mcr-telefone" placeholder="(11) 99999-9999" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="mcr-email" placeholder="cliente@email.com" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>Cidade / UF</label>
+        <input type="text" id="mcr-cidade" placeholder="São Paulo / SP" class="wz-input">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="wzSalvarClienteRapido()">
+        ✅ Salvar e Usar
+      </button>
+      <button class="btn btn-ghost" onclick="fecharModalClienteRapido()">Cancelar</button>
     </div>
   </div>
-  <div id="resultado_container" style="display:none;margin-top:24px">
+</div>
 
-    <!-- ══ HERO: Preço Principal ══ -->
-    <div class="res-hero" id="res-hero-card">
-      <!-- Gauge de margem (SVG, posicionado absoluto) -->
-      <div class="margem-gauge" id="margem-gauge-wrap">
-        <svg viewBox="0 0 72 72" width="72" height="72">
-          <circle class="gauge-track" cx="36" cy="36" r="28"/>
-          <circle class="gauge-fill" id="gauge-arc" cx="36" cy="36" r="28"
-            stroke-dasharray="175.93" stroke-dashoffset="175.93"
-            transform="rotate(-90 36 36)" stroke="var(--green)"/>
-          <text class="gauge-text" x="36" y="34" text-anchor="middle" dominant-baseline="middle" id="gauge-pct-text">—</text>
-          <text class="gauge-label" x="36" y="48" text-anchor="middle">margem</text>
-        </svg>
-      </div>
-
-      <div style="padding-right:88px">
-        <div class="res-hero-label">💰 Preço Final Sugerido</div>
-        <div class="res-hero-price" id="res_preco">—</div>
-        <div class="res-hero-badges" id="res-hero-badges">
-          <span class="res-badge res-badge-custo">
-            <span style="opacity:.7">Custo</span>
-            <span id="res_custo" style="font-family:'DM Mono',monospace">—</span>
-          </span>
-          <span class="res-badge res-badge-lucro">
-            <span style="opacity:.7">Lucro</span>
-            <span id="res_lucro" style="font-family:'DM Mono',monospace">—</span>
-          </span>
-          <span class="res-badge res-badge-markup">
-            <span style="opacity:.7">Markup</span>
-            <span id="res_markup">—</span>
-          </span>
-          <span class="res-badge res-badge-margem" id="res_margem_badge" style="display:none">
-            <span id="res_margem">—</span>
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══ DECISION SCORE ══ -->
-    <div class="decision-score" id="decision-score-box">
-      <div class="score-ring" id="score-ring">—</div>
-      <div>
-        <div class="score-info-title" id="score-title">Calculando...</div>
-        <div class="score-info-sub" id="score-sub">Aguardando dados do cálculo</div>
-      </div>
-    </div>
-
-    <!-- ══ ALERTAS INTELIGENTES ══ -->
-    <div class="smart-alerts" id="smart-alerts"></div>
-
-    <!-- ══ BREAKDOWN DE CUSTOS ══ -->
-    <div id="breakdown-section" style="margin-bottom:14px">
-      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:7px">
-        <span>📊 Composição do Custo</span>
-        <span id="breakdown-total-label" style="margin-left:auto;color:var(--text2);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0"></span>
-      </div>
-      <!-- Barra stacked -->
-      <div class="stacked-bar" id="res-stacked-bar"></div>
-      <!-- Cards de breakdown -->
-      <div class="breakdown-grid" id="res-breakdown-grid"></div>
-    </div>
-
-    <!-- ══ DETALHAMENTO LINHA A LINHA ══ -->
-    <div id="detalhamento_resultado" style="margin-bottom:12px"></div>
-
-    <!-- ══ PAINEL DE ANÁLISE IA ══ -->
-    <div id="ia-analysis-panel" style="display:none" class="ia-analysis-panel">
-      <div id="ia-analysis-content"></div>
-    </div>
-
-    <!-- ══ AÇÕES ══ -->
-    <div class="res-actions">
-      <button class="btn btn-success" onclick="salvarOrcamento()">💾 Salvar</button>
-      <button class="btn btn-primary" onclick="imprimirOrcamento()">🖨 PDF</button>
-      <button class="btn btn-secondary" onclick="abrirShareModal()">📤 Enviar</button>
-      <button class="btn btn-cyan btn-sm" onclick="enviarWhatsAppRapido()">💬 WhatsApp</button>
-      <div style="flex:1"></div>
-      <button class="btn btn-ghost btn-sm" onclick="_mostrarRelatorioCompleto()" style="border-color:rgba(56,197,224,.3);color:var(--cyan)">📋 Relatório</button>
-      <button class="btn btn-ghost btn-sm" onclick="analisarOrcamentoComIA()" id="btn-analise-ia"
-        style="border-color:rgba(139,92,246,.35);color:var(--purple);background:rgba(139,92,246,.06)">
-        🤖 Analisar com IA
-      </button>
-    </div>
-
-    <!-- legado: mantidos para compatibilidade com outras funções -->
-    <div id="simulador_lucro_box"  style="display:none"></div>
-    <div id="sim_barra_custo"      style="display:none"></div>
-    <div id="sim_legenda"          style="display:none"></div>
-    <div id="sim_kpis"             style="display:none"></div>
   </div>
 </div>
 
@@ -1744,12 +2513,27 @@ textarea{resize:vertical;}
       <button class="btn btn-secondary btn-sm" onclick="renderPedidos()">🔄 Atualizar</button>
     </div>
   </div>
-  <!-- KPIs de produção -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="ped-kpis">
+  <!-- KPIs de produção expandidos -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px" id="ped-kpis">
+    <div class="kpi-sm"><div class="kpi-lbl">Aguardando</div><div class="kpi-val y" id="ped-kpi-aguardando">0</div></div>
     <div class="kpi-sm"><div class="kpi-lbl">Em Produção</div><div class="kpi-val b" id="ped-kpi-prod">0</div></div>
     <div class="kpi-sm"><div class="kpi-lbl">Prontos p/ Entregar</div><div class="kpi-val g" id="ped-kpi-pronto">0</div></div>
     <div class="kpi-sm"><div class="kpi-lbl">Entregues (mês)</div><div class="kpi-val" id="ped-kpi-entregue">0</div></div>
-    <div class="kpi-sm"><div class="kpi-lbl">Valor em Produção</div><div class="kpi-val y" id="ped-kpi-valor">R$ 0,00</div></div>
+    <div class="kpi-sm"><div class="kpi-lbl">Valor em Produção</div><div class="kpi-val" id="ped-kpi-valor">R$ 0,00</div></div>
+  </div>
+  <!-- Filtro de responsável -->
+  <div class="ped-filtros" style="margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <div class="form-group" style="margin:0;min-width:180px">
+      <label style="font-size:10px">Filtrar Responsável</label>
+      <select id="ped-filtro-resp" class="wz-input" style="padding:6px 10px;font-size:12px" onchange="renderPedidos()">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:10px">Prazo até</label>
+      <input type="date" id="ped-filtro-prazo" class="wz-input" style="padding:6px 10px;font-size:12px" onchange="renderPedidos()">
+    </div>
+    <button class="btn btn-ghost btn-xs" onclick="document.getElementById('ped-filtro-resp').value='';document.getElementById('ped-filtro-prazo').value='';renderPedidos()">✕ Limpar</button>
   </div>
   <div id="ped-detail-box" style="display:none;background:var(--ink2);border:1px solid var(--gold);border-radius:var(--r-lg);padding:18px;margin-bottom:18px"></div>
   <!-- KANBAN VIEW -->
@@ -1774,35 +2558,111 @@ textarea{resize:vertical;}
 </div>
 
 <!-- ══════ FINANCEIRO ══════ -->
+<!-- ══════════════════════════════════════════════════════
+     FINANCEIRO EXPANDIDO v2.0 — VisualCalc ERP Pro
+══════════════════════════════════════════════════════ -->
 <div class="page" id="page-financeiro">
   <div class="section-header">
-    <div><div class="section-title">Financeiro</div><div class="section-sub">Contas a receber e a pagar</div></div>
-    <div style="display:flex;gap:8px">
+    <div>
+      <div class="section-title">💰 Financeiro</div>
+      <div class="section-sub">Fluxo de caixa · entradas · saídas · saldo</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-secondary btn-sm" onclick="exportarCSV('financeiro')">⬆️ Exportar</button>
-      <button class="btn btn-success btn-sm" onclick="abrirModalFinanceiro('entrada')">+ A Receber</button>
-      <button class="btn btn-warn btn-sm" onclick="abrirModalFinanceiro('saida')">+ A Pagar</button>
+      <button class="btn btn-success btn-sm" onclick="abrirModalFinanceiro('entrada')">+ Entrada</button>
+      <button class="btn btn-warn btn-sm" onclick="abrirModalFinanceiro('saida')">+ Saída</button>
     </div>
   </div>
-  <!-- KPIs -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
-    <div class="fin-card"><div class="fin-icon-wrap entrada">💵</div><div><div class="kpi-lbl">Entradas (pago)</div><div class="fin-val entrada" id="fin-entradas">R$ 0,00</div></div></div>
-    <div class="fin-card"><div class="fin-icon-wrap saida">💸</div><div><div class="kpi-lbl">Saídas (pago)</div><div class="fin-val saida" id="fin-saidas">R$ 0,00</div></div></div>
-    <div class="fin-card"><div class="fin-icon-wrap" style="background:rgba(232,184,75,.1)">📊</div><div><div class="kpi-lbl">Saldo</div><div class="fin-val" id="fin-saldo" style="color:var(--gold)">R$ 0,00</div></div></div>
-    <div class="fin-card"><div class="fin-icon-wrap" style="background:rgba(240,145,58,.1)">⏳</div><div><div class="kpi-lbl">A Receber</div><div class="fin-val" id="fin-pendentes" style="color:var(--warn)">R$ 0,00</div></div></div>
+
+  <!-- KPIs expandidos -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+    <div class="fin-card">
+      <div class="fin-icon-wrap entrada">💵</div>
+      <div>
+        <div class="kpi-lbl">Entradas (pagas)</div>
+        <div class="fin-val entrada" id="fin-entradas">R$ 0,00</div>
+        <div class="fin-sub" id="fin-entradas-mes">Mês atual: R$ 0,00</div>
+      </div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-icon-wrap saida">💸</div>
+      <div>
+        <div class="kpi-lbl">Saídas (pagas)</div>
+        <div class="fin-val saida" id="fin-saidas">R$ 0,00</div>
+        <div class="fin-sub" id="fin-saidas-mes">Mês atual: R$ 0,00</div>
+      </div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-icon-wrap" style="background:rgba(232,184,75,.1)">📊</div>
+      <div>
+        <div class="kpi-lbl">Saldo Atual</div>
+        <div class="fin-val" id="fin-saldo" style="color:var(--gold)">R$ 0,00</div>
+        <div class="fin-sub">Entradas − Saídas</div>
+      </div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-icon-wrap" style="background:rgba(240,145,58,.1)">⏳</div>
+      <div>
+        <div class="kpi-lbl">A Receber</div>
+        <div class="fin-val" id="fin-pendentes" style="color:var(--warn)">R$ 0,00</div>
+        <div class="fin-sub" id="fin-pendentes-cnt">0 pendentes</div>
+      </div>
+    </div>
   </div>
-  <!-- Abas -->
-  <div class="inner-tabs" style="margin-bottom:16px">
-    <button class="inner-tab active" onclick="setFinTab('todos',this)">Todos</button>
-    <button class="inner-tab" onclick="setFinTab('entrada',this)">💵 A Receber</button>
-    <button class="inner-tab" onclick="setFinTab('saida',this)">💸 A Pagar</button>
-    <button class="inner-tab" onclick="setFinTab('pendente',this)">⏳ Pendentes</button>
-    <button class="inner-tab" onclick="setFinTab('pago',this)">✅ Pagos</button>
+
+  <!-- Faturamento do mês -->
+  <div class="fin-mes-banner" id="fin-mes-banner">
+    <div class="fin-mes-title">
+      <span>📅</span>
+      <span id="fin-mes-nome">Janeiro 2025</span>
+    </div>
+    <div class="fin-mes-grid">
+      <div class="fin-mes-kpi">
+        <div class="fin-mes-kpi-label">Faturamento</div>
+        <div class="fin-mes-kpi-value entrada" id="fin-mes-fat">R$ 0,00</div>
+      </div>
+      <div class="fin-mes-kpi">
+        <div class="fin-mes-kpi-label">Despesas</div>
+        <div class="fin-mes-kpi-value saida" id="fin-mes-desp">R$ 0,00</div>
+      </div>
+      <div class="fin-mes-kpi">
+        <div class="fin-mes-kpi-label">Resultado</div>
+        <div class="fin-mes-kpi-value" id="fin-mes-result" style="color:var(--gold)">R$ 0,00</div>
+      </div>
+      <div class="fin-mes-kpi">
+        <div class="fin-mes-kpi-label">Lançamentos</div>
+        <div class="fin-mes-kpi-value" id="fin-mes-cnt" style="color:var(--text)">0</div>
+      </div>
+    </div>
   </div>
-  <!-- Tabela -->
+
+  <!-- Filtros -->
+  <div class="fin-filtros">
+    <div class="inner-tabs" style="flex:1;flex-wrap:wrap">
+      <button class="inner-tab active" onclick="setFinTab('todos',this)">Todos</button>
+      <button class="inner-tab" onclick="setFinTab('entrada',this)">💵 Entradas</button>
+      <button class="inner-tab" onclick="setFinTab('saida',this)">💸 Saídas</button>
+      <button class="inner-tab" onclick="setFinTab('pendente',this)">⏳ Pendentes</button>
+      <button class="inner-tab" onclick="setFinTab('pago',this)">✅ Pagos</button>
+    </div>
+    <div class="fin-filtro-datas">
+      <div class="form-group" style="margin:0">
+        <label style="font-size:10px">De</label>
+        <input type="date" id="fin-filtro-de" class="wz-input" style="padding:6px 10px;font-size:12px" onchange="renderFinanceiro()">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:10px">Até</label>
+        <input type="date" id="fin-filtro-ate" class="wz-input" style="padding:6px 10px;font-size:12px" onchange="renderFinanceiro()">
+      </div>
+      <button class="btn btn-ghost btn-xs" onclick="limparFiltroData()">✕</button>
+    </div>
+  </div>
+
+  <!-- Tabela expandida -->
   <div class="card" style="padding:0;overflow:hidden">
     <table class="data-table">
-      <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
-      <tbody id="tbody-financeiro"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px">Nenhum lançamento</td></tr></tbody>
+      <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Origem</th><th>Valor</th><th>Categoria</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+      <tbody id="tbody-financeiro"><tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px">Nenhum lançamento</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -15863,6 +16723,843 @@ async function iniciarControleAssinatura() {
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MÓDULO MULTIUSUÁRIOS v1.0 — VisualCalc ERP Pro
+══════════════════════════════════════════════════════ -->
+<div class="page" id="page-usuarios">
+  <div class="section-header">
+    <div>
+      <div class="section-title">👥 Equipe</div>
+      <div class="section-sub">Gestão de usuários, permissões e acessos</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Novo Usuário</button>
+  </div>
+
+  <!-- Matriz de permissões -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><div class="card-icon">🔐</div>Matriz de Permissões</div>
+    <div class="perm-matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>Módulo</th>
+            <th style="text-align:center">Admin</th>
+            <th style="text-align:center">Vendas</th>
+            <th style="text-align:center">Produção</th>
+            <th style="text-align:center">Financeiro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Dashboard</td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-check">✓</span></td></tr>
+          <tr><td>Orçamentos</td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-block">—</span></td></tr>
+          <tr><td>Clientes</td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-block">—</span></td></tr>
+          <tr><td>Produção</td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-block">—</span></td></tr>
+          <tr><td>Financeiro</td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-check">✓</span></td></tr>
+          <tr><td>Configurações</td><td style="text-align:center"><span class="perm-check">✓</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-block">—</span></td><td style="text-align:center"><span class="perm-block">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Lista de usuários -->
+  <div class="usr-grid" id="usr-lista">
+    <div style="color:var(--text3);font-size:13px;padding:20px;grid-column:1/-1">Carregando equipe...</div>
+  </div>
+</div>
+
+<!-- Modal de Usuário -->
+<div id="modal-usuario" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalUsuario()">
+  <div class="modal-box" style="max-width:500px">
+    <button class="modal-close" onclick="fecharModalUsuario()">✕</button>
+    <div class="modal-title" id="modal-usr-titulo">➕ Novo Usuário</div>
+    <div class="modal-sub">Configure acesso e permissões</div>
+
+    <div class="op-grid" style="margin-top:8px">
+      <div class="form-group" style="grid-column:span 2">
+        <label>Nome Completo <span class="wz-req-mark">*</span></label>
+        <input type="text" id="usr-nome" placeholder="João da Silva" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>E-mail <span class="wz-req-mark">*</span></label>
+        <input type="email" id="usr-email" placeholder="joao@empresa.com" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>Senha <span class="wz-req-mark">*</span></label>
+        <input type="password" id="usr-senha" placeholder="Mínimo 6 caracteres" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>Tipo / Perfil <span class="wz-req-mark">*</span></label>
+        <select id="usr-tipo" class="wz-input">
+          <option value="admin">🛡 Admin — Acesso total</option>
+          <option value="vendas">💼 Vendas — Orçamentos e clientes</option>
+          <option value="producao">🔧 Produção — Ordens de produção</option>
+          <option value="financeiro">💰 Financeiro — Módulo financeiro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="usr-ativo" class="wz-input">
+          <option value="1">✅ Ativo</option>
+          <option value="0">🔴 Inativo</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="usr-perm-preview" style="margin:12px 0;padding:12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);font-size:12px;color:var(--text3)">
+      Selecione o tipo para ver os módulos liberados
+    </div>
+
+    <input type="hidden" id="usr-edit-id">
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="salvarUsuario()">💾 Salvar Usuário</button>
+      <button class="btn btn-ghost" onclick="fecharModalUsuario()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Ordem de Produção -->
+<div id="modal-ordem-producao" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalOP()">
+  <div class="modal-box" style="max-width:520px">
+    <button class="modal-close" onclick="fecharModalOP()">✕</button>
+    <div class="modal-title">🏭 Ordem de Produção</div>
+    <div class="modal-sub" id="modal-op-sub">Pedido vinculado</div>
+
+    <div class="op-grid" style="margin-top:8px">
+      <div class="form-group" style="grid-column:span 2">
+        <label>Responsável <span class="wz-req-mark">*</span></label>
+        <select id="op-responsavel" class="wz-input">
+          <option value="">— Selecione o responsável —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prazo de Entrega</label>
+        <input type="date" id="op-prazo" class="wz-input">
+      </div>
+      <div class="form-group">
+        <label>Status Inicial</label>
+        <select id="op-status-inicial" class="wz-input">
+          <option value="producao">🔧 Em Produção</option>
+          <option value="impressao">🖨 Impressão</option>
+          <option value="acabamento">✂️ Acabamento</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>Observações</label>
+        <textarea id="op-obs" class="wz-input" rows="3" placeholder="Instruções especiais para produção..." style="resize:vertical"></textarea>
+      </div>
+    </div>
+
+    <input type="hidden" id="op-pedido-id">
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="salvarOrdemProducao()">✅ Criar Ordem</button>
+      <button class="btn btn-ghost" onclick="fecharModalOP()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VISUALCALC ERP PRO — WIZARD ENGINE v3.0
+     Controle completo do fluxo de orçamento em 6 etapas
+     Validações em tempo real · Navegação inteligente · Sem quebrar nada
+═══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────
+// ESTADO DO WIZARD
+// ─────────────────────────────────────────────────────────────────
+var _wz = {
+  etapaAtual:     1,
+  etapasConcluidas: [],
+  calcExecutado:  false,
+  clientePreenchido: false,
+
+  // Dados coletados por etapa (preenchidos ao avançar)
+  dadosProduto:   null,
+  dadosMateriais: null,
+  dadosCusto:     null,
+  dadosCliente:   null,
+};
+
+// Configuração das etapas
+var WZ_CONFIG = [
+  { num:1, label:'Produto',      icon:'📦', reqFields:['orc_produto','orc_sku','orc_ncm','orc_largura','orc_altura'] },
+  { num:2, label:'Materiais',    icon:'🎨', reqFields:['orc_material','custo_material'] },
+  { num:3, label:'Formação',     icon:'⚙️', reqFields:[] },
+  { num:4, label:'Resultado',    icon:'💰', reqFields:[] },
+  { num:5, label:'Cliente',      icon:'👤', reqFields:[] },
+  { num:6, label:'Finalização',  icon:'🎯', reqFields:[] },
+];
+
+// ─────────────────────────────────────────────────────────────────
+// INICIALIZAÇÃO
+// ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    wzRenderStepsBar();
+    wzGoToStep(1);
+    wzLimparEstado();
+  }, 200);
+});
+
+// ─────────────────────────────────────────────────────────────────
+// RENDERIZAR BARRA DE ETAPAS
+// ─────────────────────────────────────────────────────────────────
+function wzRenderStepsBar() {
+  var bar = document.getElementById('wz-steps-bar');
+  if (!bar) return;
+
+  bar.innerHTML = WZ_CONFIG.map(function(s) {
+    var isDone   = _wz.etapasConcluidas.indexOf(s.num) >= 0;
+    var isActive = _wz.etapaAtual === s.num;
+    var isLocked = !isDone && !isActive && s.num > _wz.etapaAtual && !_wzEtapaLiberada(s.num);
+
+    var cls = isDone ? 'done' : isActive ? 'active' : isLocked ? 'locked' : '';
+    var nodeContent = isDone ? '✓' : s.num;
+    var reqBadge = isActive && s.reqFields.length > 0
+      ? '<span class="wz-step-req-badge">!</span>' : '';
+
+    return '<div class="wz-step ' + cls + '" onclick="wzClickStep(' + s.num + ')" role="button" title="Etapa ' + s.num + ': ' + s.label + '">'
+      + '<div class="wz-step-node">' + nodeContent + reqBadge + '</div>'
+      + '<div class="wz-step-label">' + s.label + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Atualizar barra de progresso
+  wzUpdateFill();
+}
+
+function wzUpdateFill() {
+  var fill = document.getElementById('wz-steps-fill');
+  if (!fill) return;
+  var pct = ((_wz.etapaAtual - 1) / (WZ_CONFIG.length - 1)) * 100;
+  fill.style.width = 'calc(' + pct + '% + ' + pct * 0.38 + 'px)';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// VERIFICAR SE ETAPA ESTÁ LIBERADA
+// ─────────────────────────────────────────────────────────────────
+function _wzEtapaLiberada(num) {
+  if (num <= 1) return true;
+  if (num <= _wz.etapaAtual) return true;
+  // Pode ir à próxima se a anterior está concluída
+  return _wz.etapasConcluidas.indexOf(num - 1) >= 0;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CLICAR EM UMA ETAPA DA BARRA
+// ─────────────────────────────────────────────────────────────────
+function wzClickStep(num) {
+  if (!_wzEtapaLiberada(num) && num > _wz.etapaAtual) {
+    wzShowMsg('⚠️ Complete a etapa ' + (num-1) + ' antes de avançar.', 'warn');
+    return;
+  }
+  wzGoToStep(num);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// IR PARA UMA ETAPA (função principal de navegação)
+// ─────────────────────────────────────────────────────────────────
+function wzGoToStep(num) {
+  if (num < 1 || num > WZ_CONFIG.length) return;
+
+  // Bloquear etapas futuras se as anteriores não foram concluídas
+  if (num > _wz.etapaAtual + 1 && _wz.etapasConcluidas.indexOf(_wz.etapaAtual) < 0) {
+    wzShowMsg('⚠️ Complete a etapa atual antes de pular.', 'warn');
+    return;
+  }
+
+  // Esconder todos os panes
+  for (var i = 1; i <= WZ_CONFIG.length; i++) {
+    var pane = document.getElementById('wz-pane-' + i);
+    if (pane) pane.style.display = 'none';
+  }
+
+  // Mostrar o pane correto
+  var alvo = document.getElementById('wz-pane-' + num);
+  if (alvo) {
+    alvo.style.display = 'block';
+    alvo.style.animation = 'none';
+    void alvo.offsetWidth;
+    alvo.style.animation = 'wzSlideIn .28s cubic-bezier(.4,0,.2,1)';
+  }
+
+  _wz.etapaAtual = num;
+  wzRenderStepsBar();
+  wzUpdateNavBar();
+  wzUpdatePageHeader();
+
+  // Ações específicas por etapa
+  if (num === 4) wzMostrarResultado();
+  if (num === 5) wzPopularClienteSelect();
+  if (num === 6) wzRenderFinalizacao();
+
+  // Scroll ao topo da página de orçamento
+  var pg = document.getElementById('page-orcamento');
+  if (pg) pg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PRÓXIMO / ANTERIOR
+// ─────────────────────────────────────────────────────────────────
+function wzNext() {
+  var num = _wz.etapaAtual;
+
+  // Validar etapa atual antes de avançar
+  var erros = wzValidateStepNow(num);
+  if (erros.length > 0) {
+    wzHighlightErrors(erros);
+    wzShowMsg('⚠️ Preencha os campos obrigatórios: ' + erros.join(', '), 'error');
+    return;
+  }
+
+  // Marcar etapa como concluída
+  if (_wz.etapasConcluidas.indexOf(num) < 0) {
+    _wz.etapasConcluidas.push(num);
+  }
+
+  wzGoToStep(num + 1);
+}
+
+function wzPrev() {
+  wzGoToStep(_wz.etapaAtual - 1);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ATUALIZAR BARRA DE NAVEGAÇÃO INFERIOR
+// ─────────────────────────────────────────────────────────────────
+function wzUpdateNavBar() {
+  var btnPrev    = document.getElementById('wz-btn-prev');
+  var btnNext    = document.getElementById('wz-btn-next');
+  var navCurrent = document.getElementById('wz-nav-current');
+
+  if (btnPrev)    btnPrev.style.display    = _wz.etapaAtual > 1 ? 'inline-flex' : 'none';
+  if (btnNext)    btnNext.style.display    = _wz.etapaAtual < WZ_CONFIG.length ? 'inline-flex' : 'none';
+  if (navCurrent) navCurrent.textContent   = _wz.etapaAtual;
+
+  // Trocar texto do botão next dependendo da etapa
+  if (btnNext) {
+    var labels = { 1:'Materiais →', 2:'Formação de Custo →', 3:'Calcular e Ver Resultado →', 4:'Dados do Cliente →', 5:'Finalizar →' };
+    btnNext.textContent = labels[_wz.etapaAtual] || 'Próximo →';
+    // Na etapa 3, clicar em "Calcular" deve executar o cálculo
+    if (_wz.etapaAtual === 3) {
+      btnNext.onclick = function() { executarCalculo(); setTimeout(function(){ wzNext(); }, 400); };
+    } else {
+      btnNext.onclick = wzNext;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ATUALIZAR HEADER DA PÁGINA
+// ─────────────────────────────────────────────────────────────────
+function wzUpdatePageHeader() {
+  var s = WZ_CONFIG[_wz.etapaAtual - 1];
+  var icons  = ['📦','🎨','⚙️','💰','👤','🎯'];
+  var titles = ['Produto','Materiais','Formação de Custo','Resultado','Dados do Cliente','Finalização'];
+  var subs   = [
+    'Defina o produto, NCM e dimensões',
+    'Selecione o material e custos diretos',
+    'Configure custos, margem e precificação',
+    'Análise completa do orçamento',
+    'Dados do cliente (obrigatório para NF)',
+    'Salve, gere PDF ou emita nota fiscal',
+  ];
+
+  var el = document.getElementById('wz-page-title');
+  var ic = document.getElementById('wz-page-icon');
+  var sb = document.getElementById('wz-page-sub');
+  if (el) el.textContent = titles[_wz.etapaAtual - 1];
+  if (ic) ic.textContent = icons[_wz.etapaAtual - 1];
+  if (sb) sb.textContent = subs[_wz.etapaAtual - 1];
+}
+
+// ─────────────────────────────────────────────────────────────────
+// VALIDAÇÃO POR ETAPA
+// ─────────────────────────────────────────────────────────────────
+function wzValidateStepNow(num) {
+  var erros = [];
+
+  if (num === 1) {
+    var produto = (document.getElementById('orc_produto') || {}).value || '';
+    var sku     = (document.getElementById('orc_sku')     || {}).value || '';
+    var ncm     = (document.getElementById('orc_ncm')     || {}).value || '';
+    var largura = parseFloat((document.getElementById('orc_largura') || {}).value) || 0;
+    var altura  = parseFloat((document.getElementById('orc_altura')  || {}).value) || 0;
+    if (!produto) erros.push('Tipo de produto');
+    if (!sku)     erros.push('Código SKU');
+    if (!ncm)     erros.push('NCM');
+    if (!largura || !altura) erros.push('Dimensões (largura × altura)');
+  }
+
+  if (num === 2) {
+    var mat = (document.getElementById('orc_material') || {}).value || '';
+    if (!mat) erros.push('Material');
+  }
+
+  // Etapas 3,4,5,6 sem campos obrigatórios para avançar
+  return erros;
+}
+
+// Trigger de validação em tempo real (chamado pelos oninput)
+function wzValidateStep(num) {
+  var erros = wzValidateStepNow(num);
+  // Atualizar indicador visual no nó da etapa
+  var step = document.querySelector('.wz-step.active .wz-step-node');
+  if (step) {
+    if (erros.length === 0 && num < 4) {
+      step.style.boxShadow = '0 0 0 4px rgba(46,212,122,.15)';
+    } else {
+      step.style.boxShadow = '0 0 0 4px rgba(232,184,75,.15)';
+    }
+  }
+}
+
+function wzHighlightErrors(erros) {
+  // Remover erros anteriores
+  document.querySelectorAll('.wz-error').forEach(function(el) { el.classList.remove('wz-error'); });
+
+  var mapa = {
+    'Tipo de produto': 'orc_produto',
+    'Código SKU':      'orc_sku',
+    'NCM':             'orc_ncm',
+    'Dimensões (largura × altura)': 'orc_largura',
+    'Material':        'orc_material',
+  };
+  erros.forEach(function(e) {
+    var elId = mapa[e];
+    if (elId) {
+      var el = document.getElementById(elId);
+      if (el) {
+        el.classList.add('wz-error');
+        el.focus();
+        el.addEventListener('input', function once() { el.classList.remove('wz-error'); el.removeEventListener('input', once); });
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ETAPA 4: MOSTRAR RESULTADO
+// ─────────────────────────────────────────────────────────────────
+function wzMostrarResultado() {
+  var rc      = document.getElementById('resultado_container');
+  var empty   = document.getElementById('wz-result-empty');
+  if (!rc || !empty) return;
+
+  if (window._lastCalc && window._lastCalc.precoFinal > 0) {
+    rc.style.display = 'block';
+    empty.style.display = 'none';
+    // Marcar cálculo como executado
+    _wz.calcExecutado = true;
+    if (_wz.etapasConcluidas.indexOf(4) < 0) _wz.etapasConcluidas.push(4);
+  } else {
+    rc.style.display = 'none';
+    empty.style.display = 'block';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ETAPA 5: POPULAR SELECT DE CLIENTES
+// ─────────────────────────────────────────────────────────────────
+function wzPopularClienteSelect() {
+  if (typeof populateClienteSelect === 'function') populateClienteSelect();
+}
+
+function wzSyncClienteFromSelect() {
+  if (typeof preencherDadosCliente === 'function') preencherDadosCliente();
+
+  var sel = document.getElementById('orc_cliente_id');
+  if (!sel || !sel.value) return;
+  var cli = (window.state && window.state.clientes || []).find(function(c) {
+    return String(c._db_id || c.id) === String(sel.value);
+  });
+  if (!cli) return;
+
+  // Preencher campos do wizard
+  _setVal('orc_cliente',         cli.nome     || '');
+  _setVal('orc_cliente_cpfcnpj', cli.cpf_cnpj || '');
+  _setVal('orc_telefone',        cli.telefone || '');
+  _setVal('orc_cliente_email',   cli.email    || '');
+  _setVal('orc_cidade_end',      (cli.cidade  || '').split('/')[0].trim() || '');
+  _setVal('orc_uf_end',          (cli.cidade  || '').split('/')[1] ? (cli.cidade||'').split('/')[1].trim() : '');
+
+  _wz.clientePreenchido = true;
+}
+
+function _setVal(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// BUSCAR CEP (via ViaCEP)
+// ─────────────────────────────────────────────────────────────────
+async function wzBuscarCep() {
+  var cep = ((document.getElementById('orc_cep') || {}).value || '').replace(/\D/g, '');
+  if (cep.length !== 8) return;
+  var btn = document.getElementById('btn-buscar-cep');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  try {
+    var r = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+    var d = await r.json();
+    if (!d.erro) {
+      _setVal('orc_logradouro', d.logradouro || '');
+      _setVal('orc_bairro',     d.bairro     || '');
+      _setVal('orc_cidade_end', d.localidade || '');
+      var ufEl = document.getElementById('orc_uf_end');
+      if (ufEl && d.uf) ufEl.value = d.uf;
+      typeof toast === 'function' && toast('CEP encontrado: ' + d.localidade + '/' + d.uf, 'success');
+    } else {
+      typeof toast === 'function' && toast('CEP não encontrado', 'warn');
+    }
+  } catch(e) {}
+  if (btn) { btn.textContent = '🔍 Buscar CEP'; btn.disabled = false; }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MÁSCARAS
+// ─────────────────────────────────────────────────────────────────
+function wzMaskCep(el) {
+  var v = el.value.replace(/\D/g, '').slice(0, 8);
+  el.value = v.length > 5 ? v.slice(0,5) + '-' + v.slice(5) : v;
+}
+
+function wzMaskCpfCnpj(el) {
+  var v = el.value.replace(/\D/g, '');
+  if (v.length <= 11) {
+    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  } else {
+    v = v.slice(0,14);
+    v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  el.value = v;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ETAPA 6: RENDERIZAR FINALIZAÇÃO
+// ─────────────────────────────────────────────────────────────────
+function wzRenderFinalizacao() {
+  wzRenderSummary();
+  wzRenderNFStatus();
+}
+
+function wzRenderSummary() {
+  var el = document.getElementById('wz-summary-card');
+  if (!el) return;
+  var c = window._lastCalc;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v) { return (+v||0).toFixed(2).replace('.',','); };
+
+  if (!c || !c.precoFinal) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Calcule um orçamento primeiro</div>';
+    return;
+  }
+
+  var cliente = (document.getElementById('orc_cliente') || {}).value || '—';
+  var produto  = (document.getElementById('orc_produto') || {}).value || c.produto || '—';
+  var sku      = (document.getElementById('orc_sku')     || {}).value || '—';
+
+  el.innerHTML = '<div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:8px">'
+    +   '<div>'
+    +     '<div style="font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:16px">'
+    +       (cliente !== '—' ? cliente : '<span style="color:var(--text3)">Sem cliente</span>')
+    +     '</div>'
+    +     '<div style="font-size:12px;color:var(--text3);margin-top:2px">'
+    +       produto + ' · SKU: ' + sku
+    +       (c.largura && c.altura ? ' · ' + c.largura + '×' + c.altura + 'm' : '')
+    +     '</div>'
+    +   '</div>'
+    +   '<div style="font-family:DM Mono,monospace;font-size:28px;font-weight:700;color:var(--gold)">R$ ' + fmtV(c.precoFinal) + '</div>'
+    + '</div>'
+    + '<div class="wz-summary-grid">'
+    +   _wzKpi('Custo Total',   'R$ ' + fmtV(c.custoTotal),   'var(--cyan)')
+    +   _wzKpi('Lucro Bruto',   'R$ ' + fmtV(c.lucro),        'var(--green)')
+    +   _wzKpi('Margem Real',   (c.margemReal||0).toFixed(1)+'%', (c.margemReal||0)>=30?'var(--green)':(c.margemReal||0)>=15?'var(--gold)':'var(--red)')
+    +   _wzKpi('Markup',        (c.markupReal||0).toFixed(1)+'%', 'var(--purple)')
+    + '</div>'
+    + '</div>';
+}
+
+function _wzKpi(label, val, cor) {
+  return '<div class="wz-summary-kpi">'
+    + '<div class="wz-summary-kpi-label">' + label + '</div>'
+    + '<div class="wz-summary-kpi-value" style="color:' + cor + '">' + val + '</div>'
+    + '</div>';
+}
+
+function wzRenderNFStatus() {
+  var el = document.getElementById('wz-nf-status');
+  if (!el) return;
+
+  var nome   = (document.getElementById('orc_cliente') || {}).value || '';
+  var cpfcnpj= (document.getElementById('orc_cliente_cpfcnpj') || {}).value || '';
+  var cidade  = (document.getElementById('orc_cidade_end') || {}).value || '';
+  var btnNF   = document.getElementById('wz-btn-emitir-nf');
+
+  var temCliente = nome.trim().length >= 3;
+  var temDoc     = cpfcnpj.replace(/\D/g,'').length >= 11;
+
+  if (temCliente && temDoc) {
+    el.className = 'wz-nf-status wz-nf-ok';
+    el.innerHTML = '<span style="font-size:20px">✅</span>'
+      + '<div><strong>Cliente completo</strong> — ' + nome + (cpfcnpj ? ' · ' + cpfcnpj : '') + '<br>'
+      + '<span style="font-size:11px;opacity:.7">Nota Fiscal pode ser emitida</span></div>';
+    if (btnNF) btnNF.classList.remove('wz-action-nf-disabled');
+  } else {
+    el.className = 'wz-nf-status wz-nf-warn';
+    el.innerHTML = '<span style="font-size:20px">⚠️</span>'
+      + '<div><strong>Para emitir nota fiscal é obrigatório selecionar um cliente válido.</strong><br>'
+      + '<span style="font-size:11px;opacity:.8">Preencha: Nome + CPF/CNPJ do cliente (Etapa 5)</span>'
+      + '<button class="btn btn-ghost btn-xs" onclick="wzGoToStep(5)" style="margin-left:10px">← Ir para Etapa 5</button>'
+      + '</div>';
+    if (btnNF) btnNF.classList.add('wz-action-nf-disabled');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// AÇÕES DE FINALIZAÇÃO
+// ─────────────────────────────────────────────────────────────────
+function wzSalvarOrcamento() {
+  // Sincronizar dados do wizard para o _lastCalc
+  wzSincronizarDados();
+  if (typeof salvarOrcamento === 'function') {
+    salvarOrcamento();
+  } else {
+    typeof toast === 'function' && toast('Orçamento salvo!', 'success');
+  }
+}
+
+function wzGerarPDF() {
+  wzSincronizarDados();
+  if (typeof imprimirOrcamento === 'function') imprimirOrcamento();
+}
+
+function wzEmitirNF() {
+  // REGRA FISCAL: verificar cliente obrigatório
+  var nome    = (document.getElementById('orc_cliente') || {}).value || '';
+  var cpfcnpj = (document.getElementById('orc_cliente_cpfcnpj') || {}).value || '';
+  var docNum  = cpfcnpj.replace(/\D/g, '');
+
+  if (nome.trim().length < 3 || docNum.length < 11) {
+    // Bloquear e mostrar aviso clara
+    wzShowModal(
+      '⚠️ Cliente obrigatório para NF',
+      '<div style="font-size:14px;line-height:1.7;color:var(--text2)">'
+      + '<strong style="color:var(--red)">Para emitir nota fiscal é obrigatório selecionar um cliente válido.</strong><br><br>'
+      + 'Preencha na <strong>Etapa 5 — Dados do Cliente</strong>:<br>'
+      + '• Nome / Razão Social<br>'
+      + '• CPF ou CNPJ<br>'
+      + '</div>',
+      [
+        { label:'← Preencher Cliente', action:'wzGoToStep(5)', cls:'btn-primary' },
+        { label:'Cancelar', action:'wzFecharModal()', cls:'btn-ghost' },
+      ]
+    );
+    return;
+  }
+
+  // Cliente OK — sincronizar e emitir
+  wzSincronizarDados();
+
+  // Buscar o último orçamento salvo para pegar o ID
+  var orc = window.state && window.state.orcamentos && window.state.orcamentos[0];
+  if (orc) {
+    if (typeof emitirNotaFiscal === 'function') {
+      emitirNotaFiscal(orc._db_id || orc.id);
+    }
+  } else {
+    typeof toast === 'function' && toast('Salve o orçamento antes de emitir a NF', 'warn');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SINCRONIZAR CAMPOS DO WIZARD → SISTEMA ORIGINAL
+// ─────────────────────────────────────────────────────────────────
+function wzSincronizarDados() {
+  // Campos do cliente para o sistema legado
+  var cliente = (document.getElementById('orc_cliente') || {}).value || '';
+  var telefone= (document.getElementById('orc_telefone') || {}).value || '';
+
+  if (window._lastCalc) {
+    window._lastCalc.cliente  = cliente  || window._lastCalc.cliente;
+    window._lastCalc.telefone = telefone || window._lastCalc.telefone;
+    window._lastCalc.ref      = (document.getElementById('orc_ref') || {}).value || window._lastCalc.ref;
+    // Dados fiscais extras
+    window._lastCalc.clienteCpfCnpj = (document.getElementById('orc_cliente_cpfcnpj') || {}).value || '';
+    window._lastCalc.clienteEmail   = (document.getElementById('orc_cliente_email') || {}).value || '';
+    window._lastCalc.clienteCidade  = (document.getElementById('orc_cidade_end') || {}).value || '';
+    window._lastCalc.clienteUf      = (document.getElementById('orc_uf_end') || {}).value || '';
+    window._lastCalc.clienteLogradouro = (document.getElementById('orc_logradouro') || {}).value || '';
+    window._lastCalc.clienteNumero     = (document.getElementById('orc_numero_end') || {}).value || '';
+    window._lastCalc.clienteCep        = (document.getElementById('orc_cep') || {}).value || '';
+    window._lastCalc.orc_sku = (document.getElementById('orc_sku') || {}).value || '';
+    window._lastCalc.orc_ncm = (document.getElementById('orc_ncm') || {}).value || '';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MODAL GENÉRICO DO WIZARD
+// ─────────────────────────────────────────────────────────────────
+function wzShowModal(title, body, btns) {
+  var existing = document.getElementById('wz-generic-modal');
+  if (existing) existing.remove();
+
+  var m = document.createElement('div');
+  m.id = 'wz-generic-modal';
+  m.className = 'modal-overlay';
+  m.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:20px;animation:fadeIn .18s ease';
+  m.innerHTML = '<div class="modal-box" style="max-width:480px">'
+    + '<div class="modal-title">' + title + '</div>'
+    + '<div style="margin:14px 0">' + body + '</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'
+    + (btns || []).map(function(b) {
+        return '<button class="btn ' + (b.cls||'btn-ghost') + '" onclick="' + b.action + '">' + b.label + '</button>';
+      }).join('')
+    + '</div></div>';
+  m.addEventListener('click', function(e) { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+
+function wzFecharModal() {
+  var m = document.getElementById('wz-generic-modal');
+  if (m) m.remove();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// TOAST DO WIZARD
+// ─────────────────────────────────────────────────────────────────
+function wzShowMsg(msg, tipo) {
+  if (typeof toast === 'function') toast(msg, tipo || 'warn');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MODAL CLIENTE RÁPIDO
+// ─────────────────────────────────────────────────────────────────
+function abrirModalClienteRapido() {
+  ['mcr-nome','mcr-cpfcnpj','mcr-telefone','mcr-email','mcr-cidade'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var m = document.getElementById('modal-cliente-rapido');
+  if (m) m.style.display = 'flex';
+  setTimeout(function() { var n = document.getElementById('mcr-nome'); if (n) n.focus(); }, 100);
+}
+
+function fecharModalClienteRapido() {
+  var m = document.getElementById('modal-cliente-rapido');
+  if (m) m.style.display = 'none';
+}
+
+async function wzSalvarClienteRapido() {
+  var nome = (document.getElementById('mcr-nome') || {}).value.trim();
+  if (!nome) { typeof toast === 'function' && toast('Informe o nome do cliente', 'warn'); return; }
+
+  var cli = {
+    nome:     nome,
+    cpf_cnpj: (document.getElementById('mcr-cpfcnpj')  || {}).value.trim(),
+    telefone: (document.getElementById('mcr-telefone') || {}).value.trim(),
+    email:    (document.getElementById('mcr-email')    || {}).value.trim(),
+    cidade:   (document.getElementById('mcr-cidade')   || {}).value.trim(),
+    ativo:    true,
+  };
+
+  typeof showLoading === 'function' && showLoading('Salvando cliente...');
+
+  try {
+    // Salvar via sistema existente
+    var novo = Object.assign({ id: Date.now() }, cli);
+    if (!window.state) window.state = {};
+    if (!window.state.clientes) window.state.clientes = [];
+    window.state.clientes.push(novo);
+
+    if (typeof dbSaveCliente === 'function') await dbSaveCliente(novo);
+    if (typeof saveState    === 'function') saveState();
+
+    typeof hideLoading === 'function' && hideLoading();
+    fecharModalClienteRapido();
+
+    // Preencher automaticamente na etapa 5
+    _setVal('orc_cliente',         cli.nome);
+    _setVal('orc_cliente_cpfcnpj', cli.cpf_cnpj);
+    _setVal('orc_telefone',        cli.telefone);
+    _setVal('orc_cliente_email',   cli.email);
+
+    var cidParts = (cli.cidade || '').split('/');
+    _setVal('orc_cidade_end', (cidParts[0] || '').trim());
+    var ufEl = document.getElementById('orc_uf_end');
+    if (ufEl && cidParts[1]) ufEl.value = cidParts[1].trim();
+
+    // Atualizar select de clientes
+    if (typeof populateClienteSelect === 'function') populateClienteSelect();
+
+    _wz.clientePreenchido = true;
+    typeof toast === 'function' && toast('✅ Cliente "' + nome + '" cadastrado e selecionado!', 'success');
+
+  } catch(e) {
+    typeof hideLoading === 'function' && hideLoading();
+    typeof toast === 'function' && toast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RESET DO WIZARD
+// ─────────────────────────────────────────────────────────────────
+function wzReset() {
+  if (!confirm('Limpar o orçamento atual?')) return;
+  _wz.etapaAtual       = 1;
+  _wz.etapasConcluidas = [];
+  _wz.calcExecutado    = false;
+  _wz.clientePreenchido= false;
+  window._lastCalc     = null;
+
+  if (typeof limparOrcamento === 'function') limparOrcamento();
+
+  // Limpar campos extras do wizard
+  ['orc_sku','orc_ncm','orc_cliente_cpfcnpj','orc_cliente_email',
+   'orc_cep','orc_logradouro','orc_numero_end','orc_bairro',
+   'orc_cidade_end'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var ufEl = document.getElementById('orc_uf_end');
+  if (ufEl) ufEl.value = '';
+  var uniEl = document.getElementById('orc_unidade');
+  if (uniEl) uniEl.value = 'M2';
+
+  wzGoToStep(1);
+  typeof toast === 'function' && toast('Orçamento limpo', 'info');
+}
+
+function wzLimparEstado() {
+  wzUpdateNavBar();
+  wzUpdatePageHeader();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INTEGRAÇÃO: executarCalculo() → marcar etapa 3 como concluída
+// ─────────────────────────────────────────────────────────────────
+(function patchCalculo() {
+  var _orig = window.executarCalculo;
+  if (!_orig) return;
+  window.executarCalculo = function() {
+    _orig.apply(this, arguments);
+    setTimeout(function() {
+      if (window._lastCalc && window._lastCalc.precoFinal > 0) {
+        if (_wz.etapasConcluidas.indexOf(3) < 0) _wz.etapasConcluidas.push(3);
+        _wz.calcExecutado = true;
+        wzRenderStepsBar();
+        // Atualizar ref badge
+        var rb = document.getElementById('wz-ref-badge');
+        var rt = document.getElementById('wz-ref-text');
+        var ref = (document.getElementById('orc_ref') || {}).value || 'ORC-' + String(Date.now()).slice(-5);
+        if (rb && rt) { rb.style.display = 'block'; rt.textContent = ref; }
+      }
+    }, 150);
+  };
+})();
+
+console.log('[VisualCalc] Wizard Engine v3.0 ✓ — 6 etapas ativas');
+</script>
+
 <!-- ═══════════════════════════════════════════════════════════════
      VISUALCALC ERP PRO — Backend Integration Patch v2.0
      Conecta o frontend ao backend Node.js (Railway/Render)
@@ -16366,6 +18063,839 @@ async function iniciarControleAssinatura() {
 
   console.log('[VisualCalc] Backend Integration Patch v2.0 ✓ | Railway-ready');
 })();
+</script>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════
+   VISUALCALC ERP PRO — MÓDULOS COMPLETOS v2.0
+   1. Dashboard Executivo  2. Financeiro  3. Produção  4. Multiusuários
+   Todos integrados com Supabase · Sem quebrar funcionalidades existentes
+═══════════════════════════════════════════════════════════════ */
+
+// ─────────────────────────────────────────────────────────────
+// 1. DASHBOARD EXECUTIVO v2.0
+// ─────────────────────────────────────────────────────────────
+var _dashPeriod = 'mes';
+
+function setDashPeriod(p, btn) {
+  _dashPeriod = p;
+  document.querySelectorAll('.dash-period-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderDashboard();
+}
+
+// Sobrescreve renderDashboard() existente com versão expandida
+window.renderDashboard = function renderDashboardV2() {
+  var orcs = (window.state && window.state.orcamentos) || [];
+  var fins = (window.state && window.state.financeiro)  || [];
+  var peds = (window.state && window.state.pedidos)     || [];
+
+  // ── Saudação dinâmica
+  var h = new Date().getHours();
+  var saud = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  var nome = (window.currentUser && window.currentUser.email) ? window.currentUser.email.split('@')[0] : '';
+  var grEl = document.getElementById('dash-greeting');
+  if (grEl) grEl.textContent = saud + (nome ? ', ' + nome : '') + ' 👋';
+
+  // ── Filtro por período
+  var agora    = new Date();
+  var anoAtual = agora.getFullYear();
+  var mesAtual = agora.getMonth();
+  function dentroPeríodo(dataStr) {
+    if (!dataStr) return true;
+    var d = new Date(dataStr);
+    if (_dashPeriod === 'mes')      return d.getFullYear() === anoAtual && d.getMonth() === mesAtual;
+    if (_dashPeriod === 'trimestre') {
+      var trimAtual = Math.floor(mesAtual / 3);
+      return d.getFullYear() === anoAtual && Math.floor(d.getMonth() / 3) === trimAtual;
+    }
+    return d.getFullYear() === anoAtual; // ano
+  }
+
+  var orcsP = orcs.filter(function(o){ return dentroPeríodo(o.data || o.created_at); });
+
+  // ── KPIs principais
+  var finalizados  = orcs.filter(function(o){ return o.status === 'finalizado'; });
+  var finalizadosP = finalizados.filter(function(o){ return dentroPeríodo(o.data || o.created_at); });
+  var aprovados    = orcs.filter(function(o){ return ['aprovado','producao','finalizado'].includes(o.status); });
+
+  var fatMes       = finalizadosP.reduce(function(s,o){ return s + (+o.precoFinal||0); }, 0);
+  var lucroMes     = finalizadosP.reduce(function(s,o){ return s + (+o.lucro||0); }, 0);
+  var margemMedia  = fatMes > 0 ? (lucroMes / fatMes * 100) : 0;
+  var faturadoTotal= finalizados.reduce(function(s,o){ return s + (+o.precoFinal||0); }, 0);
+  var ticket       = aprovados.length ? aprovados.reduce(function(s,o){ return s+(+o.precoFinal||0);},0)/aprovados.length : 0;
+  var conversao    = orcs.filter(function(o){ return o.status!=='cancelado'; }).length > 0
+    ? (aprovados.length / orcs.filter(function(o){ return o.status!=='cancelado'; }).length * 100) : 0;
+
+  var entradas   = fins.filter(function(f){ return f.tipo==='entrada'&&f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var saidas     = fins.filter(function(f){ return f.tipo==='saida'&&f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var pendentes  = fins.filter(function(f){ return f.status==='pendente'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var saldo      = entradas - saidas;
+  var pedAtivos  = peds.filter(function(p){ return !['entregue','cancelado'].includes(p.status); });
+
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+
+  // KPIs principais
+  set('kpi-fat-mes',     'R$ ' + fmtV(fatMes));
+  set('kpi-fat-delta',   '🏆 Fat. total: R$ ' + fmtV(faturadoTotal));
+  set('kpi-lucro-mes',   'R$ ' + fmtV(lucroMes));
+  set('kpi-lucro-delta', '📊 Margem: ' + margemMedia.toFixed(1) + '%');
+  set('kpi-ped-ativos',  pedAtivos.length);
+  set('kpi-ped-delta',   pedAtivos.length === 1 ? 'pedido em produção' : 'pedidos em produção');
+  set('kpi-saldo-dash',  'R$ ' + fmtV(saldo));
+  set('kpi-saldo-delta', saldo >= 0 ? '✅ Saldo positivo' : '⚠️ Saldo negativo');
+
+  // KPIs secundários
+  set('kpi-orcs',      orcs.length);
+  set('kpi-aprovados', aprovados.length);
+  set('kpi-conversao', conversao.toFixed(1) + '%');
+  set('kpi-ticket',    'R$ ' + fmtV(ticket));
+  set('kpi-pendentes', 'R$ ' + fmtV(pendentes));
+  set('kpi-faturado',  'R$ ' + fmtV(faturadoTotal));
+
+  // legado (mantidos para compatibilidade)
+  set('kpi-entradas',  'R$ ' + fmtV(entradas));
+  set('kpi-peds',      pedAtivos.length);
+
+  // ── Gráfico: vendas por dia
+  _renderGraficoVendas(finalizados);
+
+  // ── Produtos mais vendidos
+  _renderTopProdutos(finalizados);
+
+  // ── Funil de status
+  var statusOrder = ['orcamento','aprovado','producao','finalizado','cancelado'];
+  var funilEl = document.getElementById('dash-funil');
+  if (funilEl) {
+    var counts = {};
+    orcs.forEach(function(o){ var s=o.status||'orcamento'; counts[s]=(counts[s]||0)+1; });
+    var maxCnt = Math.max(1, Math.max.apply(null, statusOrder.map(function(s){ return counts[s]||0; })));
+    var SC = typeof STATUS_CFG !== 'undefined' ? STATUS_CFG : {};
+    funilEl.innerHTML = statusOrder.map(function(s) {
+      var cfg = SC[s] || { icon:'•', label:s, color:'var(--text3)' };
+      var cnt = counts[s]||0;
+      var pct = cnt/maxCnt*100;
+      return '<div style="margin-bottom:9px">'
+        + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'
+        + '<span>' + cfg.icon + ' ' + cfg.label + '</span>'
+        + '<span style="color:var(--text3);font-family:DM Mono,monospace">' + cnt + '</span></div>'
+        + '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+cfg.color+'"></div></div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ── Produção ativa
+  var pedEl = document.getElementById('dash-pedidos');
+  if (pedEl) {
+    var ativos = pedAtivos.slice(0, 5);
+    var PED_CFG = typeof PED_STATUS_CFG !== 'undefined' ? PED_STATUS_CFG : {};
+    pedEl.innerHTML = ativos.length === 0
+      ? '<div style="color:var(--text3);font-size:13px;padding:10px 0">Nenhum pedido em produção</div>'
+      : ativos.map(function(p) {
+          var cfg = PED_CFG[p.status] || { icon:'🔧', label:p.status };
+          var resp = p.responsavel ? '<span class="ped-card-resp">👤 '+p.responsavel+'</span>' : '';
+          var prazoInfo = _calcPrazoInfo(p.prazo);
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">'
+            + '<div style="flex:1;min-width:0">'
+            + '<div style="font-weight:600;font-size:13px">' + (p.cliente_nome||'—') + '</div>'
+            + '<div style="font-size:11px;color:var(--text3)">' + (p.produto||'') + '</div>'
+            + resp + prazoInfo
+            + '</div>'
+            + '<span class="badge ' + (cfg.badgeCls||'badge-yellow') + '">' + cfg.icon + ' ' + cfg.label + '</span>'
+            + '</div>';
+        }).join('');
+  }
+
+  // ── Últimos orçamentos
+  var recEl = document.getElementById('dash-recentes');
+  if (recEl) {
+    var SC2 = typeof STATUS_CFG !== 'undefined' ? STATUS_CFG : {};
+    recEl.innerHTML = orcs.length === 0
+      ? '<div style="color:var(--text3);font-size:13px;padding:18px 0;text-align:center">Nenhum orçamento ainda</div>'
+      : orcs.slice(0, 6).map(function(o) {
+          var cfg = SC2[o.status] || SC2.orcamento || { badgeCls:'badge-blue', icon:'📋', label:'Orçamento' };
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">'
+            + '<div>'
+            + '<div style="font-weight:600;font-size:13px">' + (o.cliente||'—')
+            + ' <span class="badge ' + cfg.badgeCls + '" style="font-size:10px">' + cfg.icon + ' ' + cfg.label + '</span></div>'
+            + '<div style="font-size:11px;color:var(--text3)">' + (o.produto||'') + ' · ' + (o.data||'') + '</div>'
+            + '</div>'
+            + '<div style="font-family:DM Mono,monospace;font-weight:600;color:var(--gold);margin-left:12px;white-space:nowrap">R$ ' + fmtV(o.precoFinal) + '</div>'
+            + '</div>';
+        }).join('');
+  }
+
+  if (typeof updateHistBadge === 'function') updateHistBadge();
+};
+
+// Gráfico de barras SVG: vendas por dia
+function _renderGraficoVendas(finalizados) {
+  var svg = document.getElementById('svg-vendas');
+  var labelsEl = document.getElementById('dash-chart-labels');
+  var totalEl  = document.getElementById('dash-chart-total');
+  if (!svg) return;
+
+  // Últimos 14 dias
+  var dias = [];
+  var agora = new Date();
+  for (var i = 13; i >= 0; i--) {
+    var d = new Date(agora);
+    d.setDate(d.getDate() - i);
+    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    dias.push({ key: key, label: String(d.getDate()).padStart(2,'0')+'/'+(d.getMonth()+1), val: 0 });
+  }
+
+  finalizados.forEach(function(o) {
+    var data = (o.data||'').substring(0,10);
+    var d = dias.find(function(x){ return x.key === data; });
+    if (d) d.val += (+o.precoFinal || 0);
+  });
+
+  var maxVal = Math.max(1, Math.max.apply(null, dias.map(function(d){ return d.val; })));
+  var total  = dias.reduce(function(s,d){ return s + d.val; }, 0);
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+  if (totalEl) totalEl.textContent = 'Total: R$ ' + fmtV(total);
+
+  var W = 700, H = 120, padL = 10, padR = 10, padT = 10, padB = 24;
+  var barW = (W - padL - padR) / (dias.length * 1.4);
+  var gap   = (W - padL - padR - dias.length * barW) / (dias.length - 1 || 1);
+
+  // Linhas de grade
+  var gridHTML = [0.25,0.5,0.75,1].map(function(pct) {
+    var y = padT + (H - padT - padB) * (1 - pct);
+    return '<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="rgba(255,255,255,.04)" stroke-width="1"/>';
+  }).join('');
+
+  // Barras
+  var barsHTML = dias.map(function(d, i) {
+    var x = padL + i * (barW + gap);
+    var pct = d.val / maxVal;
+    var barH = Math.max(2, pct * (H - padT - padB));
+    var y = H - padB - barH;
+    var isToday = i === dias.length - 1;
+    var fill = d.val > 0
+      ? (isToday ? 'url(#barGradActive)' : 'url(#barGrad)')
+      : 'rgba(255,255,255,.05)';
+    var title = d.val > 0 ? '<title>'+d.label+': R$ '+fmtV(d.val)+'</title>' : '';
+    return '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+barH+'" rx="3" fill="'+fill+'" opacity="'+(d.val>0?'1':'.4')+'">'+title+'</rect>';
+  }).join('');
+
+  svg.innerHTML = '<defs>'
+    + '<linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="rgba(232,184,75,.85)"/>'
+    + '<stop offset="100%" stop-color="rgba(232,184,75,.25)"/>'
+    + '</linearGradient>'
+    + '<linearGradient id="barGradActive" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="rgba(46,212,122,.9)"/>'
+    + '<stop offset="100%" stop-color="rgba(46,212,122,.3)"/>'
+    + '</linearGradient>'
+    + '</defs>'
+    + gridHTML + barsHTML;
+
+  // Labels
+  if (labelsEl) {
+    labelsEl.innerHTML = dias.map(function(d, i) {
+      var show = i % 2 === 0 || i === dias.length - 1;
+      return '<span class="dash-chart-label" style="flex:1;text-align:center;opacity:'+(show?1:.3)+'">' + (show?d.label:'') + '</span>';
+    }).join('');
+  }
+}
+
+// Produtos mais vendidos
+function _renderTopProdutos(finalizados) {
+  var el = document.getElementById('dash-top-produtos');
+  if (!el) return;
+  var contagem = {};
+  finalizados.forEach(function(o) {
+    var p = o.produto || 'Sem produto';
+    if (!contagem[p]) contagem[p] = { qtd: 0, valor: 0 };
+    contagem[p].qtd++;
+    contagem[p].valor += (+o.precoFinal || 0);
+  });
+  var lista = Object.keys(contagem).map(function(k) {
+    return { nome: k, qtd: contagem[k].qtd, valor: contagem[k].valor };
+  }).sort(function(a,b){ return b.valor - a.valor; }).slice(0, 6);
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:10px 0">Nenhuma venda finalizada ainda</div>';
+    return;
+  }
+  var maxV = lista[0].valor;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+  var rankCls = ['r1','r2','r3'];
+  el.innerHTML = lista.map(function(p, i) {
+    var pct = p.valor / maxV * 100;
+    return '<div class="dash-produto-row">'
+      + '<div class="dash-produto-rank ' + (rankCls[i] || 'r2') + '">' + (i+1) + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.nome + '</div>'
+      + '<div class="dash-produto-bar-wrap"><div class="dash-produto-bar" style="width:'+pct+'%"></div></div>'
+      + '</div>'
+      + '<div style="text-align:right;margin-left:10px;flex-shrink:0">'
+      + '<div style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;color:var(--gold)">R$ '+fmtV(p.valor)+'</div>'
+      + '<div style="font-size:10px;color:var(--text3)">'+p.qtd+' vend.</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// Calcular info de prazo para card de produção
+function _calcPrazoInfo(prazoStr) {
+  if (!prazoStr) return '';
+  var prazo = new Date(prazoStr);
+  var hoje  = new Date();
+  hoje.setHours(0,0,0,0);
+  prazo.setHours(0,0,0,0);
+  var diff = Math.round((prazo - hoje) / 86400000);
+  if (diff < 0)   return '<div class="ped-card-prazo vencido">⚠️ Atrasado ' + Math.abs(diff) + 'd</div>';
+  if (diff === 0) return '<div class="ped-card-prazo hoje">🔥 Vence hoje</div>';
+  if (diff <= 3)  return '<div class="ped-card-prazo hoje">⏰ ' + diff + 'd restantes</div>';
+  return '<div class="ped-card-prazo ok">📅 ' + diff + 'd restantes</div>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// 2. FINANCEIRO EXPANDIDO v2.0
+// ─────────────────────────────────────────────────────────────
+
+// Patch: sobrescreve renderFinanceiro() com versão expandida
+var _renderFinOrig = window.renderFinanceiro;
+window.renderFinanceiro = function renderFinanceiroV2() {
+  var fins = (window.state && window.state.financeiro) || [];
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+
+  // ── KPIs globais
+  var totalEntradas = fins.filter(function(f){ return f.tipo==='entrada'&&f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var totalSaidas   = fins.filter(function(f){ return f.tipo==='saida'&&f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var pendentes     = fins.filter(function(f){ return f.status==='pendente'; });
+  var saldo         = totalEntradas - totalSaidas;
+
+  set('fin-entradas', 'R$ ' + fmtV(totalEntradas));
+  set('fin-saidas',   'R$ ' + fmtV(totalSaidas));
+  set('fin-saldo',    'R$ ' + fmtV(saldo));
+  set('fin-pendentes','R$ ' + fmtV(pendentes.reduce(function(s,f){ return s+(+f.valor||0);},0)));
+  set('fin-pendentes-cnt', pendentes.length + (pendentes.length === 1 ? ' pendente' : ' pendentes'));
+
+  // ── Faturamento do mês atual
+  var agora = new Date();
+  var mesN  = agora.getMonth();
+  var anoN  = agora.getFullYear();
+  var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  set('fin-mes-nome', meses[mesN] + ' ' + anoN);
+
+  var finsDoMes = fins.filter(function(f) {
+    var d = new Date(f.data || f.created_at || '');
+    return d.getFullYear() === anoN && d.getMonth() === mesN;
+  });
+  var fatMes  = finsDoMes.filter(function(f){ return f.tipo==='entrada'&&f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var despMes = finsDoMes.filter(function(f){ return f.tipo==='saida'&&f.status==='pago'; }).reduce(function(s,f){ return s+(+f.valor||0);},0);
+  var entMes  = fins.filter(function(f){ return f.tipo==='entrada'&&f.status==='pago'; });
+  var saiMes  = fins.filter(function(f){ return f.tipo==='saida'&&f.status==='pago'; });
+  set('fin-mes-fat',    'R$ ' + fmtV(fatMes));
+  set('fin-mes-desp',   'R$ ' + fmtV(despMes));
+  set('fin-mes-result', 'R$ ' + fmtV(fatMes - despMes));
+  set('fin-mes-cnt',    finsDoMes.length);
+  set('fin-entradas-mes', 'Mês: R$ ' + fmtV(fatMes));
+  set('fin-saidas-mes',   'Mês: R$ ' + fmtV(despMes));
+
+  // Colorir saldo do mês
+  var resEl = document.getElementById('fin-mes-result');
+  if (resEl) resEl.style.color = (fatMes - despMes) >= 0 ? 'var(--green)' : 'var(--red)';
+  var saldoEl = document.getElementById('fin-saldo');
+  if (saldoEl) saldoEl.style.color = saldo >= 0 ? 'var(--gold)' : 'var(--red)';
+
+  // ── Filtros
+  var tabFiltro   = window._finTabFiltro   || 'todos';
+  var filtroDeStr = (document.getElementById('fin-filtro-de')  || {}).value  || '';
+  var filtroAteStr= (document.getElementById('fin-filtro-ate') || {}).value  || '';
+  var filtroDe    = filtroDeStr  ? new Date(filtroDeStr)  : null;
+  var filtroAte   = filtroAteStr ? new Date(filtroAteStr) : null;
+  if (filtroAte) filtroAte.setHours(23,59,59,999);
+
+  var finsFilt = fins.filter(function(f) {
+    if (tabFiltro === 'entrada'  && f.tipo   !== 'entrada')  return false;
+    if (tabFiltro === 'saida'    && f.tipo   !== 'saida')    return false;
+    if (tabFiltro === 'pendente' && f.status !== 'pendente') return false;
+    if (tabFiltro === 'pago'     && f.status !== 'pago')     return false;
+    if (filtroDe || filtroAte) {
+      var d = new Date(f.data || f.created_at || '');
+      if (filtroDe  && d < filtroDe)  return false;
+      if (filtroAte && d > filtroAte) return false;
+    }
+    return true;
+  });
+
+  // ── Tabela
+  var tbody = document.getElementById('tbody-financeiro');
+  if (!tbody) return;
+
+  if (!finsFilt.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px">Nenhum lançamento encontrado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = finsFilt.slice(0, 100).map(function(f) {
+    var isEntrada = f.tipo === 'entrada';
+    var origemCls = f.origem === 'pedido' ? 'badge-origem' : 'badge-origem badge-origem-manual';
+    var origemTxt = f.origem || 'manual';
+    var venc = f.data_vencimento || f.vencimento || '';
+    var vencClass = '';
+    if (venc && f.status !== 'pago') {
+      var dv = new Date(venc); var dh = new Date();
+      if (dv < dh) vencClass = 'style="color:var(--red);font-weight:600"';
+    }
+    return '<tr>'
+      + '<td style="font-size:12px">' + (f.data||'—') + '</td>'
+      + '<td><span class="badge ' + (isEntrada?'badge-green':'badge-red') + '">' + (isEntrada?'↑ Entrada':'↓ Saída') + '</span></td>'
+      + '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (f.descricao||'—') + '</td>'
+      + '<td><span class="' + origemCls + '">' + origemTxt + '</span></td>'
+      + '<td><span style="font-family:DM Mono,monospace;font-weight:600;color:' + (isEntrada?'var(--green)':'var(--red)') + '">R$ ' + fmtV(f.valor) + '</span></td>'
+      + '<td style="font-size:12px;color:var(--text3)">' + (f.categoria||'—') + '</td>'
+      + '<td ' + vencClass + ' style="font-size:12px">' + (venc||'—') + '</td>'
+      + '<td>'
+      + '<span class="badge ' + (f.status==='pago'?'badge-green':f.status==='cancelado'?'badge-red':'badge-yellow') + '">' + (f.status||'pendente') + '</span>'
+      + (f.status==='pendente' ? '<button class="btn btn-success btn-xs" onclick="pagarLancamento('' + (f._db_id||f.id) + '')" style="margin-left:5px">✓ Pago</button>' : '')
+      + '</td>'
+      + '<td><button class="btn btn-ghost btn-xs" onclick="excluirLancamento('' + (f._db_id||f.id) + '')">🗑</button></td>'
+      + '</tr>';
+  }).join('');
+};
+
+// Limpar filtros de data
+function limparFiltroData() {
+  var de  = document.getElementById('fin-filtro-de');
+  var ate = document.getElementById('fin-filtro-ate');
+  if (de)  de.value  = '';
+  if (ate) ate.value = '';
+  renderFinanceiro();
+}
+
+// Excluir lançamento
+function excluirLancamento(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  if (!window.state || !window.state.financeiro) return;
+  window.state.financeiro = window.state.financeiro.filter(function(f){ return (f._db_id||f.id) != id; });
+  if (typeof saveState === 'function') saveState();
+  renderFinanceiro();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof toast === 'function') toast('Lançamento excluído', 'info');
+}
+
+// ── Integração: ao salvar orçamento como venda → criar entrada automática
+(function patchSalvarOrcamento() {
+  var _orig = window.salvarOrcamento;
+  if (!_orig) { setTimeout(patchSalvarOrcamento, 1000); return; }
+  window.salvarOrcamento = function() {
+    var result = _orig.apply(this, arguments);
+    // Verificar se o status mudou para finalizado/aprovado
+    setTimeout(function() {
+      var calc = window._lastCalc;
+      if (calc && calc.precoFinal > 0 && calc.status === 'finalizado') {
+        _criarEntradaAutomatica(calc);
+      }
+    }, 500);
+    return result;
+  };
+})();
+
+function _criarEntradaAutomatica(orc) {
+  if (!window.state) return;
+  if (!window.state.financeiro) window.state.financeiro = [];
+  // Verificar se já existe entrada para este orçamento
+  var refId = orc._db_id || orc.id || orc.ref;
+  var jaExiste = window.state.financeiro.some(function(f){ return f.origem === 'pedido' && f.origem_ref === String(refId); });
+  if (jaExiste) return;
+
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v||0).toFixed(2).replace('.',','); };
+  var entry = {
+    id:          Date.now(),
+    tipo:        'entrada',
+    valor:       orc.precoFinal || 0,
+    descricao:   'Venda: ' + (orc.produto||'produto') + (orc.cliente ? ' — ' + orc.cliente : ''),
+    data:        new Date().toISOString().split('T')[0],
+    origem:      'pedido',
+    origem_ref:  String(refId),
+    status:      'pendente',
+    categoria:   'vendas',
+  };
+  window.state.financeiro.unshift(entry);
+  if (typeof dbSaveFinanceiro === 'function') dbSaveFinanceiro(entry).catch(function(){});
+  if (typeof saveState === 'function') saveState();
+  if (typeof toast === 'function') toast('💰 Entrada de R$ ' + fmtV(entry.valor) + ' registrada no financeiro!', 'success', 'Financeiro');
+  if (typeof renderFinanceiro === 'function') renderFinanceiro();
+  if (typeof renderDashboard  === 'function') renderDashboard();
+}
+
+// ── Tabs do financeiro
+window.setFinTab = function(tab, btn) {
+  window._finTabFiltro = tab;
+  document.querySelectorAll('#page-financeiro .inner-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderFinanceiro();
+};
+
+// ─────────────────────────────────────────────────────────────
+// 3. PRODUÇÃO EXPANDIDA v2.0
+// ─────────────────────────────────────────────────────────────
+
+// Abre modal de Ordem de Produção ao finalizar/aprovar pedido
+function abrirModalOP(pedidoId) {
+  var m = document.getElementById('modal-ordem-producao');
+  if (!m) return;
+  var pid = document.getElementById('op-pedido-id');
+  if (pid) pid.value = pedidoId;
+
+  // Preencher sub
+  var ped = ((window.state && window.state.pedidos) || []).find(function(p){ return String(p.id||p._db_id) === String(pedidoId); });
+  var sub = document.getElementById('modal-op-sub');
+  if (sub && ped) sub.textContent = (ped.cliente_nome||'—') + ' · ' + (ped.produto||'');
+
+  // Popular responsáveis
+  _popularSelectResponsaveis('op-responsavel');
+
+  // Prazo default: 3 dias
+  var prazoEl = document.getElementById('op-prazo');
+  if (prazoEl) {
+    var d = new Date(); d.setDate(d.getDate() + 3);
+    prazoEl.value = d.toISOString().split('T')[0];
+  }
+
+  m.style.display = 'flex';
+}
+
+function fecharModalOP() {
+  var m = document.getElementById('modal-ordem-producao');
+  if (m) m.style.display = 'none';
+}
+
+async function salvarOrdemProducao() {
+  var pedId    = (document.getElementById('op-pedido-id')     || {}).value || '';
+  var resp     = (document.getElementById('op-responsavel')   || {}).value || '';
+  var prazo    = (document.getElementById('op-prazo')         || {}).value || '';
+  var statusI  = (document.getElementById('op-status-inicial')|| {}).value || 'producao';
+  var obs      = (document.getElementById('op-obs')           || {}).value || '';
+
+  if (!resp) { typeof toast === 'function' && toast('Selecione um responsável', 'warn'); return; }
+
+  // Atualizar o pedido com responsável e prazo
+  var peds = (window.state && window.state.pedidos) || [];
+  var idx  = peds.findIndex(function(p){ return String(p.id||p._db_id) === String(pedId); });
+  if (idx >= 0) {
+    peds[idx].responsavel  = resp;
+    peds[idx].prazo        = prazo;
+    peds[idx].obs_producao = obs;
+    peds[idx].status       = statusI;
+    if (typeof saveState === 'function') saveState();
+    if (typeof renderPedidos === 'function') renderPedidos();
+    if (typeof renderDashboard === 'function') renderDashboard();
+  }
+
+  fecharModalOP();
+  typeof toast === 'function' && toast('✅ Ordem de produção criada!', 'success', 'Produção');
+}
+
+// Patch renderPedidos: adiciona responsável, prazo e botão OP
+var _renderPedsOrig = window.renderPedidos;
+window.renderPedidos = function renderPedidosV2() {
+  if (_renderPedsOrig) _renderPedsOrig.apply(this, arguments);
+
+  // Adicionar kpi aguardando
+  var peds = (window.state && window.state.pedidos) || [];
+  var agEl = document.getElementById('ped-kpi-aguardando');
+  if (agEl) agEl.textContent = peds.filter(function(p){ return p.status === 'aguardando'; }).length;
+
+  // Popular filtro de responsáveis
+  _popularSelectResponsaveis('ped-filtro-resp');
+};
+
+// Popular dropdown de responsáveis com membros da equipe
+function _popularSelectResponsaveis(selectId) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  var usuarios = (window.state && window.state.usuarios) || [];
+  var prodUsers = usuarios.filter(function(u){ return ['admin','producao'].includes(u.tipo) && u.ativo; });
+  if (!prodUsers.length) {
+    if (selectId === 'op-responsavel') {
+      // Opções padrão se não houver usuários cadastrados
+      if (sel.options.length <= 1) {
+        ['Operador 1','Operador 2','Supervisor'].forEach(function(n){
+          var opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+          sel.appendChild(opt);
+        });
+      }
+    }
+    return;
+  }
+  var oldVal = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  prodUsers.forEach(function(u) {
+    var opt = document.createElement('option');
+    opt.value = u.nome || u.email;
+    opt.textContent = u.nome || u.email;
+    sel.appendChild(opt);
+  });
+  if (oldVal) sel.value = oldVal;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4. MULTIUSUÁRIOS v1.0
+// ─────────────────────────────────────────────────────────────
+
+// State de usuários
+if (window.state && !window.state.usuarios) window.state.usuarios = [];
+
+// Navegar para página usuários
+(function patchNavTo() {
+  var _orig = window.navTo;
+  if (!_orig) { setTimeout(patchNavTo, 500); return; }
+  window.navTo = function(pageId) {
+    _orig.apply(this, arguments);
+    if (pageId === 'usuarios') setTimeout(renderUsuarios, 100);
+    if (pageId === 'dashboard') setTimeout(renderDashboard, 100);
+    if (pageId === 'financeiro') setTimeout(renderFinanceiro, 100);
+  };
+})();
+
+// Renderizar lista de usuários
+function renderUsuarios() {
+  var el = document.getElementById('usr-lista');
+  if (!el) return;
+  var usuarios = (window.state && window.state.usuarios) || [];
+
+  // Sempre incluir o usuário atual
+  var emailAtual = window.currentUser && window.currentUser.email;
+  var roleAtual  = window.currentRole || 'owner';
+  if (emailAtual && !usuarios.find(function(u){ return u.email === emailAtual; })) {
+    usuarios.unshift({ id: 0, nome: emailAtual.split('@')[0], email: emailAtual, tipo: roleAtual, ativo: true, _sistema: true });
+  }
+
+  if (!usuarios.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px;grid-column:1/-1">Nenhum usuário cadastrado ainda.</div>';
+    return;
+  }
+
+  var tipoMap = {
+    admin:      { cls:'usr-avatar-admin',      label:'Admin',      cor:'usr-tipo-admin' },
+    vendas:     { cls:'usr-avatar-vendas',     label:'Vendas',     cor:'usr-tipo-vendas' },
+    producao:   { cls:'usr-avatar-producao',   label:'Produção',   cor:'usr-tipo-producao' },
+    financeiro: { cls:'usr-avatar-financeiro', label:'Financeiro', cor:'usr-tipo-financeiro' },
+    owner:      { cls:'usr-avatar-admin',      label:'Proprietário', cor:'usr-tipo-admin' },
+    user:       { cls:'usr-avatar-vendas',     label:'Usuário',    cor:'usr-tipo-vendas' },
+  };
+  var permMap = {
+    admin:      'Dashboard · Orçamentos · Clientes · Produção · Financeiro · Config',
+    vendas:     'Dashboard · Orçamentos · Clientes',
+    producao:   'Dashboard · Produção',
+    financeiro: 'Dashboard · Financeiro',
+    owner:      'Acesso total ao sistema',
+    user:       'Acesso básico',
+  };
+
+  el.innerHTML = usuarios.map(function(u) {
+    var tipo  = u.tipo || 'user';
+    var cfg   = tipoMap[tipo] || tipoMap.user;
+    var ini   = (u.nome || u.email || 'U')[0].toUpperCase();
+    var ativo = u.ativo !== false && u.ativo !== 0;
+    var isAtual = u.email === emailAtual;
+
+    return '<div class="usr-card">'
+      + '<div class="usr-avatar ' + cfg.cls + '">' + ini + '</div>'
+      + '<div class="usr-info">'
+      + '<div class="usr-nome">' + (u.nome||'Sem nome') + (isAtual ? ' <span style="font-size:10px;color:var(--gold)">(você)</span>' : '') + '</div>'
+      + '<div class="usr-email">' + (u.email||'—') + '</div>'
+      + '<span class="usr-tipo-badge ' + cfg.cor + '">' + cfg.label + '</span>'
+      + '<div style="font-size:10.5px;color:var(--text3);margin-top:4px">' + (permMap[tipo]||'—') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0">'
+      + '<div class="usr-status-dot ' + (ativo?'ativo':'inativo') + '" title="' + (ativo?'Ativo':'Inativo') + '"></div>'
+      + (!isAtual ? '<button class="btn btn-ghost btn-xs" onclick="editarUsuario(' + JSON.stringify(u.id||u.email) + ')">✏️</button>' : '')
+      + (!isAtual && !u._sistema ? '<button class="btn btn-ghost btn-xs" onclick="toggleUsuarioAtivo(' + JSON.stringify(u.id||u.email) + ')">' + (ativo?'🔴':'🟢') + '</button>' : '')
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Badge no sidebar
+  var badge = document.getElementById('badge-usr');
+  if (badge) {
+    var ativos = usuarios.filter(function(u){ return u.ativo !== false; }).length;
+    badge.style.display = ativos > 0 ? 'inline' : 'none';
+    badge.textContent = ativos;
+  }
+}
+
+// Modal de usuário
+function abrirModalUsuario(usuario) {
+  ['usr-nome','usr-email','usr-senha'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var tipoEl = document.getElementById('usr-tipo'); if (tipoEl) tipoEl.value = 'vendas';
+  var ativoEl= document.getElementById('usr-ativo'); if (ativoEl) ativoEl.value = '1';
+  var editEl = document.getElementById('usr-edit-id'); if (editEl) editEl.value = '';
+  var titulo = document.getElementById('modal-usr-titulo'); if (titulo) titulo.textContent = '➕ Novo Usuário';
+  _atualizarPermPreview();
+  var m = document.getElementById('modal-usuario'); if (m) m.style.display = 'flex';
+  setTimeout(function(){ var n=document.getElementById('usr-nome'); if(n) n.focus(); }, 100);
+}
+
+function fecharModalUsuario() {
+  var m = document.getElementById('modal-usuario'); if (m) m.style.display = 'none';
+}
+
+function editarUsuario(id) {
+  var u = ((window.state && window.state.usuarios) || []).find(function(x){ return (x.id||x.email) == id; });
+  if (!u) return;
+  var set = function(elId, v){ var el=document.getElementById(elId); if(el) el.value=v; };
+  set('usr-nome',  u.nome||'');
+  set('usr-email', u.email||'');
+  set('usr-senha', '');
+  set('usr-tipo',  u.tipo||'vendas');
+  set('usr-ativo', u.ativo !== false ? '1' : '0');
+  set('usr-edit-id', u.id || u.email || '');
+  var titulo = document.getElementById('modal-usr-titulo'); if (titulo) titulo.textContent = '✏️ Editar Usuário';
+  _atualizarPermPreview();
+  var m = document.getElementById('modal-usuario'); if (m) m.style.display = 'flex';
+}
+
+function toggleUsuarioAtivo(id) {
+  var usuarios = (window.state && window.state.usuarios) || [];
+  var idx = usuarios.findIndex(function(u){ return (u.id||u.email) == id; });
+  if (idx < 0) return;
+  usuarios[idx].ativo = !usuarios[idx].ativo;
+  if (typeof saveState === 'function') saveState();
+  renderUsuarios();
+  typeof toast === 'function' && toast(usuarios[idx].ativo ? '✅ Usuário ativado' : '🔴 Usuário desativado', 'info');
+}
+
+async function salvarUsuario() {
+  var nome  = (document.getElementById('usr-nome')  ||{}).value.trim();
+  var email = (document.getElementById('usr-email') ||{}).value.trim();
+  var senha = (document.getElementById('usr-senha') ||{}).value;
+  var tipo  = (document.getElementById('usr-tipo')  ||{}).value || 'vendas';
+  var ativo = (document.getElementById('usr-ativo') ||{}).value !== '0';
+  var editId= (document.getElementById('usr-edit-id')||{}).value || '';
+
+  if (!nome)  { typeof toast === 'function' && toast('Informe o nome', 'warn'); return; }
+  if (!email) { typeof toast === 'function' && toast('Informe o e-mail', 'warn'); return; }
+  if (!editId && !senha) { typeof toast === 'function' && toast('Informe a senha para novo usuário', 'warn'); return; }
+  if (!editId && senha.length < 6) { typeof toast === 'function' && toast('Senha mínimo 6 caracteres', 'warn'); return; }
+
+  if (!window.state) window.state = {};
+  if (!window.state.usuarios) window.state.usuarios = [];
+
+  typeof showLoading === 'function' && showLoading('Salvando usuário...');
+
+  try {
+    // Tentar criar/atualizar no Supabase Auth
+    var sb = typeof getSb === 'function' ? getSb() : null;
+    if (sb && !editId) {
+      try {
+        var { data, error } = await sb.auth.admin.createUser({ email, password: senha, email_confirm: true });
+        if (!error && data && data.user) {
+          // Salvar role na tabela usuarios_empresa
+          await sb.from('usuarios_empresa').upsert({
+            user_id: data.user.id, empresa_id: window.currentEmpresaId,
+            nome, email, role: tipo, ativo,
+          });
+        }
+      } catch(e) { /* Supabase admin pode não estar disponível */ }
+    }
+
+    // Salvar localmente no state
+    if (editId) {
+      var idx = window.state.usuarios.findIndex(function(u){ return (u.id||u.email) == editId; });
+      if (idx >= 0) Object.assign(window.state.usuarios[idx], { nome, email, tipo, ativo });
+    } else {
+      var novoU = { id: Date.now(), nome, email, tipo, ativo, criado_em: new Date().toISOString() };
+      window.state.usuarios.push(novoU);
+    }
+
+    if (typeof saveState === 'function') saveState();
+    typeof hideLoading === 'function' && hideLoading();
+    fecharModalUsuario();
+    renderUsuarios();
+    typeof toast === 'function' && toast('✅ Usuário ' + (editId ? 'atualizado' : 'criado') + '!', 'success', 'Equipe');
+
+  } catch(e) {
+    typeof hideLoading === 'function' && hideLoading();
+    typeof toast === 'function' && toast('Erro: ' + e.message, 'error');
+  }
+}
+
+// Preview de permissões no modal
+function _atualizarPermPreview() {
+  var tipoEl = document.getElementById('usr-tipo');
+  var prevEl = document.getElementById('usr-perm-preview');
+  if (!tipoEl || !prevEl) return;
+  var permMap = {
+    admin:      { cor:'var(--gold)',   icon:'🛡', modulos:['Dashboard','Orçamentos','Clientes','Produção','Financeiro','Config','NF'] },
+    vendas:     { cor:'var(--green)',  icon:'💼', modulos:['Dashboard','Orçamentos','Clientes'] },
+    producao:   { cor:'var(--cyan)',   icon:'🔧', modulos:['Dashboard','Produção'] },
+    financeiro: { cor:'var(--purple)', icon:'💰', modulos:['Dashboard','Financeiro','NF'] },
+  };
+  var tipo = tipoEl.value;
+  var cfg  = permMap[tipo] || permMap.vendas;
+  prevEl.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:'+cfg.cor+';margin-bottom:6px">'+cfg.icon+' Acesso liberado</div>'
+    + cfg.modulos.map(function(m){ return '<span class="badge badge-green" style="margin:2px;font-size:10px">'+m+'</span>'; }).join('');
+}
+// Listener do select
+setTimeout(function() {
+  var tipoEl = document.getElementById('usr-tipo');
+  if (tipoEl) tipoEl.addEventListener('change', _atualizarPermPreview);
+}, 500);
+
+// ── Middleware de permissões expandido
+var _podeAcessarOrig = window.podeAcessarPagina;
+window.podeAcessarPagina = function(modulo, role, plano) {
+  // Verificar tipo de usuário do ERP (admin/vendas/producao/financeiro)
+  var tipo = _getUserTipo();
+  if (tipo) {
+    var permTipo = {
+      admin:      ['dashboard','orcamento','historico','pedidos','clientes','materiais','financeiro','nf','config','usuarios','relatorios','insumos','estoque','compras','fornecedores','produtos','pcp'],
+      vendas:     ['dashboard','orcamento','historico','clientes','materiais'],
+      producao:   ['dashboard','pedidos'],
+      financeiro: ['dashboard','financeiro','nf'],
+    };
+    var liberados = permTipo[tipo] || [];
+    if (liberados.length > 0 && !liberados.includes(modulo)) return false;
+  }
+  if (_podeAcessarOrig) return _podeAcessarOrig(modulo, role, plano);
+  return true;
+};
+
+function _getUserTipo() {
+  // Verificar se o usuário logado tem tipo específico do ERP
+  var email = window.currentUser && window.currentUser.email;
+  if (!email) return null;
+  var u = ((window.state && window.state.usuarios) || []).find(function(x){ return x.email === email; });
+  return u ? u.tipo : null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// INICIALIZAÇÃO DOS MÓDULOS ERP
+// ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    // Inicializar state de usuários
+    if (window.state && !window.state.usuarios) window.state.usuarios = [];
+
+    // Renderizar dashboard ao carregar
+    if (typeof renderDashboard === 'function') renderDashboard();
+
+    // Adicionar PAGE_META para usuários
+    if (typeof PAGE_META !== 'undefined') {
+      PAGE_META['usuarios'] = { title: '👥 Equipe', sub: 'Gestão de usuários e permissões' };
+    }
+
+    // Saudação dinâmica
+    var h = new Date().getHours();
+    var saud = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+    var grEl = document.getElementById('dash-greeting');
+    if (grEl && grEl.textContent.indexOf('👋') === -1) grEl.textContent = saud + ' 👋';
+
+  }, 800);
+});
+
+console.log('[VisualCalc] ERP Módulos v2.0 ✓ — Dashboard · Financeiro · Produção · Multiusuários');
 </script>
 
 </body>
