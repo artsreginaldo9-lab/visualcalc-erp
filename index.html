@@ -2111,6 +2111,8 @@ textarea{resize:vertical;}
             <div class="auth-card-title">Criar sua conta</div>
             <div class="auth-card-sub">Grátis para começar · sem cartão</div>
           </div>
+          <!-- Badge do plano escolhido na landing -->
+          <div id="auth-plano-badge" style="display:none;background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);border-radius:var(--r-lg);padding:8px 14px;font-size:12.5px;color:var(--gold);font-weight:600;margin-bottom:14px;text-align:center"></div>
 
           <!-- Progress steps -->
           <div class="auth-reg-steps">
@@ -3445,12 +3447,12 @@ textarea{resize:vertical;}
       <div class="wz-grid-2">
         <div class="form-group" style="margin:0"><label>Largura total (m)</label><input type="number" id="acm-larg" class="wz-input" placeholder="4.00" step="0.01" min="0" oninput="piCalcACM()"></div>
         <div class="form-group" style="margin:0"><label>Altura total (m)</label><input type="number" id="acm-alt" class="wz-input" placeholder="1.20" step="0.01" min="0" oninput="piCalcACM()"></div>
-        <div class="form-group" style="margin:0"><label>Custo ACM (R$/m²)</label><input type="number" id="acm-custo-m2" class="wz-input" placeholder="85.00" step="0.01" value="85" oninput="piCalcACM()"></div>
+        <div class="form-group" style="margin:0"><label>Custo ACM (R$/m²)</label><input type="number" id="acm-custo-m2" class="wz-input" placeholder="220.00" step="0.01" value="220" oninput="piCalcACM()"></div>
         <div class="form-group" style="margin:0"><label>Espessura/Tipo</label>
           <select id="acm-espessura" class="wz-input" onchange="piCalcACM()">
-            <option value="1.0">3mm (econômico)</option>
-            <option value="1.2" selected>4mm (padrão)</option>
-            <option value="1.5">6mm (premium)</option>
+            <option value="1.0">3mm — R$ 180/m² (econômico)</option>
+            <option value="1.2" selected>4mm — R$ 220/m² (padrão)</option>
+            <option value="1.5">6mm — R$ 280/m² (premium)</option>
           </select>
         </div>
       </div>
@@ -3516,7 +3518,7 @@ textarea{resize:vertical;}
         <div class="wz-grid-2">
           <div class="form-group" style="margin:0"><label>Custo LED (R$/m linear)</label><input type="number" id="acm-led-custo" class="wz-input" placeholder="35.00" step="0.01" value="35" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Metros de LED estimados</label><input type="number" id="acm-led-metros" class="wz-input" placeholder="0" step="0.5" oninput="piCalcACM()"></div>
-          <div class="form-group" style="margin:0"><label>Driver/Fonte (R$)</label><input type="number" id="acm-led-driver" class="wz-input" placeholder="150.00" step="0.01" value="150" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Driver/Fonte (R$)</label><input type="number" id="acm-led-driver" class="wz-input" placeholder="85.00" step="0.01" value="85" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Perfil alumínio (R$/m)</label><input type="number" id="acm-led-perfil" class="wz-input" placeholder="18.00" step="0.01" value="18" oninput="piCalcACM()"></div>
         </div>
       </div>
@@ -3526,7 +3528,7 @@ textarea{resize:vertical;}
         <div style="font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👷 Mão de Obra e Acabamentos</div>
         <div class="wz-grid-2">
           <div class="form-group" style="margin:0"><label>Horas corte/dobra/montagem</label><input type="number" id="acm-mo-horas" class="wz-input" placeholder="4" step="0.5" value="4" oninput="piCalcACM()"></div>
-          <div class="form-group" style="margin:0"><label>Valor hora (R$/h)</label><input type="number" id="acm-mo-valor-h" class="wz-input" placeholder="45.00" step="0.01" value="45" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Valor hora (R$/h)</label><input type="number" id="acm-mo-valor-h" class="wz-input" placeholder="80.00" step="0.01" value="80" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Rebites/parafusos/consumíveis (R$)</label><input type="number" id="acm-consumiveis" class="wz-input" placeholder="30.00" step="0.01" value="30" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Adesivo/impressão na fachada (R$)</label><input type="number" id="acm-adesivo" class="wz-input" placeholder="0.00" step="0.01" value="0" oninput="piCalcACM()"></div>
         </div>
@@ -3559,7 +3561,7 @@ textarea{resize:vertical;}
           </select>
         </div>
         <div class="form-group" style="margin:0"><label>Profundidade caixa (cm)</label><input type="number" id="lc-prof" class="wz-input" placeholder="10" step="0.5" value="10" oninput="piCalcLetraCaixa()"></div>
-        <div class="form-group" style="margin:0"><label>Custo estimado por char (R$)</label><input type="number" id="lc-custo-char" class="wz-input" placeholder="120.00" step="1" value="120" oninput="piCalcLetraCaixa()"></div>
+        <div class="form-group" style="margin:0"><label>Custo estimado por char (R$)</label><input type="number" id="lc-custo-char" class="wz-input" placeholder="100.00" step="1" value="100" oninput="piCalcLetraCaixa()"></div>
         <div class="form-group" style="margin:0"><label>Tem LED interno?</label>
           <select id="lc-led" class="wz-input" onchange="piCalcLetraCaixa()">
             <option value="0">Não</option>
@@ -4645,9 +4647,77 @@ GRANT SELECT,INSERT,UPDATE ON certificados_fiscais TO authenticated;
     <button class="inner-tab active" onclick="trocarAbaCfg('cfg-supabase',this)">🗄️ Supabase</button>
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-empresa',this)">🏢 Empresa</button>
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-planos',this)">💎 Planos</button>
+    <button class="inner-tab" onclick="trocarAbaCfg('cfg-parametros',this)">⚙️ Parâmetros</button>
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-backup',this)">💾 Backup</button>
     <button class="inner-tab" onclick="trocarAbaCfg('cfg-ia',this)">🤖 IA &amp; Motor</button>
     <button class="inner-tab" id="cfg-tab-admin" style="display:none;color:var(--gold);font-weight:700" onclick="trocarAbaCfg('cfg-admin',this)">🛡️ Admin SaaS</button>
+  </div>
+
+  <!-- ══ ABA PARÂMETROS DE CÁLCULO ══ -->
+  <div class="inner-page" id="cfg-parametros" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div>
+        <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:17px">⚙️ Parâmetros de Cálculo</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">Configure os valores padrão usados nos calculadores de produtos complexos</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="salvarParametrosCalculo()">💾 Salvar Parâmetros</button>
+    </div>
+
+    <div class="g2" style="gap:16px">
+
+      <!-- ACM -->
+      <div class="card">
+        <div class="card-title"><div class="card-icon" style="background:rgba(56,197,224,.15);border-color:rgba(56,197,224,.3)">🏗️</div>Fachada ACM</div>
+        <div class="form-row">
+          <div class="form-group"><label>ACM 3mm (R$/m²)</label><input type="number" id="param-acm-3mm" class="wz-input" value="180" step="1"></div>
+          <div class="form-group"><label>ACM 4mm (R$/m²)</label><input type="number" id="param-acm-4mm" class="wz-input" value="220" step="1"></div>
+          <div class="form-group"><label>ACM 6mm (R$/m²)</label><input type="number" id="param-acm-6mm" class="wz-input" value="280" step="1"></div>
+          <div class="form-group"><label>Metalon (R$/m)</label><input type="number" id="param-metalon" class="wz-input" value="35" step="1"></div>
+          <div class="form-group"><label>Fita VHB (R$/m)</label><input type="number" id="param-fita-vhb" class="wz-input" value="18" step="0.5"></div>
+          <div class="form-group"><label>Silicone (R$/tubo)</label><input type="number" id="param-silicone" class="wz-input" value="22" step="0.5"></div>
+          <div class="form-group"><label>Mão de obra ACM (R$/h)</label><input type="number" id="param-mo-acm" class="wz-input" value="80" step="1"></div>
+          <div class="form-group"><label>Consumíveis padrão (R$)</label><input type="number" id="param-consumiveis-acm" class="wz-input" value="30" step="1"></div>
+        </div>
+      </div>
+
+      <!-- LED -->
+      <div class="card">
+        <div class="card-title"><div class="card-icon" style="background:rgba(232,184,75,.15);border-color:rgba(232,184,75,.3)">💡</div>Iluminação LED</div>
+        <div class="form-row">
+          <div class="form-group"><label>LED por metro (R$/m)</label><input type="number" id="param-led-m" class="wz-input" value="35" step="0.5"></div>
+          <div class="form-group"><label>Módulo LED (R$/un)</label><input type="number" id="param-led-modulo" class="wz-input" value="2.5" step="0.1"></div>
+          <div class="form-group"><label>Fonte 12V (R$/un)</label><input type="number" id="param-led-fonte" class="wz-input" value="85" step="1"></div>
+          <div class="form-group"><label>Perfil alumínio (R$/m)</label><input type="number" id="param-perfil-alu" class="wz-input" value="18" step="0.5"></div>
+        </div>
+      </div>
+
+      <!-- Letra Caixa -->
+      <div class="card">
+        <div class="card-title"><div class="card-icon" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3)">🔡</div>Letra Caixa</div>
+        <div class="form-row">
+          <div class="form-group"><label>Acrílico (R$/m²)</label><input type="number" id="param-acrilico" class="wz-input" value="220" step="1"></div>
+          <div class="form-group"><label>PVC Expandido (R$/m²)</label><input type="number" id="param-pvc-exp" class="wz-input" value="90" step="1"></div>
+          <div class="form-group"><label>Custo base por char (R$)</label><input type="number" id="param-custo-char" class="wz-input" value="100" step="1"></div>
+          <div class="form-group"><label>Adicional LED/char (R$)</label><input type="number" id="param-led-char" class="wz-input" value="80" step="1"></div>
+        </div>
+      </div>
+
+      <!-- Mão de Obra -->
+      <div class="card">
+        <div class="card-title"><div class="card-icon" style="background:rgba(46,212,122,.15);border-color:rgba(46,212,122,.3)">👷</div>Mão de Obra</div>
+        <div class="form-row">
+          <div class="form-group"><label>MO geral (R$/m²)</label><input type="number" id="param-mo-geral" class="wz-input" value="120" step="1"></div>
+          <div class="form-group"><label>MO por hora (R$/h)</label><input type="number" id="param-mo-hora" class="wz-input" value="65" step="1"></div>
+          <div class="form-group"><label>Designer (R$/h)</label><input type="number" id="param-designer-h" class="wz-input" value="80" step="1"></div>
+          <div class="form-group"><label>Instalação altura (R$/h)</label><input type="number" id="param-inst-altura-h" class="wz-input" value="85" step="1"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="alert alert-info" style="margin-top:14px;font-size:12px">
+      💡 Esses valores são usados como padrão nos calculadores de <strong>Fachada ACM, Letra Caixa, Totem, Letreiro LED, Wrap e Instalação</strong>. Você pode ajustar em cada orçamento individualmente.
+    </div>
   </div>
 
   <!-- ══ ABA IA & MOTOR ══ -->
@@ -9117,16 +9187,50 @@ function copiarSqlFix() {
 // AUTH UI v3.0 — Navegação, validação e fluxo de cadastro
 // ═══════════════════════════════════════════════════════════════
 
-function showAuthScreen() {
+function showAuthScreen(forcePane) {
   const sc = document.getElementById('auth-screen');
   const ap = document.getElementById('app');
   if (sc) sc.style.display = 'flex';
   if (ap) ap.style.display = 'none';
-  // Focar no campo de e-mail
-  setTimeout(function() {
-    const el = document.getElementById('auth-email');
-    if (el) el.focus();
-  }, 200);
+
+  // Detectar parâmetros da URL para abrir no painel correto
+  const params  = new URLSearchParams(window.location.search);
+  const acao    = forcePane || params.get('acao') || 'login';
+  const plano   = params.get('plano') || '';
+
+  if (acao === 'cadastro' || acao === 'register') {
+    // Abrir direto no cadastro
+    authGoPane('register');
+    // Pré-preencher nome do plano escolhido se disponível
+    if (plano) {
+      var planosNome = { free: 'Básico (Grátis)', pro: 'Médio — R$ 97/mês', premium: 'Avançado — R$ 197/mês' };
+      var nomeEmpEl = document.getElementById('reg-nome-empresa');
+      // Guardar plano escolhido para usar depois
+      window._planoEscolhido = plano;
+      // Mostrar badge do plano escolhido
+      setTimeout(function() {
+        var badge = document.getElementById('auth-plano-badge');
+        if (badge && planosNome[plano]) {
+          badge.textContent = '🎯 Plano escolhido: ' + planosNome[plano];
+          badge.style.display = 'block';
+        }
+        var el = document.getElementById('reg-nome-empresa');
+        if (el) el.focus();
+      }, 200);
+    } else {
+      setTimeout(function() {
+        var el = document.getElementById('reg-nome-empresa');
+        if (el) el.focus();
+      }, 200);
+    }
+  } else {
+    // Login normal
+    authGoPane('login');
+    setTimeout(function() {
+      const el = document.getElementById('auth-email');
+      if (el) el.focus();
+    }, 200);
+  }
 }
 
 function hideAuthScreen() {
@@ -9364,19 +9468,33 @@ async function handleRegister() {
     // Mostrar step 3 (sucesso)
     authGoRegStep(3);
     const msgEl = document.getElementById('auth-success-msg');
+    var planoEscolhido = window._planoEscolhido || 'free';
+    var planosNome = { free: 'Básico Grátis', pro: 'Médio — R$ 97/mês', premium: 'Avançado — R$ 197/mês' };
     if (msgEl) {
       if (currentEmpresaId) {
-        msgEl.innerHTML = '✅ Empresa <strong>' + nomeEmp + '</strong> criada!<br>Entrando no sistema...';
+        msgEl.innerHTML = '✅ Empresa <strong>' + nomeEmp + '</strong> criada!'
+          + (planoEscolhido !== 'free' ? '<br>📋 Plano <strong>' + (planosNome[planoEscolhido]||planoEscolhido) + '</strong> selecionado.' : '')
+          + '<br><span style="font-size:12px;color:#8b93a8">Entrando no sistema...</span>';
       } else {
         msgEl.innerHTML = 'Conta criada! <strong>Verifique seu e-mail</strong> para confirmar o cadastro.';
-        return; // Não entrar automático se precisar confirmar email
+        return;
       }
     }
-    // Entrar automático
+    // Entrar automático e direcionar para assinatura se plano pago
     setTimeout(async function() {
       if (getSb() && currentEmpresaId) {
         hideAuthScreen();
         await initApp();
+        // Se escolheu plano pago, abrir tela de assinatura após carregar
+        if (planoEscolhido && planoEscolhido !== 'free') {
+          setTimeout(function() {
+            if (typeof navTo === 'function') navTo('assinatura');
+            if (typeof toast === 'function') {
+              toast('🎯 Complete a assinatura do plano ' + (planosNome[planoEscolhido]||planoEscolhido), 'info', 'Plano escolhido');
+            }
+          }, 1500);
+        }
+        window._planoEscolhido = null;
       }
     }, 1800);
   }
@@ -21712,6 +21830,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('[VisualCalc] Para ver o SQL de migration: console.log(VC_MIGRATION_SQL)');
+
+// Verificar URL ao carregar — se vier da landing com ?acao=cadastro
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var acao   = params.get('acao');
+  if (acao === 'cadastro' || acao === 'register') {
+    // Guardar intenção para usar quando showAuthScreen for chamado
+    window._authIntencao = acao;
+    window._planoEscolhido = params.get('plano') || 'free';
+    console.log('[VisualCalc] Vindo da landing — plano:', window._planoEscolhido);
+  }
+})();
 console.log('[VisualCalc] Para rodar diagnóstico: vcDiagnostico()');
 </script>
 
@@ -23124,6 +23254,141 @@ window.projAdicionarItem = function() {
 };
 
 console.log('[VisualCalc] Calculador de Produtos Complexos v2.0 ✓');
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   PARÂMETROS DE CÁLCULO — Configuração centralizada
+   Valores da planilha Disiprint aplicados como padrão
+═══════════════════════════════════════════════════════════════ */
+
+// Valores padrão extraídos da planilha
+var PARAM_DEFAULT = {
+  'acm-3mm':          180,
+  'acm-4mm':          220,
+  'acm-6mm':          280,
+  'metalon':           35,
+  'fita-vhb':          18,
+  'silicone':          22,
+  'mo-acm':            80,
+  'consumiveis-acm':   30,
+  'led-m':             35,
+  'led-modulo':         2.5,
+  'led-fonte':         85,
+  'perfil-alu':        18,
+  'acrilico':         220,
+  'pvc-exp':           90,
+  'custo-char':       100,
+  'led-char':          80,
+  'mo-geral':         120,
+  'mo-hora':           65,
+  'designer-h':        80,
+  'inst-altura-h':     85,
+};
+
+function getParam(key) {
+  try {
+    var saved = JSON.parse(localStorage.getItem('vc_parametros_calculo') || '{}');
+    return saved[key] !== undefined ? saved[key] : (PARAM_DEFAULT[key] || 0);
+  } catch(e) { return PARAM_DEFAULT[key] || 0; }
+}
+
+function salvarParametrosCalculo() {
+  var params = {};
+  Object.keys(PARAM_DEFAULT).forEach(function(key) {
+    var el = document.getElementById('param-' + key);
+    if (el) params[key] = parseFloat(el.value) || PARAM_DEFAULT[key];
+  });
+  localStorage.setItem('vc_parametros_calculo', JSON.stringify(params));
+  typeof toast === 'function' && toast('✅ Parâmetros salvos!', 'success');
+
+  // Atualizar os campos dos calculadores com novos valores
+  _aplicarParametrosNosCalculadores();
+}
+
+function carregarParametrosCalculo() {
+  Object.keys(PARAM_DEFAULT).forEach(function(key) {
+    var el = document.getElementById('param-' + key);
+    if (el) el.value = getParam(key);
+  });
+}
+
+function _aplicarParametrosNosCalculadores() {
+  // Atualizar ACM
+  var acmM2 = document.getElementById('acm-custo-m2');
+  if (acmM2 && !acmM2.dataset.userEdited) acmM2.value = getParam('acm-4mm');
+
+  var metEl = document.getElementById('acm-metalon-tipo');
+  // Atualizar opções de metalon com valor da config
+  var pMetalon = getParam('metalon');
+  if (metEl) {
+    // Atualizar texto das opções
+    Array.from(metEl.options).forEach(function(opt) {
+      if (opt.value === '35') {
+        opt.text = 'Metalon 30x30 — R$ ' + pMetalon + '/m';
+        opt.value = String(pMetalon);
+      }
+    });
+  }
+
+  // LED fonte
+  var ledFonte = document.getElementById('acm-led-driver');
+  if (ledFonte && !ledFonte.dataset.userEdited) ledFonte.value = getParam('led-fonte');
+
+  var ledPerfil = document.getElementById('acm-led-perfil');
+  if (ledPerfil && !ledPerfil.dataset.userEdited) ledPerfil.value = getParam('perfil-alu');
+
+  var ledCusto = document.getElementById('acm-led-custo');
+  if (ledCusto && !ledCusto.dataset.userEdited) ledCusto.value = getParam('led-m');
+
+  // MO ACM
+  var moH = document.getElementById('acm-mo-valor-h');
+  if (moH && !moH.dataset.userEdited) moH.value = getParam('mo-acm');
+
+  var cons = document.getElementById('acm-consumiveis');
+  if (cons && !cons.dataset.userEdited) cons.value = getParam('consumiveis-acm');
+
+  // Letra caixa
+  var lcCusto = document.getElementById('lc-custo-char');
+  if (lcCusto && !lcCusto.dataset.userEdited) lcCusto.value = getParam('custo-char');
+
+  var lcLed = document.getElementById('lc-led-adicional');
+  if (lcLed && !lcLed.dataset.userEdited) lcLed.value = getParam('led-char');
+
+  // Arte
+  var artH = document.getElementById('art-valor-h');
+  if (artH && !artH.dataset.userEdited) artH.value = getParam('designer-h');
+
+  // Instalação
+  var insH = document.getElementById('ins-valor-h');
+  if (insH && !insH.dataset.userEdited) insH.value = getParam('mo-hora');
+}
+
+// Marcar campo como editado pelo usuário (não sobrescreve)
+document.addEventListener('DOMContentLoaded', function() {
+  ['acm-custo-m2','acm-led-driver','acm-led-perfil','acm-led-custo',
+   'acm-mo-valor-h','acm-consumiveis','lc-custo-char','lc-led-adicional',
+   'art-valor-h','ins-valor-h'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', function() { this.dataset.userEdited = '1'; });
+  });
+
+  // Carregar parâmetros nas configurações ao abrir
+  carregarParametrosCalculo();
+  _aplicarParametrosNosCalculadores();
+});
+
+// Aplicar parâmetros quando abre o modal do projeto
+var _projAdicionarItemOldParam = window.projAdicionarItem;
+if (typeof window.projAdicionarItem === 'function') {
+  var __orig = window.projAdicionarItem;
+  window.projAdicionarItem = function() {
+    __orig.apply(this, arguments);
+    setTimeout(_aplicarParametrosNosCalculadores, 200);
+  };
+}
+
+console.log('[VisualCalc] Parâmetros centralizados v1.0 ✓ | Planilha Disiprint aplicada');
 </script>
 
 </body>
