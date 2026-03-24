@@ -3516,10 +3516,31 @@ textarea{resize:vertical;}
       <div id="acm-campos-led" style="display:none;margin-top:12px">
         <div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">💡 Iluminação LED</div>
         <div class="wz-grid-2">
-          <div class="form-group" style="margin:0"><label>Custo LED (R$/m linear)</label><input type="number" id="acm-led-custo" class="wz-input" placeholder="35.00" step="0.01" value="35" oninput="piCalcACM()"></div>
-          <div class="form-group" style="margin:0"><label>Metros de LED estimados</label><input type="number" id="acm-led-metros" class="wz-input" placeholder="0" step="0.5" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0">
+            <label>Tipo de LED</label>
+            <select id="acm-led-tipo" class="wz-input" onchange="piCalcACM()">
+              <option value="modulo">Módulo LED (por m²)</option>
+              <option value="fita" selected>Fita LED (por metro)</option>
+              <option value="neon">Neon Flex (por metro)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0"><label>Custo LED (R$/m ou R$/m²)</label><input type="number" id="acm-led-custo" class="wz-input" placeholder="35.00" step="0.01" value="35" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Metros lineares de LED</label><input type="number" id="acm-led-metros" class="wz-input" placeholder="0" step="0.5" oninput="piCalcACM()">
+            <div class="wz-field-hint">Ou deixe 0 para calcular automaticamente (2× largura)</div>
+          </div>
+          <div class="form-group" style="margin:0"><label>Módulos por m² (qtd)</label><input type="number" id="acm-led-modulos-m2" class="wz-input" placeholder="36" step="1" value="36" oninput="piCalcACM()">
+            <div class="wz-field-hint">Padrão: 36 módulos/m². Custo: R$ 2,50/un</div>
+          </div>
+          <div class="form-group" style="margin:0"><label>Custo por módulo (R$/un)</label><input type="number" id="acm-led-custo-modulo" class="wz-input" placeholder="2.50" step="0.01" value="2.50" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Potência por módulo (W)</label><input type="number" id="acm-led-watts-modulo" class="wz-input" placeholder="0.72" step="0.01" value="0.72" oninput="piCalcACM()">
+            <div class="wz-field-hint">Módulo padrão: 0,72W</div>
+          </div>
           <div class="form-group" style="margin:0"><label>Driver/Fonte (R$)</label><input type="number" id="acm-led-driver" class="wz-input" placeholder="85.00" step="0.01" value="85" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Perfil alumínio (R$/m)</label><input type="number" id="acm-led-perfil" class="wz-input" placeholder="18.00" step="0.01" value="18" oninput="piCalcACM()"></div>
+        </div>
+        <!-- Resumo LED calculado -->
+        <div id="acm-led-resumo" style="margin-top:8px;padding:8px 12px;background:rgba(232,184,75,.06);border:1px solid rgba(232,184,75,.2);border-radius:var(--r);font-size:11.5px;color:var(--text2)">
+          <div id="acm-led-resumo-txt">Preencha os dados para ver o resumo</div>
         </div>
       </div>
 
@@ -3529,8 +3550,19 @@ textarea{resize:vertical;}
         <div class="wz-grid-2">
           <div class="form-group" style="margin:0"><label>Horas corte/dobra/montagem</label><input type="number" id="acm-mo-horas" class="wz-input" placeholder="4" step="0.5" value="4" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Valor hora (R$/h)</label><input type="number" id="acm-mo-valor-h" class="wz-input" placeholder="80.00" step="0.01" value="80" oninput="piCalcACM()"></div>
-          <div class="form-group" style="margin:0"><label>Rebites/parafusos/consumíveis (R$)</label><input type="number" id="acm-consumiveis" class="wz-input" placeholder="30.00" step="0.01" value="30" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Rebites / Parafusos (un)</label><input type="number" id="acm-rebites-qtd" class="wz-input" placeholder="40" step="1" value="40" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Custo unitário fixador (R$)</label><input type="number" id="acm-rebites-custo" class="wz-input" placeholder="0.35" step="0.01" value="0.35" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Primer (R$/m²)</label><input type="number" id="acm-primer-m2" class="wz-input" placeholder="45.00" step="0.01" value="45" oninput="piCalcACM()">
+            <div class="wz-field-hint">Aplicado em toda área base (prep. superfície)</div>
+          </div>
+          <div class="form-group" style="margin:0"><label>Silicone estrutural (R$/tubo)</label><input type="number" id="acm-silicone-custo" class="wz-input" placeholder="22.00" step="0.01" value="22" oninput="piCalcACM()"></div>
+          <div class="form-group" style="margin:0"><label>Tubos de silicone (un)</label><input type="number" id="acm-silicone-qtd" class="wz-input" placeholder="2" step="1" value="2" oninput="piCalcACM()"></div>
           <div class="form-group" style="margin:0"><label>Adesivo/impressão na fachada (R$)</label><input type="number" id="acm-adesivo" class="wz-input" placeholder="0.00" step="0.01" value="0" oninput="piCalcACM()"></div>
+        </div>
+        <!-- Resumo de insumos calculados -->
+        <div id="acm-insumos-resumo" style="margin-top:10px;padding:10px 14px;background:var(--ink3);border-radius:var(--r);font-size:11.5px;color:var(--text2);display:none">
+          <strong style="color:var(--text);display:block;margin-bottom:6px">📋 Resumo de Insumos</strong>
+          <div id="acm-insumos-lista" style="display:grid;grid-template-columns:1fr 1fr;gap:4px"></div>
         </div>
       </div>
     </div>
@@ -4710,6 +4742,25 @@ GRANT SELECT,INSERT,UPDATE ON certificados_fiscais TO authenticated;
           <div class="form-group"><label>MO por hora (R$/h)</label><input type="number" id="param-mo-hora" class="wz-input" value="65" step="1"></div>
           <div class="form-group"><label>Designer (R$/h)</label><input type="number" id="param-designer-h" class="wz-input" value="80" step="1"></div>
           <div class="form-group"><label>Instalação altura (R$/h)</label><input type="number" id="param-inst-altura-h" class="wz-input" value="85" step="1"></div>
+        </div>
+      </div>
+
+      <!-- Insumos e Fixadores -->
+      <div class="card" style="grid-column:span 2">
+        <div class="card-title"><div class="card-icon" style="background:rgba(240,145,58,.15);border-color:rgba(240,145,58,.3)">🔧</div>Insumos e Fixadores</div>
+        <div class="form-row">
+          <div class="form-group"><label>Primer (R$/m²)</label><input type="number" id="param-primer" class="wz-input" value="45" step="0.5">
+            <div class="wz-field-hint">Aplicado na área total antes do ACM</div></div>
+          <div class="form-group"><label>Silicone estrutural (R$/tubo)</label><input type="number" id="param-silicone" class="wz-input" value="22" step="0.5"></div>
+          <div class="form-group"><label>Fita VHB (R$/m)</label><input type="number" id="param-fita-vhb" class="wz-input" value="18" step="0.5"></div>
+          <div class="form-group"><label>Rebite / Parafuso (R$/un)</label><input type="number" id="param-fixador-un" class="wz-input" value="0.35" step="0.01">
+            <div class="wz-field-hint">Custo unitário de cada fixador</div></div>
+          <div class="form-group"><label>Módulo LED (R$/un)</label><input type="number" id="param-led-modulo" class="wz-input" value="2.5" step="0.1"></div>
+          <div class="form-group"><label>Módulos por m² (qtd)</label><input type="number" id="param-modulos-m2" class="wz-input" value="36" step="1">
+            <div class="wz-field-hint">Quantidade de módulos por metro quadrado</div></div>
+          <div class="form-group"><label>Watts por módulo (W)</label><input type="number" id="param-watts-modulo" class="wz-input" value="0.72" step="0.01"></div>
+          <div class="form-group"><label>Fator de desperdício (%)</label><input type="number" id="param-desperdicio" class="wz-input" value="10" step="1">
+            <div class="wz-field-hint">Aplicado sobre o material calculado</div></div>
         </div>
       </div>
 
@@ -22843,10 +22894,15 @@ function projGerarPDFIdx(idx) {
   _projGerarPDFComItens(p.nome, p.itensDados);
 }
 
-function _projGerarPDFComItens(nome, itens) {
+function _projGerarPDFComItens(nome, itens, opts) {
   var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
   var emp  = window.empresa || {};
+  opts = opts || {};
+  var validade = opts.validade || (document.getElementById('proj-validade')||{}).value || '7';
+  var pagamento= opts.pagamento|| (document.getElementById('proj-pagamento')||{}).value || '';
+  var prazo    = opts.prazo    || (document.getElementById('proj-prazo')||{}).value    || '';
   var totalValor = itens.reduce(function(s,i){ return s+(i.valor_total||0); }, 0);
+  var totalCusto = itens.reduce(function(s,i){ return s+(i.custo_total||0); }, 0);
 
   var html = '<html><head><meta charset="UTF-8"><title>Proposta — ' + nome + '</title>'
     + '<style>body{font-family:Arial,sans-serif;font-size:13px;color:#222;margin:40px}'
@@ -22865,11 +22921,34 @@ function _projGerarPDFComItens(nome, itens) {
     + '<table><thead><tr><th>#</th><th>Descrição</th><th>Dim.</th><th>Qtd</th><th>Vlr Unit.</th><th>Total</th></tr></thead><tbody>'
     + itens.map(function(item, i) {
         var dim = item.tipo === 'impressao' && item.largura > 0 ? item.largura + '×' + item.altura + 'm' : '—';
-        return '<tr><td>' + (i+1) + '</td><td><strong>' + item.descricao + '</strong></td><td>' + dim + '</td><td>' + item.qtd + '</td><td>R$ ' + fmtV(item.valor_unit) + '</td><td><strong>R$ ' + fmtV(item.valor_total) + '</strong></td></tr>';
+        var tipoLabel = {impressao:'Impressão',acm:'Fachada ACM',letra_caixa:'Letra Caixa',totem:'Totem',letreiro:'Letreiro LED',wrap:'Wrap',instalacao:'Instalação',arte:'Arte',unitario:'Unitário',servico:'Serviço'}[item.tipo] || item.tipo;
+        return '<tr>'
+          + '<td>' + (i+1) + '</td>'
+          + '<td><strong>' + item.descricao + '</strong><br><small style="color:#888">' + tipoLabel + (item.material ? ' · ' + item.material : '') + '</small></td>'
+          + '<td>' + dim + '</td>'
+          + '<td>' + item.qtd + '</td>'
+          + '<td>R$ ' + fmtV(item.valor_unit) + '</td>'
+          + '<td><strong>R$ ' + fmtV(item.valor_total) + '</strong></td>'
+          + '</tr>';
       }).join('')
     + '</tbody></table>'
-    + '<div style="margin-top:24px;padding:16px;background:#f8f9fa;border-radius:8px">'
-    + '<div class="total">TOTAL: R$ ' + fmtV(totalValor) + '</div></div>'
+    // Breakdown de custos
+    + '<div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+    + '<div style="padding:16px;background:#f8f9fa;border-radius:8px;border-left:4px solid #e8b84b">'
+    + '<div style="font-size:11px;color:#666;text-transform:uppercase;margin-bottom:8px">Breakdown do Projeto</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Custo total estimado:</span><span style="color:#c0392b">R$ ' + fmtV(totalCusto) + '</span></div>'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Lucro estimado:</span><span style="color:#27ae60">R$ ' + fmtV(totalValor - totalCusto) + '</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span>Margem:</span><span style="color:#2980b9">' + (totalValor > 0 ? ((totalValor - totalCusto)/totalValor*100).toFixed(1) : '0') + '%</span></div>'
+    + '</div>'
+    + '<div style="padding:16px;background:#1a2035;border-radius:8px;text-align:right">'
+    + '<div style="font-size:11px;color:#8892a8;text-transform:uppercase;margin-bottom:6px">Valor Total da Proposta</div>'
+    + '<div style="font-family:monospace;font-size:28px;font-weight:700;color:#e8b84b">R$ ' + fmtV(totalValor) + '</div>'
+    + '</div></div>'
+    + '<div style="margin-top:20px;padding:12px 16px;background:#fffbf0;border:1px solid #e8b84b;border-radius:8px;font-size:12px;color:#666">'
+    + '⚠️ Esta proposta é válida por ' + (validade||'7') + ' dias a partir de ' + new Date().toLocaleDateString('pt-BR') + '.'
+    + (pagamento ? ' | Pagamento: ' + pagamento : '')
+    + (prazo ? ' | Prazo de entrega: ' + prazo : '')
+    + '</div>'
     + '<div style="margin-top:32px;font-size:11px;color:#999;text-align:center">Proposta gerada por VisualCalc ERP · ' + new Date().toLocaleDateString('pt-BR') + '</div>'
     + '</body></html>';
 
@@ -23009,44 +23088,134 @@ function piCalcACM() {
     custoLed = ledM * ledCM + driver + ledM * perfil;
   }
 
+  // ── Insumos calculados por m² / perímetro ──────────────────
+  var primerM2  = parseFloat((document.getElementById('acm-primer-m2')      ||{}).value) || 0;
+  var silicCust = parseFloat((document.getElementById('acm-silicone-custo') ||{}).value) || 22;
+  var silicQtd  = parseFloat((document.getElementById('acm-silicone-qtd')   ||{}).value) || 2;
+  var rebitQtd  = parseFloat((document.getElementById('acm-rebites-qtd')    ||{}).value) || 40;
+  var rebitCust = parseFloat((document.getElementById('acm-rebites-custo')  ||{}).value) || 0.35;
+  var adesivo   = parseFloat((document.getElementById('acm-adesivo')        ||{}).value) || 0;
+
+  // Fita VHB: calculada pelo perímetro automaticamente
+  var perimBase    = 2 * (larg + alt);
+  var fitaVHBCustM = 18; // R$/m padrão (configurável em parâmetros)
+  try { fitaVHBCustM = getParam('fita-vhb') || 18; } catch(e) {}
+  var custoFitaVHB = perimBase * fitaVHBCustM;
+
+  // Primer: R$/m² × área total
+  var custoPrimer   = primerM2 > 0 ? areaFinal * primerM2 : 0;
+
+  // Silicone + rebites
+  var custoSilicone = silicCust * silicQtd;
+  var custoRebites  = rebitCust * rebitQtd;
+
   // Mão de obra
-  var horas     = parseFloat((document.getElementById('acm-mo-horas')    ||{}).value) || 4;
-  var valorH    = parseFloat((document.getElementById('acm-mo-valor-h')  ||{}).value) || 45;
-  var consumiv  = parseFloat((document.getElementById('acm-consumiveis') ||{}).value) || 30;
-  var adesivo   = parseFloat((document.getElementById('acm-adesivo')     ||{}).value) || 0;
-  var custoMO   = horas * valorH + consumiv + adesivo;
+  var horas   = parseFloat((document.getElementById('acm-mo-horas')  ||{}).value) || 4;
+  var valorH  = parseFloat((document.getElementById('acm-mo-valor-h')||{}).value) || 80;
+  var custoMO = horas * valorH + adesivo;
 
-  var custoTotal = custoACM + custoMetalon + custoLed + custoMO;
+  var custoInsumos = custoFitaVHB + custoPrimer + custoSilicone + custoRebites;
+  var custoTotal   = custoACM + custoMetalon + custoLed + custoMO + custoInsumos;
 
-  var detalhe = 'ACM (' + _fmtV(areaFinal) + 'm²×R$' + _fmtV(custoM2) + ')=R$' + _fmtV(custoACM)
-    + (custoMetalon > 0 ? ' + Metalon(' + _fmtV(metrosMetalon) + 'm)=R$' + _fmtV(custoMetalon) : '')
-    + (custoLed > 0 ? ' + LED=R$' + _fmtV(custoLed) : '')
-    + ' + MO=R$' + _fmtV(custoMO);
+  // Resumo de insumos
+  var resumoEl = document.getElementById('acm-insumos-resumo');
+  var listaEl  = document.getElementById('acm-insumos-lista');
+  if (resumoEl && listaEl && (custoInsumos > 0)) {
+    resumoEl.style.display = 'block';
+    listaEl.innerHTML =
+      '<div>📏 Fita VHB (' + _fmtV(perimBase) + 'm × R$' + _fmtV(fitaVHBCustM) + ')</div><div style="color:var(--gold)">R$ ' + _fmtV(custoFitaVHB) + '</div>'
+      + (custoPrimer > 0 ? '<div>🖌️ Primer (' + _fmtV(areaFinal) + 'm² × R$' + _fmtV(primerM2) + ')</div><div style="color:var(--gold)">R$ ' + _fmtV(custoPrimer) + '</div>' : '')
+      + '<div>🔧 Silicone (' + silicQtd + ' tubos)</div><div style="color:var(--gold)">R$ ' + _fmtV(custoSilicone) + '</div>'
+      + '<div>🔩 Fixadores (' + rebitQtd + ' un)</div><div style="color:var(--gold)">R$ ' + _fmtV(custoRebites) + '</div>';
+  }
+
+  // Resumo LED com watts
+  var ledResumoEl = document.getElementById('acm-led-resumo-txt');
+  if (ledResumoEl && custoLed > 0) {
+    var tipoLed   = (document.getElementById('acm-led-tipo') ||{}).value || 'fita';
+    var wattsUnit = parseFloat((document.getElementById('acm-led-watts-modulo')||{}).value) || 0.72;
+    var modM2     = parseFloat((document.getElementById('acm-led-modulos-m2') ||{}).value) || 36;
+    var totalMod  = tipoLed === 'modulo' ? Math.ceil(areaFinal * modM2) : 0;
+    var totalW    = tipoLed === 'modulo' ? totalMod * wattsUnit : 0;
+    var fonteA    = totalW > 0 ? Math.ceil(totalW / 12) : 0; // Tensão 12V → Amperes
+
+    ledResumoEl.innerHTML = tipoLed === 'modulo'
+      ? '💡 ' + totalMod + ' módulos × ' + wattsUnit + 'W = <strong>' + totalW.toFixed(1) + 'W total</strong> | Fonte mínima: <strong>' + fonteA + 'A / 12V</strong>'
+      : '💡 LED tipo ' + tipoLed + ' | Custo: R$ ' + _fmtV(custoLed);
+  }
+
+  // Detalhe para o resultado
+  var detalhe =
+    '🏗️ ACM (' + _fmtV(areaFinal) + 'm²) = R$' + _fmtV(custoACM)
+    + (custoMetalon > 0 ? ' | Metalon = R$' + _fmtV(custoMetalon) : '')
+    + (custoLed > 0 ? ' | LED = R$' + _fmtV(custoLed) : '')
+    + ' | Insumos = R$' + _fmtV(custoInsumos)
+    + ' | MO = R$' + _fmtV(custoMO);
 
   _piSetResultado(custoTotal, null, detalhe);
 }
 
 // ── LETRA CAIXA ────────────────────────────────────────────────
 function piCalcLetraCaixa() {
-  var alt     = parseFloat((document.getElementById('lc-altura')      ||{}).value) || 0;
-  var chars   = parseInt((document.getElementById('lc-chars')         ||{}).value) || 1;
-  var custoC  = parseFloat((document.getElementById('lc-custo-char')  ||{}).value) || 120;
-  var temLed  = parseInt((document.getElementById('lc-led')           ||{}).value) || 0;
-  var ledAdc  = parseFloat((document.getElementById('lc-led-adicional')||{}).value) || 80;
+  var altCm    = parseFloat((document.getElementById('lc-altura')       ||{}).value) || 0;
+  var profCm   = parseFloat((document.getElementById('lc-prof')         ||{}).value) || 10;
+  var chars    = parseInt((document.getElementById('lc-chars')          ||{}).value) || 1;
+  var custoC   = parseFloat((document.getElementById('lc-custo-char')   ||{}).value) || 100;
+  var temLed   = parseInt((document.getElementById('lc-led')            ||{}).value) || 0;
+  var ledAdc   = parseFloat((document.getElementById('lc-led-adicional')||{}).value) || 80;
+  var matFace  = (document.getElementById('lc-material')                ||{}).value || 'acrilico';
 
-  // Fator por altura da letra (escala)
+  // Custo de material por m² (baseado na planilha)
+  var custoMaterial = { acrilico: 220, acrilico_led: 220, acm: 220, pvc: 90, inox: 380 };
+  var custoMatM2 = custoMaterial[matFace] || 220;
+
+  // Fator de complexidade por altura
   var fatorAltura = 1.0;
-  if (alt <= 20)      fatorAltura = 0.7;
-  else if (alt <= 40) fatorAltura = 1.0;
-  else if (alt <= 60) fatorAltura = 1.4;
-  else if (alt <= 100)fatorAltura = 1.8;
-  else                fatorAltura = 2.5;
+  if      (altCm <= 15) fatorAltura = 0.6;
+  else if (altCm <= 25) fatorAltura = 0.8;
+  else if (altCm <= 40) fatorAltura = 1.0;
+  else if (altCm <= 60) fatorAltura = 1.3;
+  else if (altCm <= 100)fatorAltura = 1.7;
+  else                  fatorAltura = 2.5;
 
-  var custoUnit = chars * custoC * fatorAltura;
-  if (temLed) custoUnit += chars * ledAdc * fatorAltura;
+  // Cálculo real de área por letra (aproximação trapézio)
+  // Largura média de uma letra ≈ 0.65 × altura
+  var altM  = altCm  / 100;
+  var profM = profCm / 100;
+  var largM = altM * 0.65; // largura média por char
 
-  _piSetResultado(custoUnit, null,
-    chars + ' chars × R$' + _fmtV(custoC) + ' × fator' + fatorAltura + (temLed ? ' + LED' : ''));
+  var areaFrontal  = largM * altM;          // face frontal
+  var areaLateral  = profM * (2 * altM + 2 * largM); // perimetro × profundidade
+  var areaTotal    = (areaFrontal + areaLateral) * chars;
+
+  // Custo de material real
+  var custoMatReal = areaTotal * custoMatM2;
+
+  // LED: cálculo por módulos
+  var custoLedTotal = 0;
+  var resumoLed = '';
+  if (temLed) {
+    var modPorLetra   = Math.ceil((2 * altCm + 2 * (altCm * 0.65)) / 100 * 36); // 36 módulos/m linear
+    var totalModulos  = modPorLetra * chars;
+    var custoModulo   = 2.50; // R$/módulo (da planilha)
+    var totalWatts    = totalModulos * 0.72;
+    var fonteA        = Math.ceil(totalWatts / 12);
+    var custoDrv      = Math.ceil(fonteA / 5) * 85; // 1 fonte por cada 5A
+    custoLedTotal = totalModulos * custoModulo + custoDrv + ledAdc * chars;
+    resumoLed = ' | LED: ' + totalModulos + ' módulos (' + totalWatts.toFixed(0) + 'W) + fonte ' + fonteA + 'A';
+  }
+
+  // Mão de obra base + fator
+  var custoMOBase = custoC * fatorAltura * chars;
+
+  var custoTotal = custoMatReal + custoMOBase + custoLedTotal;
+
+  _piSetResultado(custoTotal, null,
+    chars + ' letras | Alt:' + altCm + 'cm Prf:' + profCm + 'cm'
+    + ' | Área total:' + _fmtV(areaTotal) + 'm² × R$' + _fmtV(custoMatM2)
+    + ' = R$' + _fmtV(custoMatReal)
+    + ' | MO:R$' + _fmtV(custoMOBase)
+    + resumoLed);
 }
 
 // ── TOTEM ──────────────────────────────────────────────────────
