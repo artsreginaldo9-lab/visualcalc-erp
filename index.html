@@ -1920,6 +1920,32 @@ textarea{resize:vertical;}
   padding: 1px 7px; border-radius: 99px;
 }
 
+/* ═══════════════════════════════════════════════════════
+   SIMULADOR DE BOBINA + ORÇAMENTO POR PROJETO
+═══════════════════════════════════════════════════════ */
+.kpi-mini{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;position:relative;overflow:hidden;}
+.kpi-mini::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc);}
+.kpi-mini-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:700;margin-bottom:4px;}
+.kpi-mini-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;}
+
+/* Tipo de item no projeto */
+.proj-tipo-btn{padding:7px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.proj-tipo-btn:hover{border-color:var(--line2);color:var(--text);}
+.proj-tipo-btn.active{background:rgba(232,184,75,.12);border-color:rgba(232,184,75,.3);color:var(--gold);}
+
+/* Linha de item no projeto */
+.proj-item-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 80px;gap:8px;padding:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--ink2);margin-bottom:6px;align-items:center;font-size:13px;transition:border-color .15s;}
+.proj-item-row:hover{border-color:var(--gold);}
+.proj-item-tipo{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--ink3);border:1px solid var(--line);color:var(--text3);}
+.proj-item-tipo.impressao{background:rgba(56,197,224,.1);border-color:rgba(56,197,224,.2);color:var(--cyan);}
+.proj-item-tipo.arte{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.2);color:var(--purple);}
+.proj-item-tipo.instalacao{background:rgba(240,145,58,.1);border-color:rgba(240,145,58,.2);color:var(--warn);}
+.proj-item-tipo.unitario{background:rgba(46,212,122,.1);border-color:rgba(46,212,122,.2);color:var(--green);}
+.proj-item-tipo.servico{background:rgba(232,184,75,.1);border-color:rgba(232,184,75,.2);color:var(--gold);}
+
+/* Visualização da bobina SVG */
+#sim-visual-bobina svg{max-width:100%;height:auto;}
+
 </style>
 </head>
 <body>
@@ -2228,6 +2254,8 @@ textarea{resize:vertical;}
     <div class="sb-section">Principal</div>
     <button class="sb-item active" data-page="dashboard" onclick="navTo('dashboard')"><span class="sb-item-icon">📊</span>Dashboard</button>
     <button class="sb-item" data-page="orcamento" onclick="navTo('orcamento')"><span class="sb-item-icon">📋</span>Novo Orçamento</button>
+    <button class="sb-item" data-page="projeto" onclick="navTo('projeto')"><span class="sb-item-icon">🗂️</span>Orç. por Projeto <span class="sb-badge" style="background:var(--cyan);color:#000" id="badge-proj">Novo</span></button>
+    <button class="sb-item" data-page="simulador" onclick="navTo('simulador')"><span class="sb-item-icon">🎯</span>Simulador de Bobina</button>
     <button class="sb-item" data-page="historico" onclick="navTo('historico')"><span class="sb-item-icon">📂</span>Orçamentos <span class="sb-badge" id="badge-hist">0</span></button>
     <button class="sb-item" data-page="pedidos" data-module="pedidos" onclick="navTo('pedidos')"><span class="sb-item-icon">🔧</span>Produção <span class="sb-badge" id="badge-ped" style="background:var(--cyan);color:#000">0</span></button>
     <div class="sb-section">Cadastros</div>
@@ -3073,6 +3101,357 @@ textarea{resize:vertical;}
   </div>
 
 </div><!-- /page-orcamento -->
+
+<!-- ═══════════════════════════════════════════════════════
+     PÁGINA: SIMULADOR DE BOBINA / APROVEITAMENTO DE MÍDIA
+═══════════════════════════════════════════════════════ -->
+<div class="page" id="page-simulador">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🎯 Simulador de Bobina</div>
+      <div class="section-sub">Calcule o aproveitamento real da mídia e o custo com desperdício</div>
+    </div>
+    <button class="btn btn-primary" onclick="simCalcular()">⚡ Calcular Aproveitamento</button>
+  </div>
+
+  <div class="g2" style="gap:20px;margin-bottom:20px">
+
+    <!-- Painel Esquerdo: Entradas -->
+    <div>
+      <!-- Bobina -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <span style="background:rgba(56,197,224,.15);border:1px solid rgba(56,197,224,.3);border-radius:8px;padding:6px 10px">🎞️</span>
+          Dados da Bobina (Mídia)
+        </div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0">
+            <label>Largura da Bobina (m)</label>
+            <input type="number" id="sim-bob-larg" class="wz-input" value="1.52" step="0.01" min="0" oninput="simPreview()">
+            <div class="wz-field-hint">Ex: 1.52m, 1.60m, 2.10m</div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Comprimento / Rolo (m)</label>
+            <input type="number" id="sim-bob-comp" class="wz-input" value="50" step="1" min="0" oninput="simPreview()">
+            <div class="wz-field-hint">Metros lineares do rolo</div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Material</label>
+            <select id="sim-bob-material" class="wz-input" onchange="simAtualizarCusto()">
+              <option value="">— Selecione —</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Custo do Rolo (R$)</label>
+            <input type="number" id="sim-bob-custo" class="wz-input" placeholder="0,00" step="0.01" min="0" oninput="simPreview()">
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);font-size:12px;color:var(--text2)">
+          📐 Área total da bobina: <strong id="sim-area-total" style="color:var(--cyan)">—</strong> &nbsp;·&nbsp;
+          💰 Custo por m²: <strong id="sim-custo-m2" style="color:var(--gold)">—</strong>
+        </div>
+      </div>
+
+      <!-- Produto -->
+      <div class="card">
+        <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <span style="background:rgba(232,184,75,.15);border:1px solid rgba(232,184,75,.3);border-radius:8px;padding:6px 10px">📦</span>
+          Produto a Imprimir
+        </div>
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0">
+            <label>Largura do Produto (m)</label>
+            <input type="number" id="sim-prod-larg" class="wz-input" value="0.90" step="0.01" min="0" oninput="simPreview()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Altura do Produto (m)</label>
+            <input type="number" id="sim-prod-alt" class="wz-input" value="1.20" step="0.01" min="0" oninput="simPreview()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Quantidade desejada</label>
+            <input type="number" id="sim-prod-qtd" class="wz-input" value="10" min="1" oninput="simPreview()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Margem entre peças (cm)</label>
+            <input type="number" id="sim-margem-peca" class="wz-input" value="2" step="0.5" min="0" oninput="simPreview()">
+            <div class="wz-field-hint">Espaço entre cada peça</div>
+          </div>
+        </div>
+
+        <!-- Opções avançadas -->
+        <div style="margin-top:14px;padding:12px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r)">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Opções Avançadas</div>
+          <div class="wz-grid-2">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="sim-opt-girar" onchange="simPreview()">
+              Tentar girar peças (economiza bobina)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="sim-opt-corte" checked onchange="simPreview()">
+              Incluir margem de corte (1cm)
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Painel Direito: Resultado -->
+    <div>
+      <div class="card" id="sim-resultado-card">
+        <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:800;font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <span style="background:rgba(46,212,122,.15);border:1px solid rgba(46,212,122,.3);border-radius:8px;padding:6px 10px">📊</span>
+          Resultado do Aproveitamento
+        </div>
+
+        <!-- KPIs -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" id="sim-kpis">
+          <div class="kpi-mini" style="--kc:var(--green)">
+            <div class="kpi-mini-lbl">Peças que cabem</div>
+            <div class="kpi-mini-val" id="sim-r-pecas" style="color:var(--green)">—</div>
+          </div>
+          <div class="kpi-mini" style="--kc:var(--gold)">
+            <div class="kpi-mini-lbl">Bobinas necessárias</div>
+            <div class="kpi-mini-val" id="sim-r-bobinas" style="color:var(--gold)">—</div>
+          </div>
+          <div class="kpi-mini" style="--kc:var(--red)">
+            <div class="kpi-mini-lbl">Desperdício</div>
+            <div class="kpi-mini-val" id="sim-r-desperdicio" style="color:var(--red)">—</div>
+          </div>
+          <div class="kpi-mini" style="--kc:var(--cyan)">
+            <div class="kpi-mini-lbl">Aproveitamento</div>
+            <div class="kpi-mini-val" id="sim-r-aproveitamento" style="color:var(--cyan)">—</div>
+          </div>
+        </div>
+
+        <!-- Custo detalhado -->
+        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;margin-bottom:14px" id="sim-custo-detalhe">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">Formação de Custo</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px" id="sim-custo-linhas">
+            <div style="color:var(--text3);text-align:center;padding:20px">Preencha os dados e clique em Calcular</div>
+          </div>
+        </div>
+
+        <!-- Visualização da bobina -->
+        <div style="background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:10px">Visualização do Corte</div>
+          <div id="sim-visual-bobina" style="overflow:auto"></div>
+        </div>
+
+        <!-- Ações -->
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="simCalcular()">⚡ Calcular</button>
+          <button class="btn btn-secondary" onclick="simUsarNoOrcamento()" id="sim-btn-usar">📋 Usar no Orçamento</button>
+          <button class="btn btn-ghost" onclick="simExportar()">📄 Exportar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PÁGINA: ORÇAMENTO POR PROJETO (MÚLTIPLOS ITENS)
+═══════════════════════════════════════════════════════ -->
+<div class="page" id="page-projeto">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🗂️ Orçamento por Projeto</div>
+      <div class="section-sub">Monte propostas com múltiplos itens, serviços e arte</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="projLimpar()">🗑 Limpar</button>
+      <button class="btn btn-secondary btn-sm" onclick="projGerarPDF()">📄 PDF</button>
+      <button class="btn btn-primary" onclick="projSalvar()">💾 Salvar Proposta</button>
+    </div>
+  </div>
+
+  <!-- Dados do projeto -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:700;font-size:14px;margin-bottom:14px">📋 Dados da Proposta</div>
+    <div class="wz-grid-2">
+      <div class="form-group" style="margin:0">
+        <label>Nome do Projeto</label>
+        <input type="text" id="proj-nome" class="wz-input" placeholder="Ex: Fachada + Materiais Loja XYZ">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Cliente</label>
+        <select id="proj-cliente" class="wz-input">
+          <option value="">— Selecione ou cadastre —</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Data da Proposta</label>
+        <input type="date" id="proj-data" class="wz-input">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Validade (dias)</label>
+        <input type="number" id="proj-validade" class="wz-input" value="7" min="1">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Forma de Pagamento</label>
+        <input type="text" id="proj-pagamento" class="wz-input" placeholder="50%+50%, À vista...">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Prazo de Entrega</label>
+        <input type="text" id="proj-prazo" class="wz-input" placeholder="5 dias úteis">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px;margin-bottom:0">
+      <label>Observações gerais</label>
+      <textarea id="proj-obs" class="wz-input" rows="2" placeholder="Condições especiais, detalhes técnicos..."></textarea>
+    </div>
+  </div>
+
+  <!-- Itens do projeto -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:700;font-size:14px">📦 Itens da Proposta</div>
+      <button class="btn btn-primary btn-sm" onclick="projAdicionarItem()">＋ Adicionar Item</button>
+    </div>
+
+    <!-- Cabeçalho da tabela -->
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 80px;gap:8px;padding:8px 10px;background:var(--ink3);border-radius:var(--r);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">
+      <div>Descrição do Item</div>
+      <div>Largura×Altura</div>
+      <div>Qtd</div>
+      <div>Tipo</div>
+      <div>Valor Unit.</div>
+      <div>Ações</div>
+    </div>
+
+    <!-- Lista de itens -->
+    <div id="proj-itens-lista">
+      <div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">
+        📦 Nenhum item adicionado. Clique em "＋ Adicionar Item" para começar.
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div style="margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(232,184,75,.06),rgba(46,212,122,.03));border:1px solid rgba(232,184,75,.2);border-radius:var(--r-lg)">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="proj-totais">
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo Total</div>
+          <div style="font-family:DM Mono,monospace;font-size:18px;font-weight:700;color:var(--red)" id="proj-total-custo">R$ 0,00</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Lucro Estimado</div>
+          <div style="font-family:DM Mono,monospace;font-size:18px;font-weight:700;color:var(--green)" id="proj-total-lucro">R$ 0,00</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Margem Média</div>
+          <div style="font-family:DM Mono,monospace;font-size:18px;font-weight:700;color:var(--cyan)" id="proj-total-margem">0%</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">VALOR TOTAL</div>
+          <div style="font-family:DM Mono,monospace;font-size:24px;font-weight:700;color:var(--gold)" id="proj-total-valor">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Propostas salvas -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-family:Bricolage Grotesque,sans-serif;font-weight:700;font-size:14px">📂 Propostas Salvas</div>
+      <input type="text" id="proj-busca" class="wz-input" style="max-width:220px" placeholder="🔍 Buscar..." oninput="renderProjetos()">
+    </div>
+    <div id="proj-lista-salvas">
+      <div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">Nenhuma proposta salva ainda.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Adicionar item ao projeto -->
+<div id="modal-proj-item" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharModalProjItem()">
+  <div class="modal-box" style="max-width:580px">
+    <button class="modal-close" onclick="fecharModalProjItem()">✕</button>
+    <div class="modal-title" id="proj-item-titulo">＋ Adicionar Item</div>
+    <div class="modal-sub">Defina o produto, dimensões e preço</div>
+    <input type="hidden" id="proj-item-idx">
+
+    <!-- Tipo do item -->
+    <div style="display:flex;gap:8px;margin-bottom:16px" id="proj-tipo-tabs">
+      <button class="proj-tipo-btn active" onclick="projSetTipo('impressao',this)">🖨️ Impressão (m²)</button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('unitario',this)">📦 Item Unitário</button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('arte',this)">🎨 Arte / Projeto</button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('instalacao',this)">🔧 Instalação</button>
+      <button class="proj-tipo-btn" onclick="projSetTipo('servico',this)">⚙️ Serviço</button>
+    </div>
+
+    <div class="wz-grid-2">
+      <div class="form-group" style="grid-column:span 2;margin:0">
+        <label>Descrição do Item <span class="wz-req-mark">*</span></label>
+        <input type="text" id="pi-descricao" class="wz-input" placeholder="Ex: Banner Lona Frontlit, Arte logotipo, Instalação Fachada...">
+      </div>
+
+      <!-- Campos de impressão (m²) -->
+      <div id="pi-campos-impressao">
+        <div class="wz-grid-2">
+          <div class="form-group" style="margin:0">
+            <label>Largura (m)</label>
+            <input type="number" id="pi-largura" class="wz-input" placeholder="0.00" step="0.01" min="0" oninput="piCalcArea()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Altura (m)</label>
+            <input type="number" id="pi-altura" class="wz-input" placeholder="0.00" step="0.01" min="0" oninput="piCalcArea()">
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--text3)">
+          Área: <strong id="pi-area-calc" style="color:var(--cyan)">0,00 m²</strong>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Quantidade</label>
+        <input type="number" id="pi-qtd" class="wz-input" value="1" min="1" oninput="piCalcTotal()">
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Material</label>
+        <select id="pi-material" class="wz-input" onchange="piAtualizarCusto()">
+          <option value="">— Selecione —</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Custo Unitário (R$)</label>
+        <input type="number" id="pi-custo-unit" class="wz-input" placeholder="0,00" step="0.01" min="0" oninput="piCalcTotal()">
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Markup (%)</label>
+        <input type="number" id="pi-markup" class="wz-input" placeholder="150" step="1" min="0" oninput="piCalcTotal()">
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Valor Unitário (R$) <span style="color:var(--gold)">*</span></label>
+        <input type="number" id="pi-valor-unit" class="wz-input" placeholder="0,00" step="0.01" min="0" oninput="piCalcTotal()">
+      </div>
+
+      <div class="form-group" style="margin:0">
+        <label>Valor Total</label>
+        <div style="padding:11px 14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r-lg);font-family:DM Mono,monospace;font-weight:700;color:var(--gold)" id="pi-valor-total">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Arte / Projeto -->
+    <div id="pi-campos-arte" style="display:none;margin-top:12px">
+      <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:var(--r);padding:12px;font-size:13px;color:var(--text2)">
+        💡 <strong>Cobrança de Arte/Projeto:</strong> Informe o valor fixo pelo serviço de criação. Não é calculado por m².
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:14px;margin-bottom:0">
+      <label>Observações do item</label>
+      <input type="text" id="pi-obs" class="wz-input" placeholder="Detalhes técnicos, especificações...">
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="projConfirmarItem()">✅ Confirmar Item</button>
+      <button class="btn btn-ghost" onclick="fecharModalProjItem()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════
      MODAL — CADASTRO RÁPIDO DE CLIENTE
@@ -6895,6 +7274,8 @@ const PAGE_META = {
   produtos:     { title:'📋 Produtos',           sub:'Produtos estruturados e padrões' },
   relatorios:   { title:'📈 Relatórios',         sub:'Lucro, custos e desempenho' },
   pcp:          { title:'🏭 PCP — Produção',      sub:'Planejamento e Controle de Produção' },
+  projeto:      { title:'🗂️ Orçamento por Projeto', sub:'Múltiplos itens em uma proposta só' },
+  simulador:    { title:'🎯 Simulador de Bobina',   sub:'Aproveitamento de mídia e cálculo de desperdício' },
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -6972,6 +7353,8 @@ function renderPage(id) {
     case 'compras':     renderCompras(); break;
     case 'fornecedores':renderFornecedores(); break;
     case 'produtos':    renderProdutos(); break;
+    case 'simulador':   renderSimulador(); break;
+    case 'projeto':     renderProjetos(); break;
     case 'relatorios':  renderRelatorios(); break;
     case 'pcp':         renderPCP(); break;
     case 'assinatura':  renderAssinatura(); break;
@@ -12500,6 +12883,8 @@ var PLANOS_DEFAULT = {
 const MODULOS_TODOS = [
   // ── Básico (free) ────────────────────────────────────────────
   { id:'dashboard',   icon:'📊', label:'Dashboard',        section:'Principal',  planoMin:'free'    },
+  { id:'simulador',   icon:'🎯', label:'Simulador Bobina',  section:'Principal',  planoMin:'free'    },
+  { id:'projeto',     icon:'🗂️', label:'Orç. por Projeto',  section:'Principal',  planoMin:'free'    },
   { id:'orcamento',   icon:'📋', label:'Novo Orçamento',   section:'Principal',  planoMin:'free'    },
   { id:'historico',   icon:'📂', label:'Orçamentos',       section:'Principal',  planoMin:'free'    },
   { id:'clientes',    icon:'👥', label:'Clientes',         section:'Cadastros',  planoMin:'free'    },
@@ -21369,6 +21754,625 @@ window.updateErpFlowStatus = updateErpFlowStatus;
 window.updateBackendStatus = updateBackendStatus;
 
 console.log('[VisualCalc] Status Badges v2.0 ✓');
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   SIMULADOR DE BOBINA v1.0
+   Calcula aproveitamento real de mídia, desperdício e custo
+═══════════════════════════════════════════════════════════════ */
+
+var _simResultado = null;
+
+function renderSimulador() {
+  // Popular select de materiais
+  var sel = document.getElementById('sim-bob-material');
+  if (sel && window.state && window.state.materiais) {
+    var opts = '<option value="">— Selecione —</option>';
+    window.state.materiais.forEach(function(m) {
+      opts += '<option value="' + (m._db_id||m.id) + '" data-custo="' + (m.custo_m2||0) + '">' + m.nome + ' (R$ ' + (m.custo_m2||0).toFixed(2).replace('.',',') + '/m²)</option>';
+    });
+    sel.innerHTML = opts;
+  }
+  simPreview();
+}
+
+function simAtualizarCusto() {
+  var sel  = document.getElementById('sim-bob-material');
+  var inp  = document.getElementById('sim-bob-custo');
+  if (!sel || !inp) return;
+  var opt = sel.options[sel.selectedIndex];
+  if (opt && opt.dataset.custo && !inp.value) {
+    // Calcular custo do rolo baseado no custo/m²
+    var larg = parseFloat((document.getElementById('sim-bob-larg')||{}).value) || 1.52;
+    var comp = parseFloat((document.getElementById('sim-bob-comp')||{}).value) || 50;
+    var custoM2 = parseFloat(opt.dataset.custo) || 0;
+    inp.value = (larg * comp * custoM2).toFixed(2);
+  }
+  simPreview();
+}
+
+function simPreview() {
+  var larg  = parseFloat((document.getElementById('sim-bob-larg')  ||{}).value) || 0;
+  var comp  = parseFloat((document.getElementById('sim-bob-comp')  ||{}).value) || 0;
+  var custo = parseFloat((document.getElementById('sim-bob-custo') ||{}).value) || 0;
+
+  // Atualizar área total e custo/m²
+  var areaTot = larg * comp;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var elAt = document.getElementById('sim-area-total');
+  var elCm = document.getElementById('sim-custo-m2');
+  if (elAt) elAt.textContent = fmtV(areaTot) + ' m²';
+  if (elCm) elCm.textContent = areaTot > 0 && custo > 0 ? 'R$ ' + fmtV(custo / areaTot) + '/m²' : '—';
+}
+
+function simCalcular() {
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+
+  // Ler entradas
+  var bobLarg   = parseFloat((document.getElementById('sim-bob-larg')     ||{}).value) || 0;
+  var bobComp   = parseFloat((document.getElementById('sim-bob-comp')     ||{}).value) || 0;
+  var bobCusto  = parseFloat((document.getElementById('sim-bob-custo')    ||{}).value) || 0;
+  var prodLarg  = parseFloat((document.getElementById('sim-prod-larg')    ||{}).value) || 0;
+  var prodAlt   = parseFloat((document.getElementById('sim-prod-alt')     ||{}).value) || 0;
+  var prodQtd   = parseInt((document.getElementById('sim-prod-qtd')       ||{}).value) || 1;
+  var margemPeca= parseFloat((document.getElementById('sim-margem-peca')  ||{}).value) || 0;
+  var optGirar  = (document.getElementById('sim-opt-girar')               ||{}).checked || false;
+  var optCorte  = (document.getElementById('sim-opt-corte')               ||{}).checked !== false;
+
+  if (bobLarg <= 0 || bobComp <= 0) { typeof toast==='function' && toast('Preencha os dados da bobina', 'warn'); return; }
+  if (prodLarg <= 0 || prodAlt <= 0) { typeof toast==='function' && toast('Preencha as dimensões do produto', 'warn'); return; }
+
+  // Margem de corte
+  var corte = optCorte ? 0.01 : 0;
+  var margem = margemPeca / 100;
+
+  // Dimensões reais com margem
+  var pLarg = prodLarg + margem + corte;
+  var pAlt  = prodAlt  + margem + corte;
+
+  // Calcular quanto cabe na bobina (normal)
+  function calcCabe(bL, bC, pL, pA) {
+    if (pL > bL) return 0;
+    var porFaixa = Math.floor(bL / pL);
+    var faixas   = Math.floor(bC / pA);
+    return { pecas: porFaixa * faixas, porFaixa, faixas, compUsado: faixas * pA, largUsada: porFaixa * pL };
+  }
+
+  var r1 = calcCabe(bobLarg, bobComp, pLarg, pAlt);
+  var r2 = optGirar ? calcCabe(bobLarg, bobComp, pAlt, pLarg) : null;
+
+  // Escolher melhor aproveitamento
+  var melhor = r1;
+  var girado = false;
+  if (r2 && r2.pecas > r1.pecas) { melhor = r2; girado = true; }
+
+  var pecasPorBobina = melhor.pecas || 1;
+  var bobinasNec     = Math.ceil(prodQtd / pecasPorBobina);
+  var areaUsada      = prodQtd * prodLarg * prodAlt;
+  var areaTotal      = bobinasNec * bobLarg * bobComp;
+  var areaDesperd    = areaTotal - areaUsada;
+  var aproveit       = areaTotal > 0 ? (areaUsada / areaTotal * 100) : 0;
+  var custoTotal     = bobinasNec * bobCusto;
+  var custoPorPeca   = custoTotal / prodQtd;
+  var custoPorM2     = areaUsada > 0 ? custoTotal / areaUsada : 0;
+
+  _simResultado = {
+    pecasPorBobina, bobinasNec, areaUsada, areaTotal, areaDesperd, aproveit,
+    custoTotal, custoPorPeca, custoPorM2, girado,
+    prodLarg, prodAlt, prodQtd, bobLarg, bobComp, bobCusto,
+    melhor
+  };
+
+  // Atualizar KPIs
+  var set = function(id, v) { var el=document.getElementById(id); if(el) el.textContent=v; };
+  set('sim-r-pecas',         pecasPorBobina + ' por bobina');
+  set('sim-r-bobinas',       bobinasNec + ' bobina(s)');
+  set('sim-r-desperdicio',   fmtV(areaDesperd) + ' m² (' + (100 - aproveit).toFixed(1) + '%)');
+  set('sim-r-aproveitamento',aproveit.toFixed(1) + '%');
+
+  // Custo detalhado
+  var linhas = document.getElementById('sim-custo-linhas');
+  if (linhas) {
+    linhas.innerHTML =
+      '<div style="display:flex;justify-content:space-between"><span>Bobinas necessárias</span><span style="font-family:DM Mono,monospace">' + bobinasNec + ' × R$ ' + fmtV(bobCusto) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between"><span>Custo total de mídia</span><span style="font-family:DM Mono,monospace;color:var(--gold)">R$ ' + fmtV(custoTotal) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between"><span>Custo por peça</span><span style="font-family:DM Mono,monospace">R$ ' + fmtV(custoPorPeca) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between"><span>Custo por m² real</span><span style="font-family:DM Mono,monospace">R$ ' + fmtV(custoPorM2) + '/m²</span></div>' +
+      (girado ? '<div style="margin-top:6px;font-size:11px;color:var(--green)">✓ Peças giradas para melhor aproveitamento</div>' : '');
+  }
+
+  // Visualização SVG da bobina
+  simDesenharBobina(_simResultado);
+
+  typeof toast==='function' && toast('✅ Aproveitamento calculado!', 'success');
+}
+
+function simDesenharBobina(r) {
+  var el = document.getElementById('sim-visual-bobina');
+  if (!el) return;
+
+  var escala = Math.min(300 / r.bobLarg, 200 / Math.min(r.bobComp, 20));
+  var svgW   = Math.round(r.bobLarg * escala);
+  var maxMostra = 20; // máx metros para visualizar
+  var compVis   = Math.min(r.bobComp, maxMostra);
+  var svgH      = Math.round(compVis * escala);
+
+  var pW = Math.round(r.prodLarg * escala);
+  var pH = Math.round(r.prodAlt  * escala);
+
+  var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" style="width:' + svgW + 'px;height:' + svgH + 'px;border:2px solid rgba(232,184,75,.3);border-radius:8px;background:rgba(14,17,25,.8)">';
+  svg += '<rect width="' + svgW + '" height="' + svgH + '" fill="rgba(30,35,53,.5)" rx="6"/>';
+
+  // Desenhar peças
+  var cor = '#2ed47a';
+  var porFaixa = r.melhor.porFaixa || 1;
+  var faixas   = r.melhor.faixas   || 1;
+  var count = 0;
+
+  for (var f = 0; f < Math.min(faixas, Math.ceil(maxMostra / r.prodAlt)); f++) {
+    for (var c = 0; c < porFaixa; c++) {
+      if (count >= r.prodQtd) { cor = 'rgba(100,100,120,.3)'; }
+      var x = c * pW + 2;
+      var y = f * pH + 2;
+      if (x + pW > svgW || y + pH > svgH) continue;
+      svg += '<rect x="' + x + '" y="' + y + '" width="' + (pW-2) + '" height="' + (pH-2) + '" fill="' + (count < r.prodQtd ? 'rgba(46,212,122,.25)' : 'rgba(100,100,120,.15)') + '" stroke="' + (count < r.prodQtd ? '#2ed47a' : '#4a5168') + '" stroke-width="1" rx="2"/>';
+      if (pW > 30 && pH > 16) {
+        svg += '<text x="' + (x + pW/2) + '" y="' + (y + pH/2 + 4) + '" text-anchor="middle" font-size="8" fill="' + (count < r.prodQtd ? '#2ed47a' : '#4a5168') + '">' + (count+1) + '</text>';
+      }
+      count++;
+    }
+  }
+  svg += '<text x="4" y="' + (svgH - 4) + '" font-size="8" fill="rgba(255,255,255,.4)">' + r.bobLarg + 'm × ' + r.bobComp + 'm</text>';
+  svg += '</svg>';
+  el.innerHTML = svg;
+}
+
+function simUsarNoOrcamento() {
+  if (!_simResultado) { typeof toast==='function' && toast('Calcule primeiro', 'warn'); return; }
+  // Preencher wizard de orçamento com dados do simulador
+  if (typeof navTo === 'function') navTo('orcamento');
+  setTimeout(function() {
+    var l = document.getElementById('orc_largura'); if (l) l.value = _simResultado.prodLarg;
+    var a = document.getElementById('orc_altura');  if (a) a.value = _simResultado.prodAlt;
+    var q = document.getElementById('orc_qtd');     if (q) q.value = _simResultado.prodQtd;
+    typeof toast === 'function' && toast('Dados do simulador aplicados no orçamento!', 'success');
+  }, 500);
+}
+
+function simExportar() {
+  if (!_simResultado) { typeof toast==='function' && toast('Calcule primeiro', 'warn'); return; }
+  var r = _simResultado;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var linhasTexto = [
+    'SIMULADOR DE BOBINA - VisualCalc ERP', '',
+    'BOBINA: ' + r.bobLarg + 'm x ' + r.bobComp + 'm',
+    'PRODUTO: ' + r.prodLarg + 'm x ' + r.prodAlt + 'm',
+    'QUANTIDADE: ' + r.prodQtd + ' pecas', '',
+    'RESULTADO:',
+    '- Pecas por bobina: ' + r.pecasPorBobina,
+    '- Bobinas necessarias: ' + r.bobinasNec,
+    '- Aproveitamento: ' + r.aproveit.toFixed(1) + '%',
+    '- Custo total: R$ ' + fmtV(r.custoTotal),
+    '- Custo por peca: R$ ' + fmtV(r.custoPorPeca),
+  ];
+  var texto = linhasTexto.join('\n');
+  var blob = new Blob([texto], { type: 'text/plain' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'simulador-bobina.txt';
+  a.click();
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ORÇAMENTO POR PROJETO v1.0
+   Múltiplos itens, arte, instalação e serviços
+═══════════════════════════════════════════════════════════════ */
+
+var _projItens = [];
+var _projTipoAtual = 'impressao';
+var _projEditIdx = -1;
+var _projetos = [];
+
+function renderProjetos() {
+  // Popular select de clientes
+  var sel = document.getElementById('proj-cliente');
+  if (sel && window.state && window.state.clientes) {
+    var opts = '<option value="">— Selecione —</option>';
+    window.state.clientes.forEach(function(c) {
+      opts += '<option value="' + (c._db_id||c.id) + '">' + c.nome + '</option>';
+    });
+    sel.innerHTML = opts;
+  }
+
+  // Data de hoje
+  var dataEl = document.getElementById('proj-data');
+  if (dataEl && !dataEl.value) dataEl.value = new Date().toISOString().split('T')[0];
+
+  // Renderizar lista de projetos salvos
+  _projetos = JSON.parse(localStorage.getItem('vc_projetos') || '[]');
+  var busca = ((document.getElementById('proj-busca')||{}).value || '').toLowerCase();
+  var lista = _projetos.filter(function(p) {
+    return !busca || (p.nome||'').toLowerCase().includes(busca) || (p.cliente||'').toLowerCase().includes(busca);
+  });
+
+  var listaEl = document.getElementById('proj-lista-salvas');
+  if (!listaEl) return;
+
+  if (!lista.length) {
+    listaEl.innerHTML = '<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">Nenhuma proposta salva ainda.</div>';
+    return;
+  }
+
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  listaEl.innerHTML = lista.map(function(p, i) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--ink2);margin-bottom:6px;flex-wrap:wrap;gap:8px">'
+      + '<div><div style="font-weight:600;font-size:14px">' + (p.nome||'Sem nome') + '</div>'
+      + '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (p.cliente||'—') + ' · ' + (p.data||'') + ' · ' + (p.itens||0) + ' item(s)</div></div>'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+      + '<div style="font-family:DM Mono,monospace;font-weight:700;color:var(--gold)">R$ ' + fmtV(p.totalValor||0) + '</div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button class="btn btn-secondary btn-xs" onclick="projCarregar(' + i + ')">✏️ Editar</button>'
+      + '<button class="btn btn-primary btn-xs" onclick="projGerarPDFIdx(' + i + ')">📄 PDF</button>'
+      + '<button class="btn btn-ghost btn-xs" onclick="projExcluir(' + i + ')">🗑</button>'
+      + '</div></div></div>';
+  }).join('');
+}
+
+function projAdicionarItem() {
+  _projEditIdx = -1;
+  var modal = document.getElementById('modal-proj-item');
+  if (!modal) return;
+
+  // Limpar campos
+  ['pi-descricao','pi-largura','pi-altura','pi-custo-unit','pi-markup','pi-valor-unit','pi-obs'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var qtdEl = document.getElementById('pi-qtd'); if (qtdEl) qtdEl.value = '1';
+  document.getElementById('pi-area-calc') && (document.getElementById('pi-area-calc').textContent = '0,00 m²');
+  document.getElementById('pi-valor-total') && (document.getElementById('pi-valor-total').textContent = 'R$ 0,00');
+
+  // Popular material
+  var matSel = document.getElementById('pi-material');
+  if (matSel && window.state && window.state.materiais) {
+    var opts = '<option value="">— Selecione —</option>';
+    window.state.materiais.forEach(function(m) {
+      opts += '<option value="' + (m._db_id||m.id) + '" data-custo="' + (m.custo_m2||0) + '">' + m.nome + '</option>';
+    });
+    matSel.innerHTML = opts;
+  }
+
+  // Tipo padrão
+  projSetTipo('impressao', document.querySelector('.proj-tipo-btn'));
+  document.getElementById('proj-item-titulo').textContent = '＋ Adicionar Item';
+  modal.style.display = 'flex';
+  setTimeout(function(){ var d=document.getElementById('pi-descricao'); if(d) d.focus(); }, 100);
+}
+
+function fecharModalProjItem() {
+  var m = document.getElementById('modal-proj-item'); if (m) m.style.display = 'none';
+}
+
+function projSetTipo(tipo, btn) {
+  _projTipoAtual = tipo;
+  document.querySelectorAll('.proj-tipo-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+
+  var campos = document.getElementById('pi-campos-impressao');
+  var arte   = document.getElementById('pi-campos-arte');
+  var matRow = document.getElementById('pi-material') && document.getElementById('pi-material').closest('.form-group');
+
+  if (campos) campos.style.display = tipo === 'impressao' ? 'block' : 'none';
+  if (arte)   arte.style.display   = tipo === 'arte' ? 'block' : 'none';
+
+  piCalcTotal();
+}
+
+function piCalcArea() {
+  var l = parseFloat((document.getElementById('pi-largura')||{}).value) || 0;
+  var a = parseFloat((document.getElementById('pi-altura') ||{}).value) || 0;
+  var q = parseInt((document.getElementById('pi-qtd')     ||{}).value) || 1;
+  var area = l * a;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var el = document.getElementById('pi-area-calc');
+  if (el) el.textContent = fmtV(area) + ' m² (× ' + q + ' = ' + fmtV(area * q) + ' m² total)';
+
+  // Se tem material selecionado, atualizar custo
+  piAtualizarCusto();
+  piCalcTotal();
+}
+
+function piAtualizarCusto() {
+  if (_projTipoAtual !== 'impressao') return;
+  var sel = document.getElementById('pi-material');
+  if (!sel) return;
+  var opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.dataset.custo) return;
+  var custoM2 = parseFloat(opt.dataset.custo) || 0;
+  var l = parseFloat((document.getElementById('pi-largura')||{}).value) || 0;
+  var a = parseFloat((document.getElementById('pi-altura') ||{}).value) || 0;
+  var custoUnit = l * a * custoM2;
+  var custoEl = document.getElementById('pi-custo-unit');
+  if (custoEl && custoUnit > 0) custoEl.value = custoUnit.toFixed(2);
+  piCalcTotal();
+}
+
+function piCalcTotal() {
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var custo  = parseFloat((document.getElementById('pi-custo-unit') ||{}).value) || 0;
+  var markup = parseFloat((document.getElementById('pi-markup')     ||{}).value) || 0;
+  var valorU = parseFloat((document.getElementById('pi-valor-unit') ||{}).value) || 0;
+  var qtd    = parseInt((document.getElementById('pi-qtd')          ||{}).value) || 1;
+
+  // Se tem markup e custo mas não tem valor manual, calcular
+  if (markup > 0 && custo > 0 && valorU === 0) {
+    valorU = custo * (1 + markup / 100);
+    var vEl = document.getElementById('pi-valor-unit');
+    if (vEl) vEl.value = valorU.toFixed(2);
+  }
+
+  var total = valorU * qtd;
+  var el = document.getElementById('pi-valor-total');
+  if (el) el.textContent = 'R$ ' + fmtV(total);
+}
+
+function projConfirmarItem() {
+  var desc   = ((document.getElementById('pi-descricao') ||{}).value || '').trim();
+  var larg   = parseFloat((document.getElementById('pi-largura')   ||{}).value) || 0;
+  var alt    = parseFloat((document.getElementById('pi-altura')    ||{}).value) || 0;
+  var qtd    = parseInt((document.getElementById('pi-qtd')         ||{}).value) || 1;
+  var custo  = parseFloat((document.getElementById('pi-custo-unit')||{}).value) || 0;
+  var markup = parseFloat((document.getElementById('pi-markup')    ||{}).value) || 0;
+  var valorU = parseFloat((document.getElementById('pi-valor-unit')||{}).value) || 0;
+  var obs    = ((document.getElementById('pi-obs')                 ||{}).value || '').trim();
+  var matSel = document.getElementById('pi-material');
+  var matNome = matSel && matSel.options[matSel.selectedIndex] ? matSel.options[matSel.selectedIndex].text : '';
+
+  if (!desc) { typeof toast==='function' && toast('Informe a descrição do item', 'warn'); return; }
+  if (valorU <= 0) { typeof toast==='function' && toast('Informe o valor unitário', 'warn'); return; }
+
+  var item = {
+    tipo:       _projTipoAtual,
+    descricao:  desc,
+    largura:    larg, altura: alt,
+    area:       _projTipoAtual === 'impressao' ? larg * alt : 0,
+    qtd:        qtd,
+    material:   matNome.split(' (')[0],
+    custo_unit: custo,
+    markup:     markup,
+    valor_unit: valorU,
+    valor_total:valorU * qtd,
+    custo_total:custo * qtd,
+    lucro:      (valorU - custo) * qtd,
+    obs:        obs,
+  };
+
+  if (_projEditIdx >= 0 && _projEditIdx < _projItens.length) {
+    _projItens[_projEditIdx] = item;
+  } else {
+    _projItens.push(item);
+  }
+
+  fecharModalProjItem();
+  projRenderItens();
+  projCalcTotais();
+  typeof toast==='function' && toast('Item adicionado!', 'success');
+}
+
+function projRenderItens() {
+  var el = document.getElementById('proj-itens-lista');
+  if (!el) return;
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+
+  if (!_projItens.length) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">📦 Nenhum item adicionado.</div>';
+    return;
+  }
+
+  el.innerHTML = _projItens.map(function(item, idx) {
+    var dimStr = item.tipo === 'impressao' && item.largura > 0
+      ? item.largura + '×' + item.altura + 'm'
+      : '—';
+    return '<div class="proj-item-row">'
+      + '<div><div style="font-weight:600">' + item.descricao + '</div>'
+      + '<div style="margin-top:3px"><span class="proj-item-tipo ' + item.tipo + '">' + ({impressao:'Impressão',unitario:'Unitário',arte:'Arte',instalacao:'Instalação',servico:'Serviço'}[item.tipo]||item.tipo) + '</span>'
+      + (item.material ? '<span style="font-size:11px;color:var(--text3);margin-left:6px">' + item.material + '</span>' : '') + '</div></div>'
+      + '<div style="font-size:12px;color:var(--text3)">' + dimStr + '</div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:12px">' + item.qtd + ' un.</div>'
+      + '<div><span style="font-size:11px;color:var(--text3)">un.</span> <span style="font-family:DM Mono,monospace">R$ ' + fmtV(item.valor_unit) + '</span></div>'
+      + '<div style="font-family:DM Mono,monospace;font-weight:700;color:var(--gold)">R$ ' + fmtV(item.valor_total) + '</div>'
+      + '<div style="display:flex;gap:4px">'
+      + '<button class="btn btn-ghost btn-xs" onclick="projEditarItem(' + idx + ')">✏️</button>'
+      + '<button class="btn btn-ghost btn-xs" onclick="projRemoverItem(' + idx + ')">🗑</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function projCalcTotais() {
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var totalValor  = _projItens.reduce(function(s,i){ return s + (i.valor_total||0); }, 0);
+  var totalCusto  = _projItens.reduce(function(s,i){ return s + (i.custo_total||0); }, 0);
+  var totalLucro  = totalValor - totalCusto;
+  var margem      = totalValor > 0 ? (totalLucro / totalValor * 100) : 0;
+
+  var set = function(id, v) { var el=document.getElementById(id); if(el) el.textContent=v; };
+  set('proj-total-custo',  'R$ ' + fmtV(totalCusto));
+  set('proj-total-lucro',  'R$ ' + fmtV(totalLucro));
+  set('proj-total-margem', margem.toFixed(1) + '%');
+  set('proj-total-valor',  'R$ ' + fmtV(totalValor));
+}
+
+function projEditarItem(idx) {
+  _projEditIdx = idx;
+  var item = _projItens[idx];
+  if (!item) return;
+
+  projAdicionarItem(); // abre o modal
+
+  setTimeout(function() {
+    var s = function(id, v) { var el=document.getElementById(id); if(el) el.value=v||''; };
+    s('pi-descricao', item.descricao);
+    s('pi-largura',   item.largura);
+    s('pi-altura',    item.altura);
+    s('pi-qtd',       item.qtd);
+    s('pi-custo-unit',item.custo_unit);
+    s('pi-markup',    item.markup);
+    s('pi-valor-unit',item.valor_unit);
+    s('pi-obs',       item.obs);
+
+    // Setar tipo correto
+    var btnTipo = document.querySelector('.proj-tipo-btn[onclick*="' + item.tipo + '"]');
+    projSetTipo(item.tipo, btnTipo);
+    piCalcArea();
+    document.getElementById('proj-item-titulo').textContent = '✏️ Editar Item';
+  }, 150);
+}
+
+function projRemoverItem(idx) {
+  _projItens.splice(idx, 1);
+  projRenderItens();
+  projCalcTotais();
+}
+
+function projLimpar() {
+  if (_projItens.length > 0 && !confirm('Limpar todos os itens?')) return;
+  _projItens = [];
+  ['proj-nome','proj-pagamento','proj-prazo','proj-obs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  projRenderItens();
+  projCalcTotais();
+}
+
+async function projSalvar() {
+  var nome    = ((document.getElementById('proj-nome')   ||{}).value||'').trim();
+  var cliSel  = document.getElementById('proj-cliente');
+  var cliNome = cliSel && cliSel.options[cliSel.selectedIndex] ? cliSel.options[cliSel.selectedIndex].text : '';
+  var data    = (document.getElementById('proj-data')    ||{}).value || '';
+
+  if (!nome) { typeof toast==='function' && toast('Informe o nome do projeto', 'warn'); return; }
+  if (!_projItens.length) { typeof toast==='function' && toast('Adicione pelo menos 1 item', 'warn'); return; }
+
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var totalValor = _projItens.reduce(function(s,i){ return s+(i.valor_total||0); }, 0);
+  var totalCusto = _projItens.reduce(function(s,i){ return s+(i.custo_total||0); }, 0);
+
+  var projeto = {
+    id:         Date.now(),
+    nome,
+    cliente:    cliNome,
+    cliente_id: cliSel ? cliSel.value : '',
+    data,
+    validade:   (document.getElementById('proj-validade')  ||{}).value || '7',
+    pagamento:  (document.getElementById('proj-pagamento') ||{}).value || '',
+    prazo:      (document.getElementById('proj-prazo')     ||{}).value || '',
+    obs:        (document.getElementById('proj-obs')       ||{}).value || '',
+    itens:      _projItens.length,
+    totalValor, totalCusto,
+    margem:     totalValor > 0 ? ((totalValor - totalCusto) / totalValor * 100) : 0,
+    itensDados: _projItens.slice(),
+  };
+
+  // Salvar localmente
+  _projetos = JSON.parse(localStorage.getItem('vc_projetos') || '[]');
+  _projetos.unshift(projeto);
+  localStorage.setItem('vc_projetos', JSON.stringify(_projetos.slice(0, 100)));
+
+  // Salvar no Supabase se disponível
+  if (typeof dbMode === 'function' && dbMode() === 'supabase') {
+    try {
+      var sb = typeof getSb === 'function' ? getSb() : null;
+      if (sb && window.currentEmpresaId) {
+        await sb.from('orcamentos').insert({
+          empresa_id: window.currentEmpresaId,
+          cliente_id: projeto.cliente_id || null,
+          cliente_nome: projeto.cliente,
+          numero: 'PROJ-' + String(Date.now()).slice(-5),
+          produto: '[PROJETO] ' + projeto.nome,
+          custo_total: totalCusto,
+          preco_final: totalValor,
+          lucro: totalValor - totalCusto,
+          margem_real: projeto.margem,
+          status: 'orcamento',
+          obs: JSON.stringify({ tipo: 'projeto', itens: _projItens }),
+        });
+      }
+    } catch(e) { console.warn('projSalvar banco:', e.message); }
+  }
+
+  typeof toast==='function' && toast('✅ Proposta "' + nome + '" salva!', 'success');
+  renderProjetos();
+}
+
+function projCarregar(idx) {
+  var p = _projetos[idx];
+  if (!p) return;
+  var s = function(id, v) { var el=document.getElementById(id); if(el) el.value=v||''; };
+  s('proj-nome', p.nome); s('proj-data', p.data);
+  s('proj-validade', p.validade); s('proj-pagamento', p.pagamento);
+  s('proj-prazo', p.prazo); s('proj-obs', p.obs);
+  _projItens = (p.itensDados || []).slice();
+  projRenderItens();
+  projCalcTotais();
+  typeof toast==='function' && toast('Proposta carregada!', 'info');
+  window.scrollTo(0,0);
+}
+
+function projExcluir(idx) {
+  if (!confirm('Excluir esta proposta?')) return;
+  _projetos.splice(idx, 1);
+  localStorage.setItem('vc_projetos', JSON.stringify(_projetos));
+  renderProjetos();
+}
+
+function projGerarPDF() {
+  var nome   = (document.getElementById('proj-nome') ||{}).value || 'Proposta';
+  if (!_projItens.length) { typeof toast==='function' && toast('Adicione itens primeiro', 'warn'); return; }
+  _projGerarPDFComItens(nome, _projItens);
+}
+
+function projGerarPDFIdx(idx) {
+  var p = _projetos[idx];
+  if (!p || !p.itensDados) return;
+  _projGerarPDFComItens(p.nome, p.itensDados);
+}
+
+function _projGerarPDFComItens(nome, itens) {
+  var fmtV = typeof fmtBR === 'function' ? fmtBR : function(v){ return (+v).toFixed(2).replace('.',','); };
+  var emp  = window.empresa || {};
+  var totalValor = itens.reduce(function(s,i){ return s+(i.valor_total||0); }, 0);
+
+  var html = '<html><head><meta charset="UTF-8"><title>Proposta — ' + nome + '</title>'
+    + '<style>body{font-family:Arial,sans-serif;font-size:13px;color:#222;margin:40px}'
+    + 'h1{font-size:20px;color:#1a2035}h2{font-size:14px;color:#e8b84b}'
+    + 'table{width:100%;border-collapse:collapse;margin-top:14px}'
+    + 'th{background:#1e2335;color:#e8b84b;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase}'
+    + 'td{padding:8px 10px;border-bottom:1px solid #e8e8e8}'
+    + 'tr:nth-child(even)td{background:#f8f9fa}'
+    + '.total{font-size:20px;font-weight:700;color:#e8b84b;text-align:right}'
+    + '</style></head><body>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #e8b84b;padding-bottom:16px;margin-bottom:20px">'
+    + '<div><h1>' + (emp.nome||'VisualCalc ERP') + '</h1><div style="font-size:12px;color:#666">' + (emp.email||'') + '</div></div>'
+    + '<div style="text-align:right"><div style="font-size:20px;font-weight:700;color:#e8b84b">PROPOSTA</div>'
+    + '<div style="font-size:12px;color:#666">' + new Date().toLocaleDateString('pt-BR') + '</div></div></div>'
+    + '<h2>' + nome + '</h2>'
+    + '<table><thead><tr><th>#</th><th>Descrição</th><th>Dim.</th><th>Qtd</th><th>Vlr Unit.</th><th>Total</th></tr></thead><tbody>'
+    + itens.map(function(item, i) {
+        var dim = item.tipo === 'impressao' && item.largura > 0 ? item.largura + '×' + item.altura + 'm' : '—';
+        return '<tr><td>' + (i+1) + '</td><td><strong>' + item.descricao + '</strong></td><td>' + dim + '</td><td>' + item.qtd + '</td><td>R$ ' + fmtV(item.valor_unit) + '</td><td><strong>R$ ' + fmtV(item.valor_total) + '</strong></td></tr>';
+      }).join('')
+    + '</tbody></table>'
+    + '<div style="margin-top:24px;padding:16px;background:#f8f9fa;border-radius:8px">'
+    + '<div class="total">TOTAL: R$ ' + fmtV(totalValor) + '</div></div>'
+    + '<div style="margin-top:32px;font-size:11px;color:#999;text-align:center">Proposta gerada por VisualCalc ERP · ' + new Date().toLocaleDateString('pt-BR') + '</div>'
+    + '</body></html>';
+
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 500);
+}
+
+console.log('[VisualCalc] Simulador de Bobina + Orçamento por Projeto v1.0 ✓');
 </script>
 
 </body>
