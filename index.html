@@ -15248,6 +15248,11 @@ function executarCalculo() {
   };
 
   toast('✅ R$ ' + fmtBR(preco.precoFinal) + ' | Margem ' + preco.margemReal.toFixed(1) + '%', 'success', 'Cálculo completo');
+
+  // Disparar evento para todos os listeners (wizard, ERP modules, etc.)
+  setTimeout(function() {
+    document.dispatchEvent(new Event('vc:calculoFeito'));
+  }, 80);
 }
 
 // ── Atualização em tempo real: preview leve nos KPIs (sem scroll) ────
@@ -18232,46 +18237,28 @@ function upgradeOrcamentoCards() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// HOOK: executarCalculo — adicionar preview após cálculo
+// HOOK: preview após cálculo — sem redefinir executarCalculo
 // ─────────────────────────────────────────────────────────────────────
-var _execCalcOriginal = typeof executarCalculo === 'function' ? executarCalculo : (typeof calcular === 'function' ? calcular : null);
-
-function executarCalculo() {
-  // Chamar função original
-  if (_execCalcOriginal) _execCalcOriginal.apply(this, arguments);
-
-  // Após o cálculo, renderizar card visual
-  setTimeout(function() {
-    if (window._lastCalc) {
+// Usar evento customizado em vez de sobrescrever a função
+document.addEventListener('vc:calculoFeito', function() {
+  if (window._lastCalc) {
+    if (typeof renderProductCardResult === 'function') {
       renderProductCardResult(window._lastCalc);
-
-      // Animar KPI numbers
-      var kpis = [
-        { id: 'res_preco',  value: window._lastCalc.precoFinal,  prefix: 'R$ ' },
-        { id: 'res_custo',  value: window._lastCalc.custoTotal,  prefix: 'R$ ' },
-        { id: 'res_lucro',  value: window._lastCalc.lucro,       prefix: 'R$ ' },
-      ];
-      kpis.forEach(function(kpi) {
-        var el = document.getElementById(kpi.id);
-        if (el && kpi.value > 0) {
-          // Already set by calcular() — just add animation class
-          el.style.animation = 'none';
-          void el.offsetWidth;
-          el.style.animation = 'countUp .5s ease';
-        }
-      });
     }
-  }, 100);
-}
-
-// Garantir que calcular() também use o novo executarCalculo
-if (typeof calcular === 'function' && calcular !== executarCalculo) {
+    ['res_preco','res_custo','res_lucro'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'countUp .5s ease'; }
+    });
+  }
+});
+// Manter calcular() sem loop
+if (typeof calcular === 'function') {
   var _calcularOriginal = calcular;
   window.calcular = function() {
     _calcularOriginal.apply(this, arguments);
     setTimeout(function() {
-      if (window._lastCalc) renderProductCardResult(window._lastCalc);
-    }, 150);
+      document.dispatchEvent(new Event('vc:calculoFeito'));
+    }, 120);
   };
 }
 
@@ -19438,28 +19425,31 @@ function wzLimparEstado() {
 
 // ─────────────────────────────────────────────────────────────────
 // INTEGRAÇÃO: executarCalculo() → marcar etapa 3 como concluída
-// ─────────────────────────────────────────────────────────────────
-(function patchCalculo() {
-  var _orig = window.executarCalculo;
-  if (!_orig) return;
-  window.executarCalculo = function() {
-    _orig.apply(this, arguments);
-    setTimeout(function() {
-      if (window._lastCalc && window._lastCalc.precoFinal > 0) {
-        if (_wz.etapasConcluidas.indexOf(3) < 0) _wz.etapasConcluidas.push(3);
-        _wz.calcExecutado = true;
-        wzRenderStepsBar();
-        // Atualizar ref badge
-        var rb = document.getElementById('wz-ref-badge');
-        var rt = document.getElementById('wz-ref-text');
-        var ref = (document.getElementById('orc_ref') || {}).value || 'ORC-' + String(Date.now()).slice(-5);
-        if (rb && rt) { rb.style.display = 'block'; rt.textContent = ref; }
-      }
-    }, 150);
-  };
-})();
+// Usa evento customizado — sem sobrescrever a função (evita loop)
+document.addEventListener('vc:calculoFeito', function() {
+  if (window._lastCalc && window._lastCalc.precoFinal > 0) {
+    if (typeof _wz !== 'undefined') {
+      if (_wz.etapasConcluidas.indexOf(3) < 0) _wz.etapasConcluidas.push(3);
+      _wz.calcExecutado = true;
+      if (typeof wzRenderStepsBar === 'function') wzRenderStepsBar();
+    }
+    var rb  = document.getElementById('wz-ref-badge');
+    var rt  = document.getElementById('wz-ref-text');
+    var ref = (document.getElementById('orc_ref') || {}).value || 'ORC-' + String(Date.now()).slice(-5);
+    if (rb && rt) { rb.style.display = 'block'; rt.textContent = ref; }
+  }
+});
 
 console.log('[VisualCalc] Wizard Engine v3.0 ✓ — 6 etapas ativas');
+
+// calcularCustoProducao — alias para a função real _atualizarUIProducao
+// O HTML do wizard chama calcularCustoProducao(), que por sua vez chama
+// a função já existente no sistema original
+window.calcularCustoProducao = function() {
+  if (typeof _atualizarUIProducao === 'function') {
+    _atualizarUIProducao();
+  }
+};
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -20386,20 +20376,27 @@ function excluirLancamento(id) {
 }
 
 // ── Integração: ao salvar orçamento como venda → criar entrada automática
+// Patch salvarOrcamento — feito uma única vez com flag
 (function patchSalvarOrcamento() {
-  var _orig = window.salvarOrcamento;
-  if (!_orig) { setTimeout(patchSalvarOrcamento, 1000); return; }
-  window.salvarOrcamento = function() {
-    var result = _orig.apply(this, arguments);
-    // Verificar se o status mudou para finalizado/aprovado
-    setTimeout(function() {
-      var calc = window._lastCalc;
-      if (calc && calc.precoFinal > 0 && calc.status === 'finalizado') {
-        _criarEntradaAutomatica(calc);
-      }
-    }, 500);
-    return result;
-  };
+  function tryPatch() {
+    var _orig = window.salvarOrcamento;
+    if (typeof _orig !== 'function' || _orig._patched) return;
+    var patched = function() {
+      var result = _orig.apply(this, arguments);
+      setTimeout(function() {
+        var calc = window._lastCalc;
+        if (calc && calc.precoFinal > 0 && calc.status === 'finalizado') {
+          if (typeof _criarEntradaAutomatica === 'function') _criarEntradaAutomatica(calc);
+        }
+      }, 500);
+      return result;
+    };
+    patched._patched = true;
+    window.salvarOrcamento = patched;
+  }
+  // Tentar agora e após 1s se ainda não existir
+  tryPatch();
+  setTimeout(tryPatch, 1200);
 })();
 
 function _criarEntradaAutomatica(orc) {
